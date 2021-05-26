@@ -18,6 +18,7 @@ import { identificationRequest } from "../../store/actions/identification";
 import { navSelector } from "../../store/reducers/navigationHistory";
 import { getCurrentRouteName } from "../../utils/navigation";
 import { startTimer } from "../../utils/timer";
+import ROUTES from "../../navigation/routes";
 import { watchNotificationSaga } from "./watchNotificationSaga";
 
 /**
@@ -41,9 +42,13 @@ export function* watchApplicationActivitySaga(): IterableIterator<Effect> {
     if (lastState !== "background" && newApplicationState === "background") {
       // Screens requiring identification when the app pass from background/inactive to active state
       const whiteList: ReadonlyArray<string> = [];
+      const blackList: ReadonlyArray<string> = [ROUTES.PROFILE_MAIN];
 
       const nav: ReturnType<typeof navSelector> = yield select(navSelector);
       const currentRoute = getCurrentRouteName(nav);
+      if (blackList.some(s => s === currentRoute)) {
+        return;
+      }
       const isSecuredRoute =
         currentRoute && whiteList.indexOf(currentRoute) !== -1;
       if (isSecuredRoute) {

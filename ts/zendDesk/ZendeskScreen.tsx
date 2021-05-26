@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Content, Input, Item, Text, View } from "native-base";
-import { StyleSheet } from "react-native";
+import { Alert, StyleSheet } from "react-native";
 import ZendDesk from "react-native-zendesk-v2";
 import { connect } from "react-redux";
 import * as pot from "italia-ts-commons/lib/pot";
@@ -25,6 +25,9 @@ type Props = ReturnType<typeof mapStateToProps>;
 const styles = StyleSheet.create({
   buttonStyle: {
     width: "90%"
+  },
+  buttonStyleRow: {
+    width: "45%"
   }
 });
 type ZendeskConfig = {
@@ -38,10 +41,17 @@ type ZendeskNameEmail = {
   name: string;
   email: string;
 };
-const zendeskDefaultConfig: ZendeskConfig = {
+const zendeskDefaultJwtConfig: ZendeskConfig = {
   key: "6e2c01f7-cebc-4c77-b878-3ed3c749a835",
   appId: "7f23d5b0eadc5b4f2cc83df3898c6f607bad769fe053a186",
   clientId: "mobile_sdk_client_4bf774ed28b085195cc5",
+  url: "https://pagopa.zendesk.com",
+  token: ""
+};
+const zendeskDefaultAnonymousConfig: ZendeskConfig = {
+  key: "6e2c01f7-cebc-4c77-b878-3ed3c749a835",
+  appId: "f7e19679ac1ea5dcd46bc5c10964a72d789fab22d9cfe180",
+  clientId: "mobile_sdk_client_a33378642f966d8e9e11",
   url: "https://pagopa.zendesk.com",
   token: ""
 };
@@ -49,8 +59,12 @@ const IBANInputStyle = makeFontStyleObject("Regular", false, "RobotoMono");
 
 const ZendeskScreen = (props: Props) => {
   const [zendeskConfig, setZendeskConfig] = React.useState<ZendeskConfig>(
-    zendeskDefaultConfig
+    zendeskDefaultJwtConfig
   );
+
+  const [zendeskConfigName, setZendeskConfigName] = React.useState<
+    "jwt" | "anon"
+  >("jwt");
 
   const [nameAndEmail, setNameAndEmail] = React.useState<ZendeskNameEmail>({
     name: pot.getOrElse(
@@ -87,17 +101,18 @@ const ZendeskScreen = (props: Props) => {
 
   const identifyUserWithToken = () => {
     ZendDesk.setUserIdentity({ token: zendeskConfig.token });
+    Alert.alert("identificazione", "identificazione tramite JWT eseguita");
   };
 
   const startChat = (name: string, email: string) => {
     initZenDesk();
     ZendDesk.startChat({
-      botName: "test botName",
+      botName: "IO BOT",
       name,
       email,
       tags: ["tag1", "tag2"],
       color: "#ff0000",
-      department: "Your department"
+      department: "PagoPA SPA"
     });
   };
 
@@ -106,9 +121,7 @@ const ZendeskScreen = (props: Props) => {
     ZendDesk.showHelpCenter({
       name,
       email,
-      withChat: true,
-      color: "#ff0000",
-      disableTicketCreation: false
+      color: "#ff0000"
     });
   };
 
@@ -118,12 +131,47 @@ const ZendeskScreen = (props: Props) => {
       name,
       email
     });
+    Alert.alert(
+      "identificazione",
+      "identificazione tramite nome ed email eseguita"
+    );
+  };
+
+  const resetIdentity = () => {
+    ZendDesk.resetUserIdentity();
+    Alert.alert("identificazione", "reset eseguito");
   };
 
   return (
     <BaseScreenComponent headerTitle={"ZenDesk - ⚠️ only for test purposes"}>
       <Content>
         <View style={{ flex: 1 }}>
+          <Label weight={"Regular"}>{"Configuration"}</Label>
+          <View style={{ flexDirection: "row" }}>
+            <ButtonDefaultOpacity
+              style={styles.buttonStyleRow}
+              disabled={zendeskConfigName === "jwt"}
+              bordered={false}
+              onPress={() => {
+                setZendeskConfigName("jwt");
+                setZendeskConfig(zendeskDefaultJwtConfig);
+              }}
+            >
+              <Text>{"JWT"}</Text>
+            </ButtonDefaultOpacity>
+            <ButtonDefaultOpacity
+              disabled={zendeskConfigName === "anon"}
+              style={[styles.buttonStyleRow, { marginLeft: 6 }]}
+              bordered={false}
+              onPress={() => {
+                setZendeskConfigName("anon");
+                setZendeskConfig(zendeskDefaultAnonymousConfig);
+              }}
+            >
+              <Text>{"Anonymous"}</Text>
+            </ButtonDefaultOpacity>
+          </View>
+          <View spacer={true} />
           <Label weight={"Regular"}>{"App ID"}</Label>
           <Item error={false}>
             <Input
@@ -171,7 +219,10 @@ const ZendeskScreen = (props: Props) => {
           <ButtonDefaultOpacity
             style={styles.buttonStyle}
             bordered={false}
-            onPress={initZenDesk}
+            onPress={() => {
+              initZenDesk();
+              Alert.alert("inizializzazione", "inizializzazione eseguita");
+            }}
           >
             <Text>{"init Zendesk"}</Text>
           </ButtonDefaultOpacity>
@@ -235,6 +286,15 @@ const ZendeskScreen = (props: Props) => {
             }
           >
             <Text>{"identify with email and name"}</Text>
+          </ButtonDefaultOpacity>
+
+          <View spacer={true} />
+          <ButtonDefaultOpacity
+            style={styles.buttonStyle}
+            bordered={false}
+            onPress={resetIdentity}
+          >
+            <Text>{"reset identify"}</Text>
           </ButtonDefaultOpacity>
 
           <View spacer={true} />
