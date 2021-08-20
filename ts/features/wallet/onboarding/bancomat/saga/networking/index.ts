@@ -1,4 +1,5 @@
 import { fromNullable } from "fp-ts/lib/Option";
+import { SagaIterator } from "redux-saga";
 import { call, put } from "redux-saga/effects";
 import { ActionType } from "typesafe-actions";
 import { ContentClient } from "../../../../../../api/content";
@@ -48,7 +49,7 @@ export function* handleLoadPans(
   getPans: ReturnType<typeof PaymentManagerClient>["getPans"],
   sessionManager: SessionManager<PaymentManagerToken>,
   action: ActionType<typeof searchUserPans.request>
-) {
+): SagaIterator {
   try {
     const getPansWithRefresh = sessionManager.withRefresh(
       getPans(action.payload)

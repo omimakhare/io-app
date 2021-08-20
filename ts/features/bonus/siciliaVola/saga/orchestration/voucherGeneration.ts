@@ -1,7 +1,8 @@
-import { call, put, select } from "redux-saga/effects";
+import { call, CallEffect, put, select } from "redux-saga/effects";
 import { SagaIterator } from "redux-saga";
 import {
   executeWorkUnit,
+  SagaResult,
   withFailureHandling,
   withResetNavigationStack
 } from "../../../../../sagas/workUnit";
@@ -23,7 +24,7 @@ import { navigationCurrentRouteSelector } from "../../../../../store/reducers/na
  * - The user aborts the voucher generation {@link svGenerateVoucherCancel}
  * - The user chooses back from the first screen {@link svGenerateVoucherBack}
  */
-function* svVoucherGenerationWorkUnit() {
+function* svVoucherGenerationWorkUnit(): Generator<CallEffect<SagaResult>> {
   return yield call(executeWorkUnit, {
     startScreenNavigation: navigateToSvCheckStatusRouterScreen(),
     startScreenName: SV_ROUTES.VOUCHER_GENERATION.CHECK_STATUS,

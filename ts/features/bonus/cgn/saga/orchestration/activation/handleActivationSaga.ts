@@ -50,7 +50,9 @@ const getNextNavigationStep = (
 export const isLoadingScreen = (screenName: string) =>
   screenName === CGN_ROUTES.ACTIVATION.LOADING;
 
-export function* cgnActivationWorker(cgnActivationSaga: CgnActivationType) {
+export function* cgnActivationWorker(
+  cgnActivationSaga: CgnActivationType
+): SagaIterator {
   const currentRoute: NavigationCurrentRouteSelectorType = yield select(
     navigationCurrentRouteSelector
   );

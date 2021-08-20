@@ -1,4 +1,4 @@
-import { buffers, Channel, channel } from "redux-saga";
+import { buffers, Channel, channel, SagaIterator } from "redux-saga";
 import { call, fork, take } from "redux-saga/effects";
 import { ActionType, getType } from "typesafe-actions";
 import { BackendClient } from "../../api/backend";
@@ -14,7 +14,7 @@ import { loadMessage } from "../messages/messages";
  */
 export function* watchMessageLoadSaga(
   getMessage: ReturnType<typeof BackendClient>["getMessage"]
-) {
+): SagaIterator {
   // Create the channel used for the communication with the handlers.
   // The channel has a buffer with initial size of 10 requests.
   const requestsChannel: Channel<ActionType<

@@ -1,5 +1,5 @@
 import { SagaIterator } from "redux-saga";
-import { call, put, select } from "redux-saga/effects";
+import { call, CallEffect, put, select } from "redux-saga/effects";
 import {
   cgnActivationBack,
   cgnActivationCancel,
@@ -9,6 +9,7 @@ import {
 import { navigateToCgnActivationInformationTos } from "../../../navigation/actions";
 import {
   executeWorkUnit,
+  SagaResult,
   withResetNavigationStack
 } from "../../../../../../sagas/workUnit";
 import CGN_ROUTES from "../../../navigation/routes";
@@ -17,7 +18,7 @@ import { navigateBack } from "../../../../../../store/actions/navigation";
 import { navigationCurrentRouteSelector } from "../../../../../../store/reducers/navigation";
 import BONUSVACANZE_ROUTES from "../../../../bonusVacanze/navigation/routes";
 
-function* cgnActivationWorkUnit() {
+function* cgnActivationWorkUnit(): Generator<CallEffect<SagaResult>> {
   return yield call(executeWorkUnit, {
     startScreenNavigation: navigateToCgnActivationInformationTos(),
     startScreenName: CGN_ROUTES.ACTIVATION.INFORMATION_TOS,

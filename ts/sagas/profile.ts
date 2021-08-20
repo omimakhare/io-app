@@ -4,6 +4,7 @@
 import { none, Option, some } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import { readableReport } from "italia-ts-commons/lib/reporters";
+import { SagaIterator } from "redux-saga";
 import {
   all,
   call,
@@ -350,7 +351,7 @@ function* handleLoadBonusBeforeRemoveAccount() {
 }
 
 // watch for action of removing account
-function* handleRemoveAccount() {
+function* handleRemoveAccount(): SagaIterator {
   // dispatch an action to request account deletion
   yield put(
     upsertUserDataProcessing.request(UserDataProcessingChoiceEnum.DELETE)

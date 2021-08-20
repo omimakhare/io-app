@@ -1,3 +1,4 @@
+import { SagaIterator } from "redux-saga";
 import {
   call,
   Effect,
@@ -144,7 +145,7 @@ export function* startAndReturnIdentificationResult(
 function* startAndHandleIdentificationResult(
   pin: PinString,
   identificationRequestAction: ActionType<typeof identificationRequest>
-) {
+): SagaIterator {
   yield put(
     identificationStart(
       pin,
