@@ -1,4 +1,5 @@
 import { Either, left, right } from "fp-ts/lib/Either";
+import { SagaIterator } from "redux-saga";
 import { select } from "redux-saga-test-plan/matchers";
 import { call, put } from "redux-saga/effects";
 import { ActionType } from "typesafe-actions";
@@ -38,7 +39,7 @@ export function* handleSearchUserCoBadge(
   >["searchCobadgePans"],
   sessionManager: SessionManager<PaymentManagerToken>,
   searchAction: ActionType<typeof searchUserCoBadge.request>
-) {
+): SagaIterator {
   // try to retrieve the searchRequestId for co-badge search
   const onboardingCoBadgeSearchRequest: ReturnType<typeof onboardingCoBadgeSearchRequestId> = yield select(
     onboardingCoBadgeSearchRequestId

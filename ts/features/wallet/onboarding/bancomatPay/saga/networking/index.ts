@@ -1,3 +1,4 @@
+import { SagaIterator } from "redux-saga";
 import { call, put } from "redux-saga/effects";
 import { ActionType } from "typesafe-actions";
 import { RestBPayResponse } from "../../../../../../../definitions/pagopa/walletv2/RestBPayResponse";
@@ -26,7 +27,7 @@ export function* handleSearchUserBPay(
   searchBPay: ReturnType<typeof PaymentManagerClient>["searchBPay"],
   sessionManager: SessionManager<PaymentManagerToken>,
   action: ActionType<typeof searchUserBPay.request>
-) {
+): SagaIterator {
   try {
     const searchBPayWithRefresh = sessionManager.withRefresh(
       searchBPay(action.payload)
@@ -77,7 +78,7 @@ export function* handleAddpayToWallet(
   addBPayToWallet: ReturnType<typeof PaymentManagerClient>["addBPayToWallet"],
   sessionManager: SessionManager<PaymentManagerToken>,
   action: ActionType<typeof addBpayToWalletAction.request>
-) {
+): SagaIterator {
   try {
     const addBPayToWalletWithRefresh = sessionManager.withRefresh(
       addBPayToWallet({ data: [action.payload] })

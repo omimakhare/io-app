@@ -1,5 +1,6 @@
 import { readableReport } from "italia-ts-commons/lib/reporters";
 import _ from "lodash";
+import { SagaIterator } from "redux-saga";
 import { call, put } from "redux-saga/effects";
 import { ActionType } from "typesafe-actions";
 import { PaymentManagerClient } from "../../../../../../api/pagopa";
@@ -21,7 +22,7 @@ import { addSatispayToWallet, searchUserSatispay } from "../../store/actions";
 export function* handleSearchUserSatispay(
   searchSatispay: ReturnType<typeof PaymentManagerClient>["searchSatispay"],
   sessionManager: SessionManager<PaymentManagerToken>
-) {
+): SagaIterator {
   try {
     const searchSatispayWithRefresh = sessionManager.withRefresh(
       searchSatispay({})
@@ -77,7 +78,7 @@ export function* handleAddUserSatispayToWallet(
   >["addSatispayToWallet"],
   sessionManager: SessionManager<PaymentManagerToken>,
   action: ActionType<typeof addSatispayToWallet.request>
-) {
+): SagaIterator {
   try {
     const addSatispayToWalletWithRefresh = sessionManager.withRefresh(
       addSatispayToWalletClient({ data: action.payload })

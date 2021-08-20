@@ -1,7 +1,8 @@
 import { NavigationActions } from "react-navigation";
-import { call, put, select } from "redux-saga/effects";
+import { call, CallEffect, put, select } from "redux-saga/effects";
 import {
   executeWorkUnit,
+  SagaResult,
   withFailureHandling,
   withResetNavigationStack
 } from "../../../../../../sagas/workUnit";
@@ -31,7 +32,7 @@ import { navigationHistoryPop } from "../../../../../../store/actions/navigation
  * - The user aborts the insertion of a co-badge {@link walletAddCoBadgeCancel}
  * - The user chooses back from the first screen {@link walletAddCoBadgeBack}
  */
-function* coBadgeWorkUnit() {
+function* coBadgeWorkUnit(): Generator<CallEffect<SagaResult>> {
   return yield call(executeWorkUnit, {
     startScreenNavigation: navigateToOnboardingCoBadgeSearchStartScreen(),
     startScreenName: WALLET_ONBOARDING_COBADGE_ROUTES.START,

@@ -1,7 +1,8 @@
 import { NavigationActions } from "react-navigation";
-import { call, put, select } from "redux-saga/effects";
+import { call, CallEffect, put, select } from "redux-saga/effects";
 import {
   executeWorkUnit,
+  SagaResult,
   withResetNavigationStack
 } from "../../../../../../sagas/workUnit";
 import { fetchWalletsRequest } from "../../../../../../store/actions/wallet/wallets";
@@ -28,7 +29,7 @@ import { onboardingBPayAddedAccountSelector } from "../../store/reducers/addedBP
  * - The user abort the insertion of a BPay {@link walletAddBPayCancel}
  * - The user choose back from the first screen {@link walletAddBPayBack}
  */
-function* bPayWorkUnit() {
+function* bPayWorkUnit(): Generator<CallEffect<SagaResult>> {
   return yield call(executeWorkUnit, {
     startScreenNavigation: navigateToOnboardingBPaySearchStartScreen(),
     startScreenName: WALLET_ONBOARDING_BPAY_ROUTES.START,

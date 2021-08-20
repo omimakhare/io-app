@@ -1,4 +1,5 @@
 import { NavigationNavigateAction } from "react-navigation";
+import { SagaIterator } from "redux-saga";
 import { call, put, select } from "redux-saga/effects";
 import { navigateToWalletHome } from "../../../../../store/actions/navigation";
 import { bpdRemoteConfigSelector } from "../../../../../store/reducers/backendStatus";
@@ -17,7 +18,7 @@ import { isBpdEnabled } from "./onboarding/startOnboarding";
 export function* activateBpdOnNewPaymentMethods(
   paymentMethods: ReadonlyArray<PaymentMethod>,
   navigateToActivateNewMethods: NavigationNavigateAction
-) {
+): SagaIterator {
   const atLeastOnePaymentMethodWithBpdCapability = paymentMethods.some(b =>
     hasFunctionEnabled(b, EnableableFunctionsTypeEnum.BPD)
   );

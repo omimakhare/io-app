@@ -1,3 +1,4 @@
+import { SagaIterator } from "redux-saga";
 import { put, select, take } from "redux-saga/effects";
 import * as pot from "italia-ts-commons/lib/pot";
 import { getType, isActionOf } from "typesafe-actions";
@@ -22,7 +23,7 @@ import { sendAddCobadgeMessage } from "../../store/actions/wallet/wallets";
  *
  * This saga is called only if the {@link bancomatListVisibleInWalletSelector} return some
  */
-export function* sendAddCobadgeMessageSaga() {
+export function* sendAddCobadgeMessageSaga(): SagaIterator {
   // Check if there is at least one bancomat
   const maybeBancomatListVisibleInWallet: pot.Pot<
     ReadonlyArray<BancomatPaymentMethod>,

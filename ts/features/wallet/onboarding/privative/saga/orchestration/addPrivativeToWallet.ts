@@ -1,8 +1,9 @@
 import { NavigationActions } from "react-navigation";
-import { call, put, select } from "redux-saga/effects";
+import { call, CallEffect, put, select } from "redux-saga/effects";
 import ROUTES from "../../../../../../navigation/routes";
 import {
   executeWorkUnit,
+  SagaResult,
   withFailureHandling,
   withResetNavigationStack
 } from "../../../../../../sagas/workUnit";
@@ -30,7 +31,7 @@ import { onboardingPrivativeAddedSelector } from "../../store/reducers/addedPriv
  * - The user aborts the insertion of a privative card {@link walletAddCoBadgeCancel}
  * - The user chooses back from the first screen {@link walletAddCoBadgeBack}
  */
-function* privativeWorkUnit() {
+function* privativeWorkUnit(): Generator<CallEffect<SagaResult>> {
   return yield call(executeWorkUnit, {
     startScreenNavigation: navigateToOnboardingPrivativeChooseIssuerScreen(),
     startScreenName: WALLET_ONBOARDING_PRIVATIVE_ROUTES.CHOOSE_ISSUER,

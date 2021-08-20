@@ -1,7 +1,8 @@
 import { NavigationActions } from "react-navigation";
-import { call, put, select } from "redux-saga/effects";
+import { call, CallEffect, put, select } from "redux-saga/effects";
 import {
   executeWorkUnit,
+  SagaResult,
   withResetNavigationStack
 } from "../../../../../../sagas/workUnit";
 import { fetchWalletsRequest } from "../../../../../../store/actions/wallet/wallets";
@@ -28,7 +29,7 @@ import { onboardingSatispayAddedResultSelector } from "../../store/reducers/adde
  * - The user abort the insertion  {@link walletAddSatispayCancel}
  * - The user choose back from the first screen {@link walletAddSatispayBack}
  */
-function* satispayWorkUnit() {
+function* satispayWorkUnit(): Generator<CallEffect<SagaResult>> {
   return yield call(executeWorkUnit, {
     startScreenNavigation: navigateToOnboardingSatispayStart(),
     startScreenName: WALLET_ONBOARDING_SATISPAY_ROUTES.START,

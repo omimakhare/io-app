@@ -1,7 +1,8 @@
 import { NavigationActions } from "react-navigation";
-import { call, put, select } from "redux-saga/effects";
+import { call, CallEffect, put, select } from "redux-saga/effects";
 import {
   executeWorkUnit,
+  SagaResult,
   withResetNavigationStack
 } from "../../../../../../sagas/workUnit";
 import { fetchWalletsRequest } from "../../../../../../store/actions/wallet/wallets";
@@ -29,7 +30,7 @@ import ROUTES from "../../../../../../navigation/routes";
  * - The user abort the insertion of a bancomat {@link walletAddBancomatCancel}
  * - The user choose back from the first screen {@link walletAddBancomatBack}
  */
-function* bancomatWorkUnit() {
+function* bancomatWorkUnit(): Generator<CallEffect<SagaResult>> {
   return yield call(executeWorkUnit, {
     startScreenNavigation: navigateToOnboardingBancomatSearchStartScreen(),
     startScreenName: WALLET_ONBOARDING_BANCOMAT_ROUTES.BANCOMAT_START,

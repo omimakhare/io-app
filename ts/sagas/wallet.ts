@@ -9,6 +9,7 @@ import * as pot from "italia-ts-commons/lib/pot";
 import { DeferredPromise } from "italia-ts-commons/lib/promises";
 import { Millisecond } from "italia-ts-commons/lib/units";
 import _ from "lodash";
+import { SagaIterator } from "redux-saga";
 import {
   call,
   delay,
@@ -216,7 +217,7 @@ const successScreenDelay = 2000 as Millisecond;
 function* startOrResumeAddCreditCardSaga(
   pmSessionManager: SessionManager<PaymentManagerToken>,
   action: ActionType<typeof runStartOrResumeAddCreditCardSaga>
-) {
+): SagaIterator {
   // prepare a new wallet (payment method) that describes the credit card we
   // want to add
   const creditCardWallet: NullableWallet = {
@@ -455,7 +456,7 @@ function* startOrResumeAddCreditCardSaga(
 // eslint-disable-next-line
 function* startOrResumePaymentActivationSaga(
   action: ActionType<typeof runStartOrResumePaymentActivationSaga>
-) {
+): SagaIterator {
   while (true) {
     // before each step we select the updated payment state to know what has
     // been already done.
