@@ -1,3 +1,4 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as React from "react";
 import { useCallback, useEffect } from "react";
 import { View } from "native-base";
@@ -10,7 +11,6 @@ import {
   ScrollView,
   StyleSheet
 } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { fromNullable } from "fp-ts/lib/Option";
 import { index } from "fp-ts/lib/Array";
 import { GlobalState } from "../../../../../store/reducers/types";
@@ -34,12 +34,14 @@ import { isLoading, isReady } from "../../../bpd/model/RemoteValue";
 import { Merchant } from "../../../../../../definitions/cgn/merchants/Merchant";
 
 type NavigationParams = Readonly<{
-  merchantID: Merchant["id"];
+  CgnMerchantDetailScreen: {
+    merchantID: Merchant["id"];
+  };
 }>;
 
 type Props = ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  StackScreenProps<NavigationParams, "CgnMerchantDetailScreen">;
 
 const styles = StyleSheet.create({
   merchantImage: {
@@ -54,7 +56,7 @@ const CgnMerchantDetailScreen: React.FunctionComponent<Props> = (
   props: Props
 ) => {
   const { merchantDetail, requestMerchantDetail } = props;
-  const merchantID = props.navigation.getParam("merchantID");
+  const merchantID = props.route.params.merchantID;
   const renderDiscountListItem = ({ item }: ListRenderItemInfo<Discount>) => (
     <CgnMerchantDiscountItem discount={item} />
   );

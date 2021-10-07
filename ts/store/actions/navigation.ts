@@ -37,12 +37,12 @@ import { InferNavigationParams } from "../../types/react";
 import OnboardingServicesPreferenceScreen from "../../screens/onboarding/OnboardingServicesPreferenceScreen";
 import CreditCardDetailScreen from "../../features/wallet/creditCard/screen/CreditCardDetailScreen";
 
-export const navigationRestore =
-  createStandardAction("NAVIGATION_RESTORE")<NavigationState>();
-
-export type NavigationActions =
-  | NavigationAction
-  | ActionType<typeof navigationRestore>;
+// export const navigationRestore =
+//   createStandardAction("NAVIGATION_RESTORE")<NavigationState>();
+//
+// export type NavigationActions =
+//   | NavigationAction
+//   | ActionType<typeof navigationRestore>;
 
 export const resetToAuthenticationRoute: NavigationResetAction =
   StackActions.reset({

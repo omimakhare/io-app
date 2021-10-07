@@ -1,8 +1,8 @@
+import { NavigationActions } from "@react-navigation/compat";
 import { fromNullable } from "fp-ts/lib/Option";
 import * as React from "react";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
-import { NavigationActions } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import LoadingSpinnerOverlay from "../../../../../components/LoadingSpinnerOverlay";
@@ -138,7 +138,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   completeUnsubscriptionSuccess: () => {
     dispatch(bpdAllData.request());
     dispatch(bpdUnsubscribeCompleted());
-    dispatch(NavigationActions.back());
+    NavigationActions.back();
   },
   goToTransactions: () => dispatch(navigateToBpdTransactions()),
   goBack: () => dispatch(navigateBack()),

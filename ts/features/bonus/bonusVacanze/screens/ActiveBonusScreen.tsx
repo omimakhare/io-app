@@ -1,3 +1,4 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { fromNullable, none, Option } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import { Millisecond } from "italia-ts-commons/lib/units";
@@ -12,7 +13,6 @@ import {
   ViewStyle
 } from "react-native";
 import ViewShot, { CaptureOptions } from "react-native-view-shot";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { BonusActivationStatusEnum } from "../../../../../definitions/bonus_vacanze/BonusActivationStatus";
 import { BonusActivationWithQrCode } from "../../../../../definitions/bonus_vacanze/BonusActivationWithQrCode";
@@ -74,15 +74,17 @@ type QRCodeContents = {
 };
 
 type NavigationParams = Readonly<{
-  bonus: BonusActivationWithQrCode;
-  validFrom?: Date;
-  validTo?: Date;
+  ActiveBonusScreen: {
+    bonus: BonusActivationWithQrCode;
+    validFrom?: Date;
+    validTo?: Date;
+  };
 }>;
 
 const QR_CODE_MIME_TYPE = "image/svg+xml";
 const PNG_IMAGE_TYPE = "image/png";
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = StackScreenProps<NavigationParams, "ActiveBonusScreen">;
 
 type Props = OwnProps &
   ReturnType<typeof mapDispatchToProps> &
@@ -279,7 +281,7 @@ const ActiveBonusFooterButtons: React.FunctionComponent<FooterProps> = (
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 const ActiveBonusScreen: React.FunctionComponent<Props> = (props: Props) => {
-  const bonusFromNav = props.navigation.getParam("bonus");
+  const bonusFromNav = props.route.params.bonus;
   const bonus = pot.getOrElse(props.bonus, bonusFromNav);
   const screenShotRef = React.createRef<ViewShot>();
   const [qrCode, setQRCode] = React.useState<QRCodeContents>({});
@@ -692,7 +694,7 @@ const ActiveBonusScreen: React.FunctionComponent<Props> = (props: Props) => {
 };
 
 const mapStateToProps = (state: GlobalState, ownProps: OwnProps) => {
-  const bonusFromNav = ownProps.navigation.getParam("bonus");
+  const bonusFromNav = ownProps.route.params.bonus;
   const bonus = bonusActiveDetailByIdSelector(bonusFromNav.id)(state);
 
   return {

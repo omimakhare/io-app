@@ -1,4 +1,5 @@
-import { createStackNavigator } from "react-navigation-stack";
+import { createCompatNavigatorFactory } from "@react-navigation/compat";
+import { createStackNavigator } from "@react-navigation/stack";
 import { bpdTransactionsPaging } from "../../../../config";
 import BpdDetailsScreen from "../screens/details/BpdDetailsScreen";
 import BpdTransactionsScreen from "../screens/details/transaction/BpdTransactionsScreen";
@@ -15,7 +16,7 @@ import LoadBpdActivationStatus from "../screens/onboarding/LoadBpdActivationStat
 import NoPaymentMethodsAvailableScreen from "../screens/onboarding/NoPaymentMethodsAvailableScreen";
 import BPD_ROUTES from "./routes";
 
-const BpdNavigator = createStackNavigator(
+const BpdNavigator = createCompatNavigatorFactory(createStackNavigator)(
   {
     [BPD_ROUTES.ONBOARDING.LOAD_CHECK_ACTIVATION_STATUS]: {
       screen: LoadBpdActivationStatus

@@ -1,10 +1,10 @@
 /**
  * Implements the reducers for static content.
  */
+import { NavigationState } from "@react-navigation/native";
 import { fromNullable, none, Option } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import { ITuple2 } from "italia-ts-commons/lib/tuples";
-import { NavigationState } from "react-navigation";
 import { createSelector } from "reselect";
 import { getType } from "typesafe-actions";
 import { ContextualHelp } from "../../../definitions/content/ContextualHelp";

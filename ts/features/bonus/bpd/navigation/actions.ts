@@ -1,4 +1,4 @@
-import { NavigationActions } from "react-navigation";
+import { NavigationActions } from "@react-navigation/compat";
 import { BpdPeriodWithInfo } from "../store/reducers/details/periods";
 import BPD_ROUTES from "./routes";
 

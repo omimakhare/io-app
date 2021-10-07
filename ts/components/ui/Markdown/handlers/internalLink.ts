@@ -1,8 +1,8 @@
 /**
  * An handler for application internal links
  */
+import { NavigationActions } from "@react-navigation/compat";
 import { fromNullable, none, Option } from "fp-ts/lib/Option";
-import { NavigationActions } from "react-navigation";
 import URLParse from "url-parse";
 import {
   bpdEnabled,

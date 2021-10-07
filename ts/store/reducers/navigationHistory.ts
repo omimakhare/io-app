@@ -2,7 +2,7 @@
  * A reducer to handle the navigation history
  */
 
-import { NavigationState } from "react-navigation";
+import { NavigationState } from "@react-navigation/native";
 import { getType } from "typesafe-actions";
 import ROUTES from "../../navigation/routes";
 import {

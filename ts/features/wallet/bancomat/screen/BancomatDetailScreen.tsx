@@ -1,6 +1,6 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { View } from "native-base";
 import * as React from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import ItemSeparatorComponent from "../../../../components/ItemSeparatorComponent";
@@ -16,19 +16,21 @@ import BancomatCard from "../component/bancomatCard/BancomatCard";
 import BancomatInformation from "./BancomatInformation";
 
 type NavigationParams = Readonly<{
-  bancomat: BancomatPaymentMethod;
+  BancomatDetailScreen: {
+    bancomat: BancomatPaymentMethod;
+  };
 }>;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  StackScreenProps<NavigationParams, "BancomatDetailScreen">;
 
 /**
  * Start the cobadge onboarding, if the abi is defined
  * @param props
  */
 const startCoBadge = (props: Props) => {
-  const bancomat = props.navigation.getParam("bancomat");
+  const bancomat = props.route.params.bancomat;
   if (bancomat.info.issuerAbiCode === undefined) {
     showToast(I18n.t("global.genericError"), "danger");
     // This should never happen. This condition is due to the weakness of the remote specifications
@@ -57,7 +59,7 @@ const bancomatScreenContent = (
  * @constructor
  */
 const BancomatDetailScreen: React.FunctionComponent<Props> = props => {
-  const bancomat: BancomatPaymentMethod = props.navigation.getParam("bancomat");
+  const bancomat: BancomatPaymentMethod = props.route.params.bancomat;
 
   return (
     <BasePaymentMethodScreen
