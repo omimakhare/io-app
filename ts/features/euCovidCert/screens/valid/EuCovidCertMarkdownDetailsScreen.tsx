@@ -1,8 +1,8 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { View } from "native-base";
 import * as React from "react";
 import { useState } from "react";
 import { SafeAreaView, ScrollView, StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import ButtonDefaultOpacity from "../../../../components/ButtonDefaultOpacity";
 import { Label } from "../../../../components/core/typography/Label";
 import { IOStyles } from "../../../../components/core/variables/IOStyles";
@@ -21,7 +21,9 @@ import { MarkdownHandleCustomLink } from "../../components/MarkdownHandleCustomL
 import { captureScreenShoot, screenShotOption } from "../../utils/screenshot";
 
 type NavigationParams = Readonly<{
-  markdownDetails: string;
+  EuCovidCertMarkdownDetailsScreen: {
+    markdownDetails: string;
+  };
 }>;
 
 const styles = StyleSheet.create({
@@ -38,7 +40,7 @@ const showToastError = (error: string = I18n.t("global.genericError")) =>
   showToast(error);
 
 export const EuCovidCertMarkdownDetailsScreen = (
-  props: NavigationInjectedProps<NavigationParams>
+  props: StackScreenProps<NavigationParams, "EuCovidCertMarkdownDetailsScreen">
 ): React.ReactElement => {
   const [loadMarkdownComplete, setLoadMarkdownComplete] = useState(false);
   const [isCapturingScreenShoot, setIsCapturingScreenShoot] = useState(false);
@@ -107,7 +109,7 @@ export const EuCovidCertMarkdownDetailsScreen = (
               extraBodyHeight={60}
               onLoadEnd={() => setLoadMarkdownComplete(true)}
             >
-              {props.navigation.getParam("markdownDetails")}
+              {props.route.params.markdownDetails}
             </MarkdownHandleCustomLink>
             {canShowButton && (
               <>

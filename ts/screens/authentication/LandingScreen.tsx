@@ -2,6 +2,7 @@
  * A screen where the user can choose to login with SPID or get more informations.
  * It includes a carousel with highlights on the app functionalities
  */
+import { StackScreenProps } from "@react-navigation/stack";
 import { none, Option, some } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import JailMonkey from "jail-monkey";
@@ -9,7 +10,6 @@ import { Content, Text, View } from "native-base";
 import * as React from "react";
 import { Alert, StyleSheet } from "react-native";
 import DeviceInfo from "react-native-device-info";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import ButtonDefaultOpacity from "../../components/ButtonDefaultOpacity";
 import CieNotSupported from "../../components/cie/CieNotSupported";
@@ -51,7 +51,7 @@ import sessionExpiredImg from "../../../img/landing/session_expired.png";
 import SectionStatusComponent from "../../components/SectionStatus";
 import { Link } from "../../components/core/typography/Link";
 
-type Props = NavigationInjectedProps &
+type Props = StackScreenProps<never> &
   LightModalContextInterface &
   ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps>;

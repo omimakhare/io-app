@@ -2,23 +2,34 @@
  * The screen to display to the user the various types of errors that occurred during the transaction.
  * Inside the cancel and retry buttons are conditionally returned.
  */
-import * as t from "io-ts";
+import { StackScreenProps } from "@react-navigation/stack";
 import { Option } from "fp-ts/lib/Option";
 import Instabug from "instabug-reactnative";
+import * as t from "io-ts";
 import { RptId, RptIdFromString } from "italia-pagopa-commons/lib/pagopa";
+import { View } from "native-base";
 import * as React from "react";
 import { ComponentProps } from "react";
 import { Image, ImageSourcePropType, SafeAreaView } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
-import { View } from "native-base";
+import { Detail_v2Enum } from "../../../../definitions/backend/PaymentProblemJson";
 import {
   instabugLog,
   openInstabugQuestionReport,
   setInstabugUserAttribute,
   TypeLogs
 } from "../../../boot/configureInstabug";
+import CopyButtonComponent from "../../../components/CopyButtonComponent";
+import { H4 } from "../../../components/core/typography/H4";
+import { IOStyles } from "../../../components/core/variables/IOStyles";
+import { InfoScreenComponent } from "../../../components/infoScreen/InfoScreenComponent";
 import BaseScreenComponent from "../../../components/screens/BaseScreenComponent";
+import {
+  cancelButtonProps,
+  confirmButtonProps
+} from "../../../features/bonus/bonusVacanze/components/buttons/ButtonConfigurations";
+import { FooterStackButton } from "../../../features/bonus/bonusVacanze/components/buttons/FooterStackButtons";
+import { useHardwareBackButton } from "../../../features/bonus/bonusVacanze/components/hooks/useHardwareBackButton";
 import I18n from "../../../i18n";
 import { navigateToPaymentManualDataInsertion } from "../../../store/actions/navigation";
 import { Dispatch } from "../../../store/actions/types";
@@ -28,6 +39,10 @@ import {
   paymentIdPolling,
   paymentVerifica
 } from "../../../store/actions/wallet/payment";
+import {
+  PaymentHistory,
+  paymentsHistorySelector
+} from "../../../store/reducers/payments/history";
 import { GlobalState } from "../../../store/reducers/types";
 import { PayloadForAction } from "../../../types/utils";
 import {
@@ -37,35 +52,22 @@ import {
   getV2ErrorMainType,
   paymentInstabugTag
 } from "../../../utils/payment";
-import { useHardwareBackButton } from "../../../features/bonus/bonusVacanze/components/hooks/useHardwareBackButton";
-import { InfoScreenComponent } from "../../../components/infoScreen/InfoScreenComponent";
-import { H4 } from "../../../components/core/typography/H4";
-import CopyButtonComponent from "../../../components/CopyButtonComponent";
-import {
-  cancelButtonProps,
-  confirmButtonProps
-} from "../../../features/bonus/bonusVacanze/components/buttons/ButtonConfigurations";
-import { IOStyles } from "../../../components/core/variables/IOStyles";
-import { Detail_v2Enum } from "../../../../definitions/backend/PaymentProblemJson";
-import {
-  PaymentHistory,
-  paymentsHistorySelector
-} from "../../../store/reducers/payments/history";
-import { FooterStackButton } from "../../../features/bonus/bonusVacanze/components/buttons/FooterStackButtons";
 
 type NavigationParams = {
-  error: Option<
-    PayloadForAction<
-      | typeof paymentVerifica["failure"]
-      | typeof paymentAttiva["failure"]
-      | typeof paymentIdPolling["failure"]
-    >
-  >;
-  rptId: RptId;
-  onCancel: () => void;
+  TransactionErrorScreen: {
+    error: Option<
+      PayloadForAction<
+        | typeof paymentVerifica["failure"]
+        | typeof paymentAttiva["failure"]
+        | typeof paymentIdPolling["failure"]
+      >
+    >;
+    rptId: RptId;
+    onCancel: () => void;
+  };
 };
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = StackScreenProps<NavigationParams, "TransactionErrorScreen">;
 
 type Props = OwnProps &
   ReturnType<typeof mapStateToProps> &
@@ -134,7 +136,7 @@ const ErrorCodeCopyComponent = ({
  * @param payment
  */
 export const errorTransactionUIElements = (
-  maybeError: NavigationParams["error"],
+  maybeError: NavigationParams["TransactionErrorScreen"]["error"],
   rptId: RptId,
   onCancel: () => void,
   payment?: PaymentHistory
@@ -289,9 +291,9 @@ export const errorTransactionUIElements = (
 };
 
 const TransactionErrorScreen = (props: Props) => {
-  const rptId = props.navigation.getParam("rptId");
-  const error = props.navigation.getParam("error");
-  const onCancel = props.navigation.getParam("onCancel");
+  const rptId = props.route.params.rptId;
+  const error = props.route.params.error;
+  const onCancel = props.route.params.onCancel;
   const { paymentsHistory } = props;
 
   const codiceAvviso = getCodiceAvviso(rptId);

@@ -12,7 +12,7 @@ interface OwnProps {
   white?: boolean;
 }
 
-type Props = StackScreenProps<any> & OwnProps;
+type Props = StackScreenProps<never> & OwnProps;
 
 class GoBackButton extends React.PureComponent<Props> {
   public static defaultProps: Partial<Props> = {

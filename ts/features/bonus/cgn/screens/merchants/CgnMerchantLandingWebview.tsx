@@ -1,23 +1,25 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as React from "react";
 import { SafeAreaView } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
-import BaseScreenComponent from "../../../../../components/screens/BaseScreenComponent";
 import { IOStyles } from "../../../../../components/core/variables/IOStyles";
-import { emptyContextualHelp } from "../../../../../utils/emptyContextualHelp";
+import BaseScreenComponent from "../../../../../components/screens/BaseScreenComponent";
 import WebviewComponent from "../../../../../components/WebviewComponent";
+import { emptyContextualHelp } from "../../../../../utils/emptyContextualHelp";
 
 type NavigationParams = Readonly<{
-  landingPageUrl: string;
-  landingPageReferrer: string;
+  CgnMerchantLandingWebview: {
+    landingPageUrl: string;
+    landingPageReferrer: string;
+  };
 }>;
 
-type Props = NavigationInjectedProps<NavigationParams>;
+type Props = StackScreenProps<NavigationParams, "CgnMerchantLandingWebview">;
 
 const CgnMerchantLandingWebview: React.FunctionComponent<Props> = (
   props: Props
 ) => {
-  const landingPageUrl = props.navigation.getParam("landingPageUrl");
-  const landingPageReferrer = props.navigation.getParam("landingPageReferrer");
+  const landingPageUrl = props.route.params.landingPageUrl;
+  const landingPageReferrer = props.route.params.landingPageReferrer;
 
   return (
     <BaseScreenComponent goBack={true} contextualHelp={emptyContextualHelp}>

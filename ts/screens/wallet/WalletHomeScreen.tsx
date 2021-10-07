@@ -1,17 +1,15 @@
+import { NavigationEvents } from "@react-navigation/compat";
+import { StackScreenProps } from "@react-navigation/stack";
 import { fromNullable, none } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import { Content, Text, View } from "native-base";
 import * as React from "react";
 import { BackHandler, Image, StyleSheet } from "react-native";
-import {
-  NavigationEvents,
-  NavigationEventSubscription,
-  NavigationInjectedProps
-} from "react-navigation";
 import { connect } from "react-redux";
 import { BonusActivationWithQrCode } from "../../../definitions/bonus_vacanze/BonusActivationWithQrCode";
 import { TypeEnum } from "../../../definitions/pagopa/Wallet";
 import ButtonDefaultOpacity from "../../components/ButtonDefaultOpacity";
+import { Body } from "../../components/core/typography/Body";
 import { H3 } from "../../components/core/typography/H3";
 import { withLightModalContext } from "../../components/helpers/withLightModalContext";
 import { withValidatedEmail } from "../../components/helpers/withValidatedEmail";
@@ -92,11 +90,12 @@ import { isUpdateNeeded } from "../../utils/appVersion";
 import { isStrictSome } from "../../utils/pot";
 import { showToast } from "../../utils/showToast";
 import { setStatusBarColorAndBackground } from "../../utils/statusBar";
-import { Body } from "../../components/core/typography/Body";
 
 type NavigationParams = Readonly<{
-  newMethodAdded: boolean;
-  keyFrom?: string;
+  WalletHomeScreen: {
+    newMethodAdded: boolean;
+    keyFrom?: string;
+  };
 }>;
 
 type State = {
@@ -105,7 +104,7 @@ type State = {
 
 type Props = ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps> &
-  NavigationInjectedProps<NavigationParams> &
+  StackScreenProps<NavigationParams, "WalletHomeScreen"> &
   LightModalContextInterface;
 
 const styles = StyleSheet.create({
@@ -187,14 +186,12 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
   }
 
   get newMethodAdded() {
-    return this.props.navigation.getParam("newMethodAdded");
+    return this.props.route.params.newMethodAdded;
   }
 
   get navigationKeyFrom() {
-    return this.props.navigation.getParam("keyFrom");
+    return this.props.route.params.keyFrom;
   }
-
-  private navListener?: NavigationEventSubscription;
 
   private handleBackPress = () => {
     const shouldPop =
@@ -205,6 +202,10 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
   };
 
   private onFocus = () => {
+    setStatusBarColorAndBackground(
+      "light-content",
+      customVariables.brandDarkGray
+    );
     this.loadBonusVacanze();
     this.setState({ hasFocus: true });
   };
@@ -243,13 +244,6 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
 
     // FIXME restore loadTransactions see https://www.pivotaltracker.com/story/show/176051000
 
-    // eslint-disable-next-line functional/immutable-data
-    this.navListener = this.props.navigation.addListener("didFocus", () => {
-      setStatusBarColorAndBackground(
-        "light-content",
-        customVariables.brandDarkGray
-      );
-    }); // eslint-disable-line
     BackHandler.addEventListener("hardwareBackPress", this.handleBackPress);
 
     // Dispatch the action associated to the saga responsible to remind a user
@@ -259,9 +253,6 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
   }
 
   public componentWillUnmount() {
-    if (this.navListener) {
-      this.navListener.remove();
-    }
     BackHandler.removeEventListener("hardwareBackPress", this.handleBackPress);
   }
 

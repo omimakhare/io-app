@@ -1,7 +1,7 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as pot from "italia-ts-commons/lib/pot";
 import * as React from "react";
 import { useEffect, useRef } from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { setMessageReadState } from "../../../store/actions/messages";
@@ -12,8 +12,8 @@ import {
   euCovidCertificateShouldBeLoadedSelector
 } from "../store/reducers/byAuthCode";
 import {
-  EUCovidCertificateAuthCode,
-  EUCovidCertificate
+  EUCovidCertificate,
+  EUCovidCertificateAuthCode
 } from "../types/EUCovidCertificate";
 import { EUCovidCertificateResponse } from "../types/EUCovidCertificateResponse";
 import EuCovidCertExpiredScreen from "./EuCovidCertExpiredScreen";
@@ -27,13 +27,15 @@ import EuCovidCertWrongFormatKoScreen from "./ko/EuCovidCertWrongFormatKoScreen"
 import EuCovidCertValidScreen from "./valid/EuCovidCertValidScreen";
 
 type NavigationParams = Readonly<{
-  authCode: EUCovidCertificateAuthCode;
-  messageId: string;
+  EuCovidCertificateRouterScreen: {
+    authCode: EUCovidCertificateAuthCode;
+    messageId: string;
+  };
 }>;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  StackScreenProps<NavigationParams, "EuCovidCertificateRouterScreen">;
 
 /**
  * Return the right screen based on the response value
@@ -80,8 +82,8 @@ const routeSuccessEuCovidResponse = (
 const EuCovidCertificateRouterScreen = (
   props: Props
 ): React.ReactElement | null => {
-  const authCode = props.navigation.getParam("authCode");
-  const messageId = props.navigation.getParam("messageId");
+  const authCode = props.route.params.authCode;
+  const messageId = props.route.params.messageId;
   const { setMessageRead, shouldBeLoaded, loadCertificate } = props;
   const firstLoading = useRef<boolean>(true);
 

@@ -1,9 +1,9 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { fromNullable } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import { H3, Text, View } from "native-base";
 import * as React from "react";
 import { ActivityIndicator, Image, StyleSheet } from "react-native";
-import { NavigationStackScreenProps } from "react-navigation-stack";
 import { connect } from "react-redux";
 import { CreatedMessageWithContent } from "../../../definitions/backend/CreatedMessageWithContent";
 import { CreatedMessageWithoutContent } from "../../../definitions/backend/CreatedMessageWithoutContent";
@@ -33,15 +33,19 @@ import { paymentsByRptIdSelector } from "../../store/reducers/entities/payments"
 import { serviceByIdSelector } from "../../store/reducers/entities/services/servicesById";
 import { GlobalState } from "../../store/reducers/types";
 import customVariables from "../../theme/variables";
-import { InferNavigationParams } from "../../types/react";
 import { clipboardSetStringWithFeedback } from "../../utils/clipboard";
-import ServiceDetailsScreen from "../services/ServiceDetailsScreen";
+import { ServiceDetailsScreenNavigationParams } from "../services/ServiceDetailsScreen";
 
-type MessageDetailScreenNavigationParams = {
-  messageId: string;
+export type MessageDetailScreenNavigationParams = {
+  MessageDetailScreen: {
+    messageId: string;
+  };
 };
 
-type OwnProps = NavigationStackScreenProps<MessageDetailScreenNavigationParams>;
+type OwnProps = StackScreenProps<
+  MessageDetailScreenNavigationParams,
+  "MessageDetailScreen"
+>;
 
 type Props = OwnProps &
   ReturnType<typeof mapStateToProps> &
@@ -161,7 +165,7 @@ export class MessageDetailScreen extends React.PureComponent<Props, never> {
    * (ex. the loading of the message/service failed but we can retry)
    */
   private renderErrorState = () => {
-    const messageId = this.props.navigation.getParam("messageId");
+    const messageId = this.props.route.params.messageId;
     const onRetry = this.props.maybeMeta
       .map(_ => () => this.props.loadMessageWithRelations(_))
       .toUndefined();
@@ -315,7 +319,7 @@ export class MessageDetailScreen extends React.PureComponent<Props, never> {
 }
 
 const mapStateToProps = (state: GlobalState, ownProps: OwnProps) => {
-  const messageId = ownProps.navigation.getParam("messageId");
+  const messageId = ownProps.route.params.messageId;
   const maybeMessageState = fromNullable(
     messageStateByIdSelector(messageId)(state)
   );
@@ -365,7 +369,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   setMessageReadState: (messageId: string, isRead: boolean) =>
     dispatch(setMessageReadState(messageId, isRead)),
   navigateToServiceDetailsScreen: (
-    params: InferNavigationParams<typeof ServiceDetailsScreen>
+    params: ServiceDetailsScreenNavigationParams["ServiceDetailsScreen"]
   ) => dispatch(navigateToServiceDetailsScreen(params))
 });
 

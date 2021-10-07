@@ -1,14 +1,16 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import { AmountInEuroCents, RptId } from "italia-pagopa-commons/lib/pagopa";
 import { ActionSheet, Content, Text, View } from "native-base";
 import * as React from "react";
 import { Alert, StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { ImportoEuroCents } from "../../../../definitions/backend/ImportoEuroCents";
 import { PaymentRequestsGetResponse } from "../../../../definitions/backend/PaymentRequestsGetResponse";
-import ContextualInfo from "../../../components/ContextualInfo";
 import ButtonDefaultOpacity from "../../../components/ButtonDefaultOpacity";
+import ContextualInfo from "../../../components/ContextualInfo";
+import { H4 } from "../../../components/core/typography/H4";
+import { Link } from "../../../components/core/typography/Link";
 import { withLightModalContext } from "../../../components/helpers/withLightModalContext";
 import { withLoadingSpinner } from "../../../components/helpers/withLoadingSpinner";
 import BaseScreenComponent, {
@@ -19,6 +21,13 @@ import { LightModalContextInterface } from "../../../components/ui/LightModal";
 import Markdown from "../../../components/ui/Markdown";
 import CardComponent from "../../../components/wallet/card/CardComponent";
 import PaymentBannerComponent from "../../../components/wallet/PaymentBannerComponent";
+import { PayWebViewModal } from "../../../components/wallet/PayWebViewModal";
+import { pagoPaApiUrlPrefix, pagoPaApiUrlPrefixTest } from "../../../config";
+import {
+  isError,
+  isLoading,
+  isReady
+} from "../../../features/bonus/bpd/model/RemoteValue";
 import I18n from "../../../i18n";
 import {
   navigateToPaymentOutcomeCode,
@@ -26,6 +35,7 @@ import {
   navigateToPaymentPickPspScreen
 } from "../../../store/actions/navigation";
 import { Dispatch } from "../../../store/actions/types";
+import { paymentOutcomeCode } from "../../../store/actions/wallet/outcomeCode";
 import {
   abortRunningPayment,
   paymentCompletedFailure,
@@ -34,46 +44,41 @@ import {
   paymentWebViewEnd,
   PaymentWebViewEndReason
 } from "../../../store/actions/wallet/payment";
+import { fetchTransactionsRequestWithExpBackoff } from "../../../store/actions/wallet/transactions";
+import { isPagoPATestEnabledSelector } from "../../../store/reducers/persistedPreferences";
 import { GlobalState } from "../../../store/reducers/types";
-import variables from "../../../theme/variables";
-import customVariables from "../../../theme/variables";
-import { Psp, Wallet } from "../../../types/pagopa";
-import { showToast } from "../../../utils/showToast";
-import { getLocalePrimaryWithFallback } from "../../../utils/locale";
-import { PayloadForAction } from "../../../types/utils";
+import { outcomeCodesSelector } from "../../../store/reducers/wallet/outcomeCode";
 import {
   paymentStartPayloadSelector,
   PaymentStartWebViewPayload,
   pmSessionTokenSelector
 } from "../../../store/reducers/wallet/payment";
-import {
-  isError,
-  isLoading,
-  isReady
-} from "../../../features/bonus/bpd/model/RemoteValue";
-import { PayWebViewModal } from "../../../components/wallet/PayWebViewModal";
-import { formatNumberCentsToAmount } from "../../../utils/stringBuilder";
-import { pagoPaApiUrlPrefix, pagoPaApiUrlPrefixTest } from "../../../config";
-import { H4 } from "../../../components/core/typography/H4";
-import { isPagoPATestEnabledSelector } from "../../../store/reducers/persistedPreferences";
-import { paymentOutcomeCode } from "../../../store/actions/wallet/outcomeCode";
-import { outcomeCodesSelector } from "../../../store/reducers/wallet/outcomeCode";
-import { isPaymentOutcomeCodeSuccessfully } from "../../../utils/payment";
-import { fetchTransactionsRequestWithExpBackoff } from "../../../store/actions/wallet/transactions";
+import variables from "../../../theme/variables";
+import customVariables from "../../../theme/variables";
 import { OutcomeCodesKey } from "../../../types/outcomeCode";
+import { Psp, Wallet } from "../../../types/pagopa";
+import { PayloadForAction } from "../../../types/utils";
+import { getLocalePrimaryWithFallback } from "../../../utils/locale";
+import { isPaymentOutcomeCodeSuccessfully } from "../../../utils/payment";
 import { getLookUpIdPO } from "../../../utils/pmLookUpId";
-import { Link } from "../../../components/core/typography/Link";
+import { showToast } from "../../../utils/showToast";
+import { formatNumberCentsToAmount } from "../../../utils/stringBuilder";
 
 export type NavigationParams = Readonly<{
-  rptId: RptId;
-  initialAmount: AmountInEuroCents;
-  verifica: PaymentRequestsGetResponse;
-  idPayment: string;
-  wallet: Wallet;
-  psps: ReadonlyArray<Psp>;
+  ConfirmPaymentMethodScreen: {
+    rptId: RptId;
+    initialAmount: AmountInEuroCents;
+    verifica: PaymentRequestsGetResponse;
+    idPayment: string;
+    wallet: Wallet;
+    psps: ReadonlyArray<Psp>;
+  };
 }>;
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = StackScreenProps<
+  NavigationParams,
+  "ConfirmPaymentMethodScreen"
+>;
 
 type Props = ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps> &
@@ -151,10 +156,9 @@ const ConfirmPaymentMethodScreen: React.FC<Props> = (props: Props) => {
     ? pagoPaApiUrlPrefixTest
     : pagoPaApiUrlPrefix;
 
-  const verifica: PaymentRequestsGetResponse =
-    props.navigation.getParam("verifica");
-  const wallet: Wallet = props.navigation.getParam("wallet");
-  const idPayment: string = props.navigation.getParam("idPayment");
+  const verifica: PaymentRequestsGetResponse = props.route.params.verifica;
+  const wallet: Wallet = props.route.params.wallet;
+  const idPayment: string = props.route.params.idPayment;
   const paymentReason = verifica.causaleVersamento;
   const maybePsp = fromNullable(wallet.psp);
   const fee = maybePsp.fold(undefined, psp => psp.fixedCost.amount);
@@ -178,9 +182,7 @@ const ConfirmPaymentMethodScreen: React.FC<Props> = (props: Props) => {
       )
     ) {
       // store the rptid of a payment done
-      props.dispatchPaymentCompleteSuccessfully(
-        props.navigation.getParam("rptId")
-      );
+      props.dispatchPaymentCompleteSuccessfully(props.route.params.rptId);
       // refresh transactions list
       props.loadTransactions();
     } else {
@@ -352,21 +354,21 @@ const mapDispatchToProps = (dispatch: Dispatch, props: OwnProps) => {
     pickPaymentMethod: () =>
       dispatch(
         navigateToPaymentPickPaymentMethodScreen({
-          rptId: props.navigation.getParam("rptId"),
-          initialAmount: props.navigation.getParam("initialAmount"),
-          verifica: props.navigation.getParam("verifica"),
-          idPayment: props.navigation.getParam("idPayment")
+          rptId: props.route.params.rptId,
+          initialAmount: props.route.params.initialAmount,
+          verifica: props.route.params.verifica,
+          idPayment: props.route.params.idPayment
         })
       ),
     pickPsp: () =>
       dispatch(
         navigateToPaymentPickPspScreen({
-          rptId: props.navigation.getParam("rptId"),
-          initialAmount: props.navigation.getParam("initialAmount"),
-          verifica: props.navigation.getParam("verifica"),
-          idPayment: props.navigation.getParam("idPayment"),
-          psps: props.navigation.getParam("psps"),
-          wallet: props.navigation.getParam("wallet"),
+          rptId: props.route.params.rptId,
+          initialAmount: props.route.params.initialAmount,
+          verifica: props.route.params.verifica,
+          idPayment: props.route.params.idPayment,
+          psps: props.route.params.psps,
+          wallet: props.route.params.wallet,
           chooseToChange: true
         })
       ),

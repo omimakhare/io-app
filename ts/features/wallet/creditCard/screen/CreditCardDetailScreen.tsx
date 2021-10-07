@@ -1,5 +1,5 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as React from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import WorkunitGenericFailure from "../../../../components/error/WorkunitGenericFailure";
@@ -11,13 +11,15 @@ import PaymentMethodFeatures from "../../component/features/PaymentMethodFeature
 import CreditCardComponent from "../component/CreditCardComponent";
 
 type NavigationParams = Readonly<{
-  // Since we don't have a typed ID for the payment methods, we keep the creditCard as param even if it is then read by the store
-  creditCard: CreditCardPaymentMethod;
+  CreditCardDetailScreen: {
+    // Since we don't have a typed ID for the payment methods, we keep the creditCard as param even if only the idWallet is used
+    creditCard: CreditCardPaymentMethod;
+  };
 }>;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  StackScreenProps<NavigationParams, "CreditCardDetailScreen">;
 
 /**
  * Detail screen for a credit card
@@ -25,7 +27,7 @@ type Props = ReturnType<typeof mapDispatchToProps> &
  */
 const CreditCardDetailScreen: React.FunctionComponent<Props> = props => {
   const paramCreditCard: CreditCardPaymentMethod =
-    props.navigation.getParam("creditCard");
+    props.route.params.creditCard;
   // We need to read the card from the store to receive the updates
   // TODO: to avoid this we need a store refactoring for the wallet section (all the component should receive the id and not the wallet, in order to update when needed)
   const storeCreditCard = props.creditCardById(paramCreditCard.idWallet);

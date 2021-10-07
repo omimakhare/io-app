@@ -1,3 +1,4 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { none, Option, some } from "fp-ts/lib/Option";
 import {
   AmountInEuroCents,
@@ -8,7 +9,6 @@ import * as pot from "italia-ts-commons/lib/pot";
 import { ActionSheet, Text, View } from "native-base";
 import * as React from "react";
 import { StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { PaymentRequestsGetResponse } from "../../../../definitions/backend/PaymentRequestsGetResponse";
 import { withLoadingSpinner } from "../../../components/helpers/withLoadingSpinner";
@@ -47,25 +47,27 @@ import {
 import customVariables from "../../../theme/variables";
 import { PayloadForAction } from "../../../types/utils";
 import { cleanTransactionDescription } from "../../../utils/payment";
+import {
+  alertNoActivePayablePaymentMethods,
+  alertNoPayablePaymentMethods
+} from "../../../utils/paymentMethod";
 import { showToast } from "../../../utils/showToast";
 import {
   centsToAmount,
   formatNumberAmount
 } from "../../../utils/stringBuilder";
 import { formatTextRecipient } from "../../../utils/strings";
-import {
-  alertNoActivePayablePaymentMethods,
-  alertNoPayablePaymentMethods
-} from "../../../utils/paymentMethod";
 import { dispatchPickPspOrConfirm } from "./common";
 
 export type NavigationParams = Readonly<{
-  rptId: RptId;
-  initialAmount: AmountInEuroCents;
-  isManualPaymentInsertion?: boolean;
+  TransactionSummaryScreen: {
+    rptId: RptId;
+    initialAmount: AmountInEuroCents;
+    isManualPaymentInsertion?: boolean;
+  };
 }>;
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = StackScreenProps<NavigationParams, "TransactionSummaryScreen">;
 
 type Props = ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps> &
@@ -122,8 +124,8 @@ class TransactionSummaryScreen extends React.Component<Props> {
       // this is the case when the component is already mounted (eg. process more payments)
       // we check if the rptId is different from the previous one, in that case fire the dispatchPaymentVerificaRequest
       pot.isNone(this.props.potVerifica) &&
-      this.props.navigation.getParam("rptId").paymentNoticeNumber !==
-        prevProps.navigation.getParam("rptId").paymentNoticeNumber
+      this.props.route.params.rptId.paymentNoticeNumber !==
+        prevProps.route.params.rptId.paymentNoticeNumber
     ) {
       this.props.dispatchPaymentVerificaRequest();
     }
@@ -229,7 +231,7 @@ class TransactionSummaryScreen extends React.Component<Props> {
     );
 
   public render(): React.ReactNode {
-    const rptId: RptId = this.props.navigation.getParam("rptId");
+    const rptId: RptId = this.props.route.params.rptId;
     // TODO: it should compare the current an d the initial amount BUT the initialAmount seems to be provided with an incorrect format https://www.pivotaltracker.com/story/show/172084929
     const isAmountUpdated = true;
 
@@ -403,12 +405,9 @@ const mapStateToProps = (state: GlobalState) => {
 };
 
 const mapDispatchToProps = (dispatch: Dispatch, props: OwnProps) => {
-  const rptId = props.navigation.getParam("rptId");
-  const initialAmount = props.navigation.getParam("initialAmount");
-  const isManualPaymentInsertion = props.navigation.getParam(
-    "isManualPaymentInsertion"
-  );
-
+  const rptId = props.route.params.rptId;
+  const initialAmount = props.route.params.initialAmount;
+  const isManualPaymentInsertion = props.route.params.isManualPaymentInsertion;
   const dispatchPaymentVerificaRequest = () =>
     dispatch(paymentVerifica.request(rptId));
 
@@ -509,7 +508,7 @@ const mapDispatchToProps = (dispatch: Dispatch, props: OwnProps) => {
     onDuplicatedPayment: () =>
       dispatch(
         paymentCompletedSuccess({
-          rptId: props.navigation.getParam("rptId"),
+          rptId: props.route.params.rptId,
           kind: "DUPLICATED"
         })
       )

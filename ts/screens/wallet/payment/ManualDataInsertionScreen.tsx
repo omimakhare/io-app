@@ -8,10 +8,11 @@
  *    https://www.pivotaltracker.com/n/projects/2048617/stories/157874540
  */
 
+import { NavigationEvents } from "@react-navigation/compat";
+import { StackScreenProps } from "@react-navigation/stack";
 import { Content, Form, Text, View } from "native-base";
 import * as React from "react";
 import { Keyboard, SafeAreaView, ScrollView, StyleSheet } from "react-native";
-import { NavigationEvents, NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Either, isRight } from "fp-ts/lib/Either";
 import { fromEither, none, Option, some } from "fp-ts/lib/Option";
@@ -58,10 +59,12 @@ import { cancelButtonProps } from "../../../features/bonus/bonusVacanze/componen
 import CodesPositionManualPaymentModal from "./CodesPositionManualPaymentModal";
 
 type NavigationParams = {
-  isInvalidAmount?: boolean;
+  ManualDataInsertionScreen: {
+    isInvalidAmount?: boolean;
+  };
 };
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = StackScreenProps<NavigationParams, "ManualDataInsertionScreen">;
 
 type Props = OwnProps &
   ReturnType<typeof mapDispatchToProps> &

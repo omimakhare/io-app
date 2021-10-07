@@ -1,9 +1,10 @@
+import { NavigationEvents } from "@react-navigation/compat";
+import { StackScreenProps } from "@react-navigation/stack";
 import { fromNullable } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import { Text, View } from "native-base";
 import * as React from "react";
-import { BackHandler, Image, StyleSheet } from "react-native";
-import { NavigationEvents, NavigationInjectedProps } from "react-navigation";
+import { Image, StyleSheet } from "react-native";
 import { connect } from "react-redux";
 import ButtonDefaultOpacity from "../../components/ButtonDefaultOpacity";
 import CopyButtonComponent from "../../components/CopyButtonComponent";
@@ -18,7 +19,6 @@ import { LightModalContextInterface } from "../../components/ui/LightModal";
 import { PaymentSummaryComponent } from "../../components/wallet/PaymentSummaryComponent";
 import { SlidedContentComponent } from "../../components/wallet/SlidedContentComponent";
 import I18n from "../../i18n";
-import ROUTES from "../../navigation/routes";
 import { Dispatch } from "../../store/actions/types";
 import { backToEntrypointPayment } from "../../store/actions/wallet/payment";
 import { fetchPsp } from "../../store/actions/wallet/transactions";
@@ -30,7 +30,6 @@ import customVariables from "../../theme/variables";
 import { Transaction } from "../../types/pagopa";
 import { clipboardSetStringWithFeedback } from "../../utils/clipboard";
 import { formatDateAsLocal } from "../../utils/dates";
-import { whereAmIFrom } from "../../utils/navigation";
 import {
   cleanTransactionDescription,
   getTransactionFee,
@@ -39,11 +38,13 @@ import {
 import { formatNumberCentsToAmount } from "../../utils/stringBuilder";
 
 type NavigationParams = Readonly<{
-  isPaymentCompletedTransaction: boolean;
-  transaction: Transaction;
+  TransactionDetailsScreen: {
+    isPaymentCompletedTransaction: boolean;
+    transaction: Transaction;
+  };
 }>;
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = StackScreenProps<NavigationParams, "TransactionDetailsScreen">;
 
 type Props = ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps> &
@@ -106,31 +107,32 @@ class TransactionDetailsScreen extends React.Component<Props, State> {
     super(props);
     this.state = { showFullReason: false };
   }
-
-  public componentDidMount() {
-    BackHandler.addEventListener("hardwareBackPress", this.handleBackPress);
-  }
-
-  public componentWillUnmount() {
-    BackHandler.removeEventListener("hardwareBackPress", this.handleBackPress);
-  }
-
-  private handleBackPress = () => {
-    if (
-      whereAmIFrom(this.props.nav).fold(
-        false,
-        r => r === ROUTES.WALLET_HOME || r === ROUTES.WALLET_CREDIT_CARD_DETAIL
-      )
-    ) {
-      return this.props.navigation.goBack();
-    } else {
-      this.props.navigateBackToEntrypointPayment();
-      return true;
-    }
-  };
+  // TODO: we need to refactor this
+  // public componentDidMount() {
+  //   BackHandler.addEventListener("hardwareBackPress", this.handleBackPress);
+  // }
+  //
+  // public componentWillUnmount() {
+  //   BackHandler.removeEventListener("hardwareBackPress", this.handleBackPress);
+  // }
+  //
+  // private handleBackPress = () => {
+  //   if (
+  //     whereAmIFrom(this.props.nav).fold(
+  //       false,
+  //       r => r === ROUTES.WALLET_HOME || r === ROUTES.WALLET_CREDIT_CARD_DETAIL
+  //     )
+  //   ) {
+  //     this.props.navigation.goBack();
+  //     return false;
+  //   } else {
+  //     this.props.navigateBackToEntrypointPayment();
+  //     return true;
+  //   }
+  // };
 
   private handleWillFocus = () => {
-    const transaction = this.props.navigation.getParam("transaction");
+    const transaction = this.props.route.params.transaction;
     // Fetch psp only if the store not contains this psp
     if (transaction.idPsp !== undefined && this.props.psp === undefined) {
       this.props.fetchPsp(transaction.idPsp);
@@ -138,7 +140,7 @@ class TransactionDetailsScreen extends React.Component<Props, State> {
   };
 
   private getData = () => {
-    const transaction = this.props.navigation.getParam("transaction");
+    const transaction = this.props.route.params.transaction;
     const amount = formatNumberCentsToAmount(transaction.amount.amount, true);
 
     // fee
@@ -191,7 +193,7 @@ class TransactionDetailsScreen extends React.Component<Props, State> {
 
   public render(): React.ReactNode {
     const { psp } = this.props;
-    const transaction = this.props.navigation.getParam("transaction");
+    const transaction = this.props.route.params.transaction;
     const data = this.getData();
 
     const standardRow = (label: string, value: string) => (
@@ -207,7 +209,8 @@ class TransactionDetailsScreen extends React.Component<Props, State> {
       <BaseScreenComponent
         dark={true}
         contextualHelpMarkdown={contextualHelpMarkdown}
-        goBack={this.handleBackPress}
+        // TODO: restore
+        // goBack={this.handleBackPress}
         headerTitle={I18n.t("wallet.transactionDetails")}
         faqCategories={["wallet_transaction"]}
       >
@@ -318,7 +321,8 @@ class TransactionDetailsScreen extends React.Component<Props, State> {
             light={true}
             bordered={true}
             block={true}
-            onPress={this.handleBackPress}
+            // TODO: restore
+            // onPress={this.handleBackPress}
           >
             <Text>{I18n.t("global.buttons.close")}</Text>
           </ButtonDefaultOpacity>
@@ -335,7 +339,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
 });
 
 const mapStateToProps = (state: GlobalState, ownProps: OwnProps) => {
-  const transaction = ownProps.navigation.getParam("transaction");
+  const transaction = ownProps.route.params.transaction;
   const idPsp = String(transaction.idPsp);
 
   const maybePotPspState = fromNullable(pspStateByIdSelector(idPsp)(state));

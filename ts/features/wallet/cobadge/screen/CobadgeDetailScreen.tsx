@@ -1,5 +1,5 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as React from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { GlobalState } from "../../../../store/reducers/types";
@@ -9,19 +9,21 @@ import PaymentMethodFeatures from "../../component/features/PaymentMethodFeature
 import CobadgeCard from "../component/CoBadgeCard";
 
 type NavigationParams = Readonly<{
-  cobadge: CreditCardPaymentMethod;
+  CobadgeDetailScreen: {
+    cobadge: CreditCardPaymentMethod;
+  };
 }>;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  StackScreenProps<NavigationParams, "CobadgeDetailScreen">;
 
 /**
  * Detail screen for a cobadge card
  * @constructor
  */
 const CobadgeDetailScreen: React.FunctionComponent<Props> = props => {
-  const cobadge: CreditCardPaymentMethod = props.navigation.getParam("cobadge");
+  const cobadge: CreditCardPaymentMethod = props.route.params.cobadge;
   return (
     <BasePaymentMethodScreen
       paymentMethod={cobadge}

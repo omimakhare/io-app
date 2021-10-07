@@ -2,6 +2,8 @@
  * This screen presents a summary on the credit card after the user
  * inserted the data required to save a new card
  */
+import { StackScreenProps } from "@react-navigation/stack";
+import { constNull } from "fp-ts/lib/function";
 import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import { AmountInEuroCents, RptId } from "italia-pagopa-commons/lib/pagopa";
 import * as pot from "italia-ts-commons/lib/pot";
@@ -9,12 +11,14 @@ import { Content, Text, View } from "native-base";
 import * as React from "react";
 import { Alert, SafeAreaView, StyleSheet } from "react-native";
 import { Col, Grid } from "react-native-easy-grid";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
-import { constNull } from "fp-ts/lib/function";
 import { PaymentRequestsGetResponse } from "../../../definitions/backend/PaymentRequestsGetResponse";
 import { TypeEnum } from "../../../definitions/pagopa/Wallet";
+import image from "../../../img/wallet/errors/payment-unavailable-icon.png";
+import { IOStyles } from "../../components/core/variables/IOStyles";
 import { withLoadingSpinner } from "../../components/helpers/withLoadingSpinner";
+import { renderInfoRasterImage } from "../../components/infoScreen/imageRendering";
+import { InfoScreenComponent } from "../../components/infoScreen/InfoScreenComponent";
 import NoticeBox from "../../components/NoticeBox";
 import BaseScreenComponent, {
   ContextualHelpPropsMarkdown
@@ -22,6 +26,16 @@ import BaseScreenComponent, {
 import FooterWithButtons from "../../components/ui/FooterWithButtons";
 import Switch from "../../components/ui/Switch";
 import CardComponent from "../../components/wallet/card/CardComponent";
+import { PayWebViewModal } from "../../components/wallet/PayWebViewModal";
+import { pagoPaApiUrlPrefix, pagoPaApiUrlPrefixTest } from "../../config";
+import { confirmButtonProps } from "../../features/bonus/bonusVacanze/components/buttons/ButtonConfigurations";
+import { FooterStackButton } from "../../features/bonus/bonusVacanze/components/buttons/FooterStackButtons";
+
+import { LoadingErrorComponent } from "../../features/bonus/bonusVacanze/components/loadingErrorScreen/LoadingErrorComponent";
+import {
+  isLoading as isRemoteLoading,
+  isReady
+} from "../../features/bonus/bpd/model/RemoteValue";
 import I18n from "../../i18n";
 import {
   navigateToAddCreditCardOutcomeCode,
@@ -29,7 +43,7 @@ import {
   navigateToWalletHome
 } from "../../store/actions/navigation";
 import { Dispatch } from "../../store/actions/types";
-import { getLocalePrimaryWithFallback } from "../../utils/locale";
+import { addCreditCardOutcomeCode } from "../../store/actions/wallet/outcomeCode";
 import {
   addCreditCardWebViewEnd,
   AddCreditCardWebViewEndReason,
@@ -38,47 +52,35 @@ import {
   fetchWalletsRequestWithExpBackoff,
   runStartOrResumeAddCreditCardSaga
 } from "../../store/actions/wallet/wallets";
+import { isPagoPATestEnabledSelector } from "../../store/reducers/persistedPreferences";
 import { GlobalState } from "../../store/reducers/types";
+import { pmSessionTokenSelector } from "../../store/reducers/wallet/payment";
+import { getAllWallets } from "../../store/reducers/wallet/wallets";
 import customVariables from "../../theme/variables";
 import { CreditCard, Wallet } from "../../types/pagopa";
-import { showToast } from "../../utils/showToast";
-
-import { LoadingErrorComponent } from "../../features/bonus/bonusVacanze/components/loadingErrorScreen/LoadingErrorComponent";
-import { InfoScreenComponent } from "../../components/infoScreen/InfoScreenComponent";
-import { renderInfoRasterImage } from "../../components/infoScreen/imageRendering";
-import image from "../../../img/wallet/errors/payment-unavailable-icon.png";
-import { FooterStackButton } from "../../features/bonus/bonusVacanze/components/buttons/FooterStackButtons";
-import { confirmButtonProps } from "../../features/bonus/bonusVacanze/components/buttons/ButtonConfigurations";
-import { IOStyles } from "../../components/core/variables/IOStyles";
-import { PayWebViewModal } from "../../components/wallet/PayWebViewModal";
-import { pagoPaApiUrlPrefix, pagoPaApiUrlPrefixTest } from "../../config";
-import { isPagoPATestEnabledSelector } from "../../store/reducers/persistedPreferences";
-import { addCreditCardOutcomeCode } from "../../store/actions/wallet/outcomeCode";
-import { getAllWallets } from "../../store/reducers/wallet/wallets";
-import { pmSessionTokenSelector } from "../../store/reducers/wallet/payment";
-import {
-  isLoading as isRemoteLoading,
-  isReady
-} from "../../features/bonus/bpd/model/RemoteValue";
+import { getLocalePrimaryWithFallback } from "../../utils/locale";
 import { getLookUpIdPO } from "../../utils/pmLookUpId";
+import { showToast } from "../../utils/showToast";
 import { dispatchPickPspOrConfirm } from "./payment/common";
 
 export type NavigationParams = Readonly<{
-  creditCard: CreditCard;
-  inPayment: Option<{
-    rptId: RptId;
-    initialAmount: AmountInEuroCents;
-    verifica: PaymentRequestsGetResponse;
-    idPayment: string;
-  }>;
-  keyFrom?: string;
+  ConfirmCardDetailsScreen: {
+    creditCard: CreditCard;
+    inPayment: Option<{
+      rptId: RptId;
+      initialAmount: AmountInEuroCents;
+      verifica: PaymentRequestsGetResponse;
+      idPayment: string;
+    }>;
+    keyFrom?: string;
+  };
 }>;
 
 type ReduxMergedProps = Readonly<{
   onRetry?: () => void;
 }>;
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = StackScreenProps<NavigationParams, "ConfirmCardDetailsScreen">;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
@@ -126,8 +128,8 @@ class ConfirmCardDetailsScreen extends React.Component<Props, State> {
   };
 
   public render(): React.ReactNode {
-    const creditCard = this.props.navigation.getParam("creditCard");
-    const isInPayment = this.props.navigation.getParam("inPayment").isSome();
+    const creditCard = this.props.route.params.creditCard;
+    const isInPayment = this.props.route.params.inPayment.isSome();
 
     // WebView parameters
     const payUrlSuffix = "/v3/webview/transactions/cc/verify";
@@ -376,12 +378,9 @@ const mapStateToProps = (state: GlobalState) => {
   };
 };
 
-const mapDispatchToProps = (
-  dispatch: Dispatch,
-  props: NavigationInjectedProps<NavigationParams>
-) => {
+const mapDispatchToProps = (dispatch: Dispatch, props: OwnProps) => {
   const navigateToNextScreen = (maybeWallet: Option<Wallet>) => {
-    const inPayment = props.navigation.getParam("inPayment");
+    const inPayment = props.route.params.inPayment;
     if (inPayment.isSome()) {
       const { rptId, initialAmount, verifica, idPayment } = inPayment.value;
       dispatchPickPspOrConfirm(dispatch)(
@@ -417,7 +416,7 @@ const mapDispatchToProps = (
       dispatch(
         navigateToWalletHome({
           newMethodAdded: maybeWallet.isSome(),
-          keyFrom: props.navigation.getParam("keyFrom")
+          keyFrom: props.route.params.keyFrom
         })
       );
     }
@@ -482,7 +481,7 @@ const mergeProps = (
   const onRetry = isRetriableError
     ? () => {
         dispatchProps.runStartOrResumeAddCreditCardSaga(
-          ownProps.navigation.getParam("creditCard"),
+          ownProps.route.params.creditCard,
           // FIXME: Unfortunately we can't access the internal component state
           //        from here so we cannot know if the user wants to set this
           //        card as favourite, we pass true anyway since it's the

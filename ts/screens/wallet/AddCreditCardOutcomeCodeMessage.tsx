@@ -1,5 +1,5 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import React from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import paymentCompleted from "../../../img/pictograms/payment-completed.png";
@@ -13,10 +13,15 @@ import { lastPaymentOutcomeCodeSelector } from "../../store/reducers/wallet/outc
 import { Wallet } from "../../types/pagopa";
 
 type NavigationParams = Readonly<{
-  selectedWallet: Wallet;
+  AddCreditCardOutcomeCodeMessage: {
+    selectedWallet: Wallet;
+  };
 }>;
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = StackScreenProps<
+  NavigationParams,
+  "AddCreditCardOutcomeCodeMessage"
+>;
 type Props = OwnProps &
   ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps>;

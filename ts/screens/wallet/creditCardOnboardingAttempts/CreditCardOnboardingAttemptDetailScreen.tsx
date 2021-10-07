@@ -1,7 +1,7 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { Text, View } from "native-base";
 import * as React from "react";
 import { StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import {
   instabugLog,
@@ -9,29 +9,34 @@ import {
   TypeLogs
 } from "../../../boot/configureInstabug";
 import ButtonDefaultOpacity from "../../../components/ButtonDefaultOpacity";
+import { Body } from "../../../components/core/typography/Body";
+import { H3 } from "../../../components/core/typography/H3";
+import { Label } from "../../../components/core/typography/Label";
+import { IOStyles } from "../../../components/core/variables/IOStyles";
 import ItemSeparatorComponent from "../../../components/ItemSeparatorComponent";
+import { BadgeComponent } from "../../../components/screens/BadgeComponent";
 import BaseScreenComponent from "../../../components/screens/BaseScreenComponent";
 import IconFont from "../../../components/ui/IconFont";
+import { getPanDescription } from "../../../components/wallet/creditCardOnboardingAttempts/CreditCardAttemptsList";
 import { SlidedContentComponent } from "../../../components/wallet/SlidedContentComponent";
 import I18n from "../../../i18n";
 import { GlobalState } from "../../../store/reducers/types";
-import customVariables from "../../../theme/variables";
 import { CreditCardInsertion } from "../../../store/reducers/wallet/creditCard";
-import { IOStyles } from "../../../components/core/variables/IOStyles";
-import { Label } from "../../../components/core/typography/Label";
-import { Body } from "../../../components/core/typography/Body";
-import { formatDateAsLocal } from "../../../utils/dates";
-import { H3 } from "../../../components/core/typography/H3";
-import { BadgeComponent } from "../../../components/screens/BadgeComponent";
-import { getPanDescription } from "../../../components/wallet/creditCardOnboardingAttempts/CreditCardAttemptsList";
 import { outcomeCodesSelector } from "../../../store/reducers/wallet/outcomeCode";
+import customVariables from "../../../theme/variables";
+import { formatDateAsLocal } from "../../../utils/dates";
 import { getPaymentOutcomeCodeDescription } from "../../../utils/payment";
 
 type NavigationParams = Readonly<{
-  attempt: CreditCardInsertion;
+  CreditCardOnboardingAttemptDetailScreen: {
+    attempt: CreditCardInsertion;
+  };
 }>;
 
-type Props = NavigationInjectedProps<NavigationParams> &
+type Props = StackScreenProps<
+  NavigationParams,
+  "CreditCardOnboardingAttemptDetailScreen"
+> &
   ReturnType<typeof mapStateToProps>;
 
 const styles = StyleSheet.create({
@@ -68,7 +73,7 @@ const instabugTag = "credit-card-support";
 const CreditCardOnboardingAttemptDetailScreen: React.FC<Props> = (
   props: Props
 ) => {
-  const attempt = props.navigation.getParam("attempt");
+  const attempt = props.route.params.attempt;
   const instabugLogAndOpenReport = () => {
     instabugLog(JSON.stringify(attempt), TypeLogs.INFO, instabugTag);
     openInstabugQuestionReport();

@@ -1,7 +1,7 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { Content, Text } from "native-base";
 import * as React from "react";
 import { Alert } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { ContextualHelpPropsMarkdown } from "../../components/screens/BaseScreenComponent";
 import { ScreenContentHeader } from "../../components/screens/ScreenContentHeader";
@@ -16,7 +16,9 @@ import { Dispatch } from "../../store/actions/types";
 import { BiometricsValidType } from "../../utils/biometrics";
 
 type NavigationParams = Readonly<{
-  biometryType: BiometricsValidType;
+  FingerprintScreen: {
+    biometryType: BiometricsValidType;
+  };
 }>;
 
 /**
@@ -48,7 +50,7 @@ function getBiometryIconName(biometryType: BiometricsValidType): string {
   }
 }
 
-type Props = NavigationInjectedProps<NavigationParams> &
+type Props = StackScreenProps<NavigationParams, "FingerprintScreen"> &
   ReturnType<typeof mapDispatchToProps>;
 
 const contextualHelpMarkdown: ContextualHelpPropsMarkdown = {
@@ -79,7 +81,7 @@ class FingerprintScreen extends React.PureComponent<Props> {
     );
 
   public render() {
-    const biometryType = this.props.navigation.getParam("biometryType");
+    const biometryType = this.props.route.params.biometryType;
 
     return (
       <TopScreenComponent

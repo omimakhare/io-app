@@ -1,5 +1,5 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as React from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { GlobalState } from "../../../../store/reducers/types";
@@ -9,19 +9,21 @@ import PaymentMethodFeatures from "../../component/features/PaymentMethodFeature
 import SatispayCard from "../SatispayCard";
 
 type NavigationParams = Readonly<{
-  satispay: SatispayPaymentMethod;
+  SatispayDetailScreen: {
+    satispay: SatispayPaymentMethod;
+  };
 }>;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  StackScreenProps<NavigationParams, "SatispayDetailScreen">;
 
 /**
  * Detail screen for a satispay
  * @constructor
  */
 const SatispayDetailScreen: React.FunctionComponent<Props> = props => {
-  const satispay: SatispayPaymentMethod = props.navigation.getParam("satispay");
+  const satispay: SatispayPaymentMethod = props.route.params.satispay;
   return (
     <BasePaymentMethodScreen
       paymentMethod={satispay}

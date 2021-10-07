@@ -1,5 +1,5 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as React from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { GlobalState } from "../../../../store/reducers/types";
@@ -9,19 +9,21 @@ import PaymentMethodFeatures from "../../component/features/PaymentMethodFeature
 import BPayCard from "../component/BPayCard";
 
 type NavigationParams = Readonly<{
-  bPay: BPayPaymentMethod;
+  BPayDetailScreen: {
+    bPay: BPayPaymentMethod;
+  };
 }>;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  StackScreenProps<NavigationParams, "BPayDetailScreen">;
 
 /**
  * Detail screen for a Bancomat Pay
  * @constructor
  */
 const BPayDetailScreen: React.FunctionComponent<Props> = props => {
-  const bPay: BPayPaymentMethod = props.navigation.getParam("bPay");
+  const bPay: BPayPaymentMethod = props.route.params.bPay;
   return (
     <BasePaymentMethodScreen
       paymentMethod={bPay}

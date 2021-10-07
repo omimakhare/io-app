@@ -1,3 +1,4 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { View } from "native-base";
 import * as React from "react";
 import {
@@ -7,17 +8,18 @@ import {
   ScrollView,
   StyleSheet
 } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { IOStyles } from "../../../../components/core/variables/IOStyles";
 import BaseScreenComponent from "../../../../components/screens/BaseScreenComponent";
 import FooterWithButtons from "../../../../components/ui/FooterWithButtons";
 import I18n from "../../../../i18n";
 import { useMaxBrightness } from "../../../../utils/brightness";
-import { cancelButtonProps } from "../../../bonus/bonusVacanze/components/buttons/ButtonConfigurations";
 import { withBase64Uri } from "../../../../utils/image";
+import { cancelButtonProps } from "../../../bonus/bonusVacanze/components/buttons/ButtonConfigurations";
 
 type NavigationParams = Readonly<{
-  qrCodeContent: string;
+  EuCovidCertQrCodeFullScreen: {
+    qrCodeContent: string;
+  };
 }>;
 
 const styles = StyleSheet.create({
@@ -30,7 +32,7 @@ const styles = StyleSheet.create({
 });
 
 export const EuCovidCertQrCodeFullScreen = (
-  props: NavigationInjectedProps<NavigationParams>
+  props: StackScreenProps<NavigationParams, "EuCovidCertQrCodeFullScreen">
 ): React.ReactElement => {
   useMaxBrightness();
   return (
@@ -52,10 +54,7 @@ export const EuCovidCertQrCodeFullScreen = (
               "features.euCovidCertificate.valid.accessibility.qrCode"
             )}
             source={{
-              uri: withBase64Uri(
-                props.navigation.getParam("qrCodeContent"),
-                "png"
-              )
+              uri: withBase64Uri(props.route.params.qrCodeContent, "png")
             }}
             style={styles.qrCode}
           />

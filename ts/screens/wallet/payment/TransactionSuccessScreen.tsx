@@ -1,7 +1,7 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { Content, Text, View } from "native-base";
 import * as React from "react";
 import { BackHandler, StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import BaseScreenComponent from "../../../components/screens/BaseScreenComponent";
@@ -14,10 +14,12 @@ import customVariables from "../../../theme/variables";
 import { Transaction } from "../../../types/pagopa";
 
 type NavigationParams = Readonly<{
-  transaction: Transaction;
+  TransactionSuccessScreen: {
+    transaction: Transaction;
+  };
 }>;
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = StackScreenProps<NavigationParams, "TransactionSuccessScreen">;
 
 type Props = OwnProps & ReturnType<typeof mapDispatchToProps>;
 
@@ -28,7 +30,7 @@ const styles = StyleSheet.create({
 });
 
 class TransactionSuccessScreen extends React.PureComponent<Props> {
-  private transaction = this.props.navigation.getParam("transaction");
+  private transaction = this.props.route.params.transaction;
   public componentDidMount() {
     BackHandler.addEventListener("hardwareBackPress", this.handleBackPress);
   }

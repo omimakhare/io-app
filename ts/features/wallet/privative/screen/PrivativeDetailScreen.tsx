@@ -1,5 +1,5 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as React from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { GlobalState } from "../../../../store/reducers/types";
@@ -9,20 +9,21 @@ import PaymentMethodFeatures from "../../component/features/PaymentMethodFeature
 import BasePrivativeCard from "../component/card/BasePrivativeCard";
 
 type NavigationParams = Readonly<{
-  privative: PrivativePaymentMethod;
+  PrivativeDetailScreen: {
+    privative: PrivativePaymentMethod;
+  };
 }>;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  StackScreenProps<NavigationParams, "PrivativeDetailScreen">;
 
 /**
  * Detail screen for a privative card
  * @constructor
  */
 const PrivativeDetailScreen: React.FunctionComponent<Props> = props => {
-  const privative: PrivativePaymentMethod =
-    props.navigation.getParam("privative");
+  const privative: PrivativePaymentMethod = props.route.params.privative;
   return (
     <BasePaymentMethodScreen
       paymentMethod={privative}

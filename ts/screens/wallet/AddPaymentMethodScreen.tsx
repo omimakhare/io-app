@@ -1,11 +1,12 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { Option } from "fp-ts/lib/Option";
 import { AmountInEuroCents, RptId } from "italia-pagopa-commons/lib/pagopa";
 import { Content, View } from "native-base";
 import * as React from "react";
 import { SafeAreaView } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { PaymentRequestsGetResponse } from "../../../definitions/backend/PaymentRequestsGetResponse";
+import { H1 } from "../../components/core/typography/H1";
 import { IOStyles } from "../../components/core/variables/IOStyles";
 import BaseScreenComponent, {
   ContextualHelpPropsMarkdown
@@ -26,21 +27,22 @@ import {
   navigateToWalletAddDigitalPaymentMethod
 } from "../../store/actions/navigation";
 import { Dispatch } from "../../store/actions/types";
-import { H1 } from "../../components/core/typography/H1";
 
 type NavigationParams = Readonly<{
-  inPayment: Option<{
-    rptId: RptId;
-    initialAmount: AmountInEuroCents;
-    verifica: PaymentRequestsGetResponse;
-    idPayment: string;
-  }>;
-  // if set it will shown only those method can pay with pagoPA
-  showOnlyPayablePaymentMethods?: true;
-  keyFrom?: string;
+  AddPaymentMethodScreen: {
+    inPayment: Option<{
+      rptId: RptId;
+      initialAmount: AmountInEuroCents;
+      verifica: PaymentRequestsGetResponse;
+      idPayment: string;
+    }>;
+    // if set it will shown only those method can pay with pagoPA
+    showOnlyPayablePaymentMethods?: true;
+    keyFrom?: string;
+  };
 }>;
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = StackScreenProps<NavigationParams, "AddPaymentMethodScreen">;
 
 type Props = ReturnType<typeof mapDispatchToProps> & OwnProps;
 
@@ -112,10 +114,9 @@ const getpaymentMethods = (
 const AddPaymentMethodScreen: React.FunctionComponent<Props> = (
   props: Props
 ) => {
-  const inPayment = props.navigation.getParam("inPayment");
-  const canAddOnlyPayablePaymentMethod = props.navigation.getParam(
-    "showOnlyPayablePaymentMethods"
-  );
+  const inPayment = props.route.params.inPayment;
+  const canAddOnlyPayablePaymentMethod =
+    props.route.params.showOnlyPayablePaymentMethods;
 
   const cancelButtonProps = {
     block: true,
@@ -183,7 +184,7 @@ const mapDispatchToProps = (dispatch: Dispatch, props: OwnProps) => ({
   navigateToWalletAddDigitalPaymentMethod: () =>
     dispatch(navigateToWalletAddDigitalPaymentMethod()),
   navigateToTransactionSummary: () => {
-    const maybeInPayment = props.navigation.getParam("inPayment");
+    const maybeInPayment = props.route.params.inPayment;
     maybeInPayment.map(inPayment =>
       dispatch(
         navigateToPaymentTransactionSummaryScreen({
@@ -196,8 +197,8 @@ const mapDispatchToProps = (dispatch: Dispatch, props: OwnProps) => ({
   navigateToAddCreditCard: () =>
     dispatch(
       navigateToWalletAddCreditCard({
-        inPayment: props.navigation.getParam("inPayment"),
-        keyFrom: props.navigation.getParam("keyFrom")
+        inPayment: props.route.params.inPayment,
+        keyFrom: props.route.params.keyFrom
       })
     )
 });

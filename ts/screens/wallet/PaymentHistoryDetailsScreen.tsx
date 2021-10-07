@@ -1,9 +1,9 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import { fromNullable } from "fp-ts/lib/Option";
 import Instabug from "instabug-reactnative";
 import { Text, View } from "native-base";
 import * as React from "react";
 import { StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { EnteBeneficiario } from "../../../definitions/backend/EnteBeneficiario";
 import { PaymentRequestsGetResponse } from "../../../definitions/backend/PaymentRequestsGetResponse";
@@ -29,6 +29,7 @@ import {
   PaymentHistory
 } from "../../store/reducers/payments/history";
 import { GlobalState } from "../../store/reducers/types";
+import { outcomeCodesSelector } from "../../store/reducers/wallet/outcomeCode";
 import customVariables from "../../theme/variables";
 import { Transaction } from "../../types/pagopa";
 import { formatDateAsLocal } from "../../utils/dates";
@@ -43,13 +44,14 @@ import {
 } from "../../utils/payment";
 import { formatNumberCentsToAmount } from "../../utils/stringBuilder";
 import { isStringNullyOrEmpty } from "../../utils/strings";
-import { outcomeCodesSelector } from "../../store/reducers/wallet/outcomeCode";
 
 type NavigationParams = Readonly<{
-  payment: PaymentHistory;
+  PaymentHistoryDetailsScreen: {
+    payment: PaymentHistory;
+  };
 }>;
 
-type Props = NavigationInjectedProps<NavigationParams> &
+type Props = StackScreenProps<NavigationParams, "PaymentHistoryDetailsScreen"> &
   ReturnType<typeof mapStateToProps>;
 
 const styles = StyleSheet.create({
@@ -94,7 +96,7 @@ class PaymentHistoryDetailsScreen extends React.Component<Props> {
   private instabugLogAndOpenReport = () => {
     Instabug.appendTags([paymentInstabugTag]);
     instabugLog(
-      getPaymentHistoryDetails(this.props.navigation.getParam("payment")),
+      getPaymentHistoryDetails(this.props.route.params.payment),
       TypeLogs.INFO,
       paymentInstabugTag
     );
@@ -102,7 +104,7 @@ class PaymentHistoryDetailsScreen extends React.Component<Props> {
   };
 
   private getData = () => {
-    const payment = this.props.navigation.getParam("payment");
+    const payment = this.props.route.params.payment;
     const codiceAvviso = getCodiceAvviso(payment.data);
     const paymentCheckout = isPaymentDoneSuccessfully(payment);
     const paymentInfo = getPaymentHistoryInfo(payment, paymentCheckout);

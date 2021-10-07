@@ -1,9 +1,9 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as pot from "italia-ts-commons/lib/pot";
 import { Text, View } from "native-base";
 import * as React from "react";
 import { ReactElement, useEffect } from "react";
 import { ScrollView, StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { H2 } from "../../components/core/typography/H2";
@@ -27,7 +27,7 @@ import customVariables from "../../theme/variables";
 import { CodiceCatastale } from "../../types/MunicipalityCodiceCatastale";
 
 type Props = ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps &
+  StackScreenProps<never> &
   ReturnType<typeof mapDispatchToProps> &
   LightModalContextInterface;
 

@@ -1,3 +1,5 @@
+import { useNavigation } from "@react-navigation/native";
+import { StackScreenProps } from "@react-navigation/stack";
 import { Millisecond } from "italia-ts-commons/lib/units";
 import { View } from "native-base";
 import React, {
@@ -14,7 +16,6 @@ import {
   ScrollView,
   StyleSheet
 } from "react-native";
-import { NavigationContext, NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import AdviceComponent from "../../../components/AdviceComponent";
 import ButtonDefaultOpacity from "../../../components/ButtonDefaultOpacity";
@@ -47,7 +48,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
 
 type Props = ReduxProps &
   ReturnType<typeof mapDispatchToProps> &
-  NavigationInjectedProps;
+  StackScreenProps<never>;
 
 const styles = StyleSheet.create({
   container: {
@@ -75,7 +76,8 @@ const onOpenForgotPinPage = () => openWebUrl(FORGOT_PIN_PAGE_URL);
 
 const CiePinScreen: React.FC<Props> = props => {
   const { showAnimatedModal, hideModal } = useContext(LightModalContext);
-  const { navigate } = useContext(NavigationContext);
+
+  const { navigate } = useNavigation();
   const [pin, setPin] = useState("");
   const continueButtonRef = useRef<FooterWithButtons>(null);
   const pinPadViewRef = useRef<View>(null);

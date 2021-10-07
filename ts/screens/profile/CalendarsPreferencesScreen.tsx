@@ -1,6 +1,6 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as React from "react";
 import { Calendar } from "react-native-calendar-events";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import CalendarsListContainer from "../../components/CalendarsListContainer";
 import LoadingSpinnerOverlay from "../../components/LoadingSpinnerOverlay";
@@ -14,7 +14,7 @@ import {
 } from "../../store/actions/persistedPreferences";
 import { Dispatch } from "../../store/actions/types";
 
-type OwnProps = NavigationInjectedProps;
+type OwnProps = StackScreenProps<never>;
 
 type Props = ReturnType<typeof mapDispatchToProps> & OwnProps;
 

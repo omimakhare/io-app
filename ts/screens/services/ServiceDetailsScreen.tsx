@@ -1,8 +1,8 @@
+import { StackScreenProps } from "@react-navigation/stack";
 import * as pot from "italia-ts-commons/lib/pot";
 import { Content, Grid, View } from "native-base";
 import * as React from "react";
 import { StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 
 import { ServicePublic } from "../../../definitions/backend/ServicePublic";
@@ -12,6 +12,9 @@ import BaseScreenComponent, {
   ContextualHelpPropsMarkdown
 } from "../../components/screens/BaseScreenComponent";
 import { EdgeBorderComponent } from "../../components/screens/EdgeBorderComponent";
+import ContactPreferencesToggles from "../../components/services/ContactPreferencesToggles";
+import ServiceMetadata from "../../components/services/ServiceMetadata";
+import TosAndPrivacyBox from "../../components/services/TosAndPrivacyBox";
 import Markdown from "../../components/ui/Markdown";
 import I18n from "../../i18n";
 import { Dispatch } from "../../store/actions/types";
@@ -32,17 +35,19 @@ import {
 } from "../../utils/profile";
 import { showToast } from "../../utils/showToast";
 import { handleItemOnPress } from "../../utils/url";
-import ContactPreferencesToggles from "../../components/services/ContactPreferencesToggles";
-import ServiceMetadata from "../../components/services/ServiceMetadata";
-import TosAndPrivacyBox from "../../components/services/TosAndPrivacyBox";
 
-type NavigationParams = Readonly<{
-  service: ServicePublic;
+export type ServiceDetailsScreenNavigationParams = Readonly<{
+  ServiceDetailsScreen: {
+    service: ServicePublic;
+  };
 }>;
 
 type Props = ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  StackScreenProps<
+    ServiceDetailsScreenNavigationParams,
+    "ServiceDetailsScreen"
+  >;
 
 type State = {
   uiEnabledChannels: EnabledChannels;
@@ -101,7 +106,7 @@ const contextualHelpMarkdown: ContextualHelpPropsMarkdown = {
  */
 class ServiceDetailsScreen extends React.Component<Props, State> {
   get serviceId() {
-    return this.props.navigation.getParam("service").service_id;
+    return this.props.route.params.service.service_id;
   }
 
   constructor(props: Props) {
@@ -129,7 +134,7 @@ class ServiceDetailsScreen extends React.Component<Props, State> {
 
       const uiEnabledChannels = getEnabledChannelsForService(
         this.props.profile,
-        this.props.navigation.getParam("service").service_id
+        this.props.route.params.service.service_id
       );
       this.setState({
         uiEnabledChannels
@@ -137,7 +142,7 @@ class ServiceDetailsScreen extends React.Component<Props, State> {
     }
   }
   // collect the service
-  private service = this.props.navigation.getParam("service");
+  private service = this.props.route.params.service;
 
   private onMarkdownEnd = () => {
     this.setState({ isMarkdownLoaded: true });

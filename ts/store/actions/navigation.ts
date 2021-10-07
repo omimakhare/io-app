@@ -10,7 +10,9 @@ import ROUTES from "../../navigation/routes";
 import CieCardReaderScreen from "../../screens/authentication/cie/CieCardReaderScreen";
 import { MessageDetailScreen } from "../../screens/messages/MessageDetailScreen";
 import FingerprintScreen from "../../screens/onboarding/FingerprintScreen";
-import ServiceDetailsScreen from "../../screens/services/ServiceDetailsScreen";
+import ServiceDetailsScreen, {
+  ServiceDetailsScreenNavigationParams
+} from "../../screens/services/ServiceDetailsScreen";
 import AddCardScreen from "../../screens/wallet/AddCardScreen";
 import AddCreditCardOutcomeCodeMessage from "../../screens/wallet/AddCreditCardOutcomeCodeMessage";
 import AddPaymentMethodScreen from "../../screens/wallet/AddPaymentMethodScreen";
@@ -153,7 +155,7 @@ export const navigateToServiceHomeScreen = () =>
   });
 
 export const navigateToServiceDetailsScreen = (
-  params: InferNavigationParams<typeof ServiceDetailsScreen>
+  params: ServiceDetailsScreenNavigationParams["ServiceDetailsScreen"]
 ) =>
   NavigationActions.navigate({
     routeName: ROUTES.SERVICE_DETAIL,

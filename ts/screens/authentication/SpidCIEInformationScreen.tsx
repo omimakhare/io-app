@@ -1,6 +1,7 @@
 /**
  * A screen where the user can know more about SPID, CIE and access to spid.gov.it
  */
+import { StackScreenProps } from "@react-navigation/stack";
 import {
   Col,
   Content,
@@ -14,7 +15,6 @@ import {
 } from "native-base";
 import * as React from "react";
 import { StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import BaseScreenComponent from "../../components/screens/BaseScreenComponent";
 import { ScreenContentHeader } from "../../components/screens/ScreenContentHeader";
 import FooterWithButtons from "../../components/ui/FooterWithButtons";
@@ -24,7 +24,8 @@ import I18n from "../../i18n";
 import variables from "../../theme/variables";
 import customVariables from "../../theme/variables";
 
-type Props = NavigationInjectedProps;
+// TODO: we don't need this props
+type Props = StackScreenProps<never>;
 
 type State = {
   currentTab: number;

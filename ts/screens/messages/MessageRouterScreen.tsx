@@ -1,7 +1,8 @@
+import { NavigationActions } from "@react-navigation/compat";
+import { StackScreenProps } from "@react-navigation/stack";
 import * as pot from "italia-ts-commons/lib/pot";
 import * as React from "react";
 import { useEffect, useRef } from "react";
-import { NavigationActions, NavigationInjectedProps } from "react-navigation";
 import { connect, useDispatch } from "react-redux";
 import { Dispatch } from "redux";
 import { CreatedMessageWithContentAndAttachments } from "../../../definitions/backend/CreatedMessageWithContentAndAttachments";
@@ -17,13 +18,12 @@ import { useIODispatch } from "../../store/hooks";
 import { messagesAllIdsSelector } from "../../store/reducers/entities/messages/messagesAllIds";
 import { messageStateByIdSelector } from "../../store/reducers/entities/messages/messagesById";
 import { GlobalState } from "../../store/reducers/types";
-import { InferNavigationParams } from "../../types/react";
 import { isStrictSome } from "../../utils/pot";
-import { MessageDetailScreen } from "./MessageDetailScreen";
+import { MessageDetailScreenNavigationParams } from "./MessageDetailScreen";
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<InferNavigationParams<typeof MessageDetailScreen>>;
+  StackScreenProps<MessageDetailScreenNavigationParams, "MessageDetailScreen">;
 
 /**
  * In order to have the final CreatedMessageWithContentAndAttachments, these conditions should be verified:
@@ -38,7 +38,7 @@ const getLoadingState = (
   CreatedMessageWithContentAndAttachments | undefined,
   string | undefined
 > => {
-  const messageId = props.navigation.getParam("messageId");
+  const messageId = props.route.params.messageId;
   if (!isStrictSome(props.allMessages)) {
     void mixpanelTrack("MESSAGE_ROUTING_FAILURE", {
       reason: "all Messages is not some"
@@ -74,12 +74,12 @@ const navigateToScreenHandler = (
     authCode: EUCovidCertificateAuthCode,
     messageId: string
   ) => {
-    dispatch(NavigationActions.back());
+    NavigationActions.back();
     dispatch(navigateToEuCovidCertificateDetailScreen({ authCode, messageId }));
   };
 
   const navigateToDetails = (messageId: string) => {
-    dispatch(NavigationActions.back());
+    NavigationActions.back();
     dispatch(navigateToMessageDetailScreenAction({ messageId }));
   };
 
@@ -122,24 +122,23 @@ const MessageRouterScreen = (props: Props): React.ReactElement => {
     <LoadingErrorComponent
       isLoading={isLoading}
       loadingCaption={I18n.t("messageDetails.loadingText")}
-      onAbort={props.cancel}
+      onAbort={NavigationActions.back}
       onRetry={props.loadMessages}
     />
   );
 };
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
-  cancel: () => dispatch(NavigationActions.back()),
   loadMessages: () => dispatch(loadMessages.request()),
   navigateToDetails: (messageId: string) => {
-    dispatch(NavigationActions.back());
+    NavigationActions.back();
     dispatch(navigateToMessageDetailScreenAction({ messageId }));
   },
   navigateToEuCovidCertificate: (
     authCode: EUCovidCertificateAuthCode,
     messageId: string
   ) => {
-    dispatch(NavigationActions.back());
+    NavigationActions.back();
     dispatch(navigateToEuCovidCertificateDetailScreen({ authCode, messageId }));
   }
 });

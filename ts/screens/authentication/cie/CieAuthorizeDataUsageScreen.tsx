@@ -1,17 +1,18 @@
 /**
  * A screen displayed while the backend manage the opening of the session for the CIE authentication
  */
+import { StackScreenProps } from "@react-navigation/stack";
 import { Content, H2, View } from "native-base";
 import * as React from "react";
 import { Alert, StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import TopScreenComponent from "../../../components/screens/TopScreenComponent";
 import FooterWithButtons from "../../../components/ui/FooterWithButtons";
 import Markdown from "../../../components/ui/Markdown";
 import I18n from "../../../i18n";
 import variables from "../../../theme/variables";
 
-type Props = NavigationInjectedProps;
+// TODO: we don't need this props
+type Props = StackScreenProps<never>;
 
 type State = {
   isLoadingCompleted: boolean;

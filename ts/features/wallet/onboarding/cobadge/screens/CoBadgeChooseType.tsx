@@ -1,3 +1,5 @@
+import { NavigationActions } from "@react-navigation/compat";
+import { StackScreenProps } from "@react-navigation/stack";
 import { none } from "fp-ts/lib/Option";
 import { Content, ListItem, View } from "native-base";
 import * as React from "react";
@@ -7,7 +9,6 @@ import {
   SafeAreaView,
   StyleSheet
 } from "react-native";
-import { NavigationActions, NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import { H1 } from "../../../../../components/core/typography/H1";
@@ -28,13 +29,15 @@ import { walletAddCoBadgeStart } from "../store/actions";
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<CoBadgeChooseTypeNavigationProps>;
+  StackScreenProps<CoBadgeChooseTypeNavigationProps, "CoBadgeChooseType">;
 
 export type CoBadgeChooseTypeNavigationProps = {
-  abi?: string;
-  // Added for backward compatibility, in order to return back after add credit card workflow.
-  // Number of screens that need to be removed from the stack
-  legacyAddCreditCardBack?: number;
+  CoBadgeChooseType: {
+    abi?: string;
+    // Added for backward compatibility, in order to return back after add credit card workflow.
+    // Number of screens that need to be removed from the stack
+    legacyAddCreditCardBack?: number;
+  };
 };
 
 const styles = StyleSheet.create({
@@ -89,10 +92,8 @@ const renderListItem = (cardPathItem: ListRenderItemInfo<IAddCardPath>) => (
  * @constructor
  */
 const CoBadgeChooseType = (props: Props): React.ReactElement => {
-  const abi = props.navigation.getParam("abi");
-  const legacyAddCreditCardBack = props.navigation.getParam(
-    "legacyAddCreditCardBack"
-  );
+  const abi = props.route.params.abi;
+  const legacyAddCreditCardBack = props.route.params.legacyAddCreditCardBack;
   const addCardPath: ReadonlyArray<IAddCardPath> = [
     {
       path: "enabled",
@@ -143,7 +144,7 @@ const CoBadgeChooseType = (props: Props): React.ReactElement => {
         </Content>
         <FooterWithButtons
           type={"SingleButton"}
-          leftButton={cancelButtonProps(props.back)}
+          leftButton={cancelButtonProps(NavigationActions.back)}
         />
       </SafeAreaView>
     </BaseScreenComponent>
@@ -154,12 +155,11 @@ const navigateBack = (n: number, dispatch: Dispatch) => {
   if (n <= 0) {
     return;
   }
-  dispatch(NavigationActions.back());
+  NavigationActions.back();
   navigateBack(n - 1, dispatch);
 };
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
-  back: () => dispatch(NavigationActions.back()),
   addCoBadge: (abi: string | undefined) => dispatch(walletAddCoBadgeStart(abi)),
   addCreditCard: (popScreenNumber: number = 0) => {
     navigateBack(popScreenNumber, dispatch);
