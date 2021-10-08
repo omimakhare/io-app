@@ -39,7 +39,6 @@ import {
   GetUserDataProcessingT,
   getUserMessageDefaultDecoder,
   getUserMessagesDefaultDecoder,
-  // GetUserMessagesT,
   GetUserMessageT,
   getUserMetadataDefaultDecoder,
   GetUserMetadataT,

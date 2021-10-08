@@ -14,7 +14,6 @@ import FM from "front-matter";
 import { Linking } from "react-native";
 import { Dispatch } from "redux";
 import { Predicate } from "fp-ts/lib/function";
-import { CreatedMessageWithContent } from "../../definitions/backend/CreatedMessageWithContent";
 import { CreatedMessageWithContentAndAttachments } from "../../definitions/backend/CreatedMessageWithContentAndAttachments";
 import { MessageBodyMarkdown } from "../../definitions/backend/MessageBodyMarkdown";
 import { PrescriptionData } from "../../definitions/backend/PrescriptionData";
@@ -154,10 +153,14 @@ export function getMessagePaymentExpirationInfo(
 }
 
 /**
- * Given a message return an object of type MessagePaymentExpirationInfo
- * @param message
+ * Given a message with defined content, return an object of type MessagePaymentExpirationInfo
  */
-export const paymentExpirationInfo = (message: CreatedMessageWithContent) => {
+export const paymentExpirationInfo = (
+  message: CreatedMessageWithContentAndAttachments
+): Option<MessagePaymentExpirationInfo> => {
+  if (message.content === undefined) {
+    return none;
+  }
   const { payment_data, due_date } = message.content;
   return fromNullable(payment_data).map(paymentData =>
     getMessagePaymentExpirationInfo(paymentData, due_date)
@@ -267,17 +270,19 @@ const extractCTA = (
     );
 
 /**
- * extract the CTAs if they are nested inside the message markdown content
- * if some CTAs are been found, the localized version will be returned
+ * Extract the CTAs nested inside the message markdown content, should they exist.
+ * if some CTAs are found, the localized version is returned
  * @param message
  * @param serviceMetadata
  */
 export const getCTA = (
-  message: CreatedMessageWithContent,
+  message: CreatedMessageWithContentAndAttachments,
   serviceMetadata?: MaybePotMetadata,
   serviceId?: ServiceId
 ): Option<CTAS> =>
-  extractCTA(message.content.markdown, serviceMetadata, serviceId);
+  message.content
+    ? extractCTA(message.content.markdown, serviceMetadata, serviceId)
+    : none;
 
 /**
  * extract the CTAs from a string given in serviceMetadata such as the front-matter of the message
@@ -343,7 +348,6 @@ export const hasCtaValidActions = (
 
 /**
  * remove the cta front-matter if it is nested inside the markdown
- * @param cta
  */
 export const cleanMarkdownFromCTAs = (markdown: MessageBodyMarkdown): string =>
   fromPredicate((t: string) => FM.test(t))(markdown)

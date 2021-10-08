@@ -18,6 +18,7 @@ import {
 } from "../../utils/messages";
 import DetailedlistItemComponent from "../DetailedlistItemComponent";
 import MessageListCTABar from "./MessageListCTABar";
+import { hasContent } from "./utils";
 
 type Props = {
   isRead: boolean;
@@ -110,8 +111,9 @@ class MessageListItem extends React.PureComponent<Props> {
           ...uiService
         })}
       >
-        {!hasPrescriptionData(message) && messageNeedsCTABar(message) && (
-          <React.Fragment>
+        {!hasPrescriptionData(message) &&
+          messageNeedsCTABar(message) &&
+          hasContent(message) && (
             <MessageListCTABar
               onEUCovidCTAPress={this.handlePress}
               message={message}
@@ -119,8 +121,7 @@ class MessageListItem extends React.PureComponent<Props> {
               payment={payment}
               disabled={isSelectionModeEnabled}
             />
-          </React.Fragment>
-        )}
+          )}
       </DetailedlistItemComponent>
     );
   }

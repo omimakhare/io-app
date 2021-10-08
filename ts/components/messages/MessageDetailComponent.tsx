@@ -4,7 +4,10 @@ import { Content, H3, Text, View } from "native-base";
 import DeviceInfo from "react-native-device-info";
 import * as React from "react";
 import { StyleSheet } from "react-native";
+
+import { CreatedMessageWithContent } from "../../../definitions/backend/CreatedMessageWithContent";
 import { CreatedMessageWithContentAndAttachments } from "../../../definitions/backend/CreatedMessageWithContentAndAttachments";
+import { PrescriptionData } from "../../../definitions/backend/PrescriptionData";
 import { ServicePublic } from "../../../definitions/backend/ServicePublic";
 import I18n from "../../i18n";
 import { ServiceMetadataState } from "../../store/reducers/content";
@@ -22,9 +25,14 @@ import MessageDetailCTABar from "./MessageDetailCTABar";
 import MessageDetailData from "./MessageDetailData";
 import MessageDueDateBar from "./MessageDueDateBar";
 import MessageMarkdown from "./MessageMarkdown";
+import { hasAttachments, hasContent } from "./utils";
+
+type InputMessage =
+  | CreatedMessageWithContent
+  | CreatedMessageWithContentAndAttachments;
 
 type Props = Readonly<{
-  message: CreatedMessageWithContentAndAttachments;
+  message: InputMessage;
   paymentsByRptId: PaymentByRptIdState;
   potServiceDetail: pot.Pot<ServicePublic, Error>;
   potServiceMetadata: ServiceMetadataState;
@@ -89,14 +97,6 @@ export default class MessageDetailComponent extends React.PureComponent<
     this.setState({ isContentLoadCompleted: true });
   };
 
-  get maybeMedicalData() {
-    return fromNullable(this.props.message.content.prescription_data);
-  }
-
-  get attachments() {
-    return fromNullable(this.props.message.content.attachments);
-  }
-
   get paymentExpirationInfo() {
     return paymentExpirationInfo(this.props.message);
   }
@@ -119,23 +119,22 @@ export default class MessageDetailComponent extends React.PureComponent<
     return this.service.fold(undefined, service => {
       if (message.content.payment_data !== undefined) {
         return paymentsByRptId[
-          `${service.organization_fiscal_code}${message.content.payment_data.notice_number}`
+          `${service.organization_fiscal_code}${message.content?.payment_data.notice_number}`
         ];
       }
       return undefined;
     });
   }
 
-  private getTitle = () =>
-    this.maybeMedicalData.fold(
-      <H3>{this.props.message.content.subject}</H3>,
-      _ => (
-        <React.Fragment>
-          <H3>{I18n.t("messages.medical.prescription")}</H3>
-          <Text>{I18n.t("messages.medical.memo")}</Text>
-        </React.Fragment>
-      )
-    );
+  private withMessageContent(
+    message: InputMessage,
+    render: (m: CreatedMessageWithContent) => React.ReactNode
+  ): React.ReactNode {
+    if (hasContent(message)) {
+      return render(message);
+    }
+    return null;
+  }
 
   public render() {
     const {
@@ -144,7 +143,23 @@ export default class MessageDetailComponent extends React.PureComponent<
       potServiceMetadata,
       onServiceLinkPress
     } = this.props;
-    const { maybeMedicalData, service, payment } = this;
+    const { service, payment } = this;
+
+    const attachments = hasAttachments(message)
+      ? message.content?.attachments
+      : undefined;
+
+    const medicalData: PrescriptionData | undefined =
+      message.content.prescription_data;
+
+    const title = medicalData ? (
+      <H3>{message.content.subject}</H3>
+    ) : (
+      <React.Fragment>
+        <H3>{I18n.t("messages.medical.prescription")}</H3>
+        <Text>{I18n.t("messages.medical.memo")}</Text>
+      </React.Fragment>
+    );
 
     return (
       <React.Fragment>
@@ -159,23 +174,26 @@ export default class MessageDetailComponent extends React.PureComponent<
               </React.Fragment>
             )}
             {/* Subject */}
-            {this.getTitle()}
+            {title}
             <View spacer={true} />
           </View>
 
-          {maybeMedicalData.fold(undefined, md => (
-            <MedicalPrescriptionIdentifiersComponent prescriptionData={md} />
-          ))}
+          {medicalData && (
+            <MedicalPrescriptionIdentifiersComponent
+              prescriptionData={medicalData}
+            />
+          )}
 
-          {this.maybeMedicalData.fold(
-            <MessageDueDateBar
-              message={message}
-              service={service.toUndefined()}
-              payment={payment}
-            />,
-            _ => (
+          {this.withMessageContent(message, createdMessageWithContent =>
+            medicalData ? (
+              <MessageDueDateBar
+                message={createdMessageWithContent}
+                service={service.toUndefined()}
+                payment={payment}
+              />
+            ) : (
               <MedicalPrescriptionDueDateBar
-                message={message}
+                message={createdMessageWithContent}
                 service={service.toUndefined()}
               />
             )
@@ -189,11 +207,12 @@ export default class MessageDetailComponent extends React.PureComponent<
           </MessageMarkdown>
 
           <View spacer={true} large={true} />
-          {this.attachments.isSome() && this.state.isContentLoadCompleted && (
+
+          {attachments && this.state.isContentLoadCompleted && (
             <React.Fragment>
               <MedicalPrescriptionAttachments
-                prescriptionData={this.maybeMedicalData.toUndefined()}
-                attachments={this.attachments.value}
+                prescriptionData={medicalData}
+                attachments={attachments}
                 organizationName={this.service
                   .map(s => s.organization_name)
                   .toUndefined()}
@@ -202,31 +221,31 @@ export default class MessageDetailComponent extends React.PureComponent<
             </React.Fragment>
           )}
 
-          {this.state.isContentLoadCompleted && (
-            <React.Fragment>
+          {this.state.isContentLoadCompleted &&
+            this.withMessageContent(message, createdMessageWithContent => (
               <MessageDetailData
-                message={message}
+                message={createdMessageWithContent}
                 serviceDetail={potServiceDetail}
                 serviceMetadata={potServiceMetadata}
                 goToServiceDetail={onServiceLinkPress}
               />
-            </React.Fragment>
-          )}
+            ))}
         </Content>
+
         {DeviceInfo.hasNotch() && (
           <React.Fragment>
             <View spacer={true} large={true} />
             <View spacer={true} small={true} />
           </React.Fragment>
         )}
-        {this.maybeMedicalData.fold(
+
+        {this.withMessageContent(message, createdMessageWithContent => (
           <MessageDetailCTABar
-            message={message}
+            message={createdMessageWithContent}
             service={service.toUndefined()}
             payment={this.payment}
-          />,
-          _ => undefined
-        )}
+          />
+        ))}
       </React.Fragment>
     );
   }
