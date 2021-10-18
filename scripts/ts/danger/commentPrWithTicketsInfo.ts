@@ -1,6 +1,7 @@
 import { DangerDSLType } from "danger/distribution/dsl/DangerDSL";
 import { isLeft, isRight } from "fp-ts/lib/Either";
 import { Errors } from "io-ts";
+import { readableReport } from "italia-ts-commons/lib/reporters";
 import { GenericTicket, GenericTicketType } from "../common/ticket/types";
 import { GenericTicketRetrievalResults } from "./utils/titleParser";
 
@@ -42,16 +43,18 @@ const renderTicket = (ticket: GenericTicket) =>
   }](${ticket.url}): ${ticket.title}`;
 
 const renderTickets = (ticketList: ReadonlyArray<GenericTicket>) => {
+  const ticketListToString = ticketList
+    .map(s => {
+      const subtask = s.parent
+        ? ` \n _subtask of_\n     * ${renderTicket(s.parent)}`
+        : "";
+      return `  * ${renderTicket(s)}${subtask}`;
+    })
+    .join("\n");
+
   markdown(`
 ## Affected stories
-${ticketList
-  .map(
-    s =>
-      `  * ${renderTicket(s)}${
-        s.parent ? ` \n _subtask of_\n     * ${renderTicket(s.parent)}` : ""
-      }`
-  )
-  .join("\n")}\n`);
+${ticketListToString}\n`);
 };
 
 /**
@@ -62,7 +65,7 @@ const renderFailure = (errors: ReadonlyArray<Error | Errors>) => {
   errors.map(e =>
     warn(
       `There was an error retrieving a ticket: ${
-        e instanceof Error ? e.message : e.map(x => x.message)
+        e instanceof Error ? e.message : readableReport(e)
       }`
     )
   );

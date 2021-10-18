@@ -2,11 +2,11 @@ import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import { Task } from "fp-ts/lib/Task";
 import { TaskEither, tryCatch } from "fp-ts/lib/TaskEither";
 import RNCalendarEvents, { Calendar } from "react-native-calendar-events";
-import { CreatedMessageWithContent } from "../../definitions/backend/CreatedMessageWithContent";
 import { TranslationKeys } from "../../locales/locales";
 import I18n from "../i18n";
 import { AddCalendarEventPayload } from "../store/actions/calendarEvents";
 import { CalendarEvent } from "../store/reducers/entities/calendarEvents/calendarEventsByMessageId";
+import { CreatedMessageWithContentAndAttachments } from "../../definitions/backend/CreatedMessageWithContentAndAttachments";
 import { formatDateAsReminder } from "./dates";
 import { showToast } from "./showToast";
 
@@ -25,11 +25,9 @@ type CalendarAuthorization = { authorized: boolean; asked: boolean };
  * A function that checks if the user has already permission to read/write to Calendars
  * and in case of not already defined permission try to get the authorization.
  */
-export async function checkAndRequestPermission(): Promise<
-  CalendarAuthorization
-> {
+export async function checkAndRequestPermission(): Promise<CalendarAuthorization> {
   try {
-    const status = await RNCalendarEvents.authorizationStatus();
+    const status = await RNCalendarEvents.checkPermissions();
     // If the user already selected to deny permission just return false
     if (status === "denied") {
       return { authorized: false, asked: false };
@@ -41,7 +39,7 @@ export async function checkAndRequestPermission(): Promise<
     }
 
     // In other cases ask the authorization
-    const newStatus = await RNCalendarEvents.authorizeEventStore();
+    const newStatus = await RNCalendarEvents.requestPermissions();
     return { authorized: newStatus === "authorized", asked: true };
   } catch {
     return { authorized: false, asked: false };
@@ -53,7 +51,7 @@ export async function checkAndRequestPermission(): Promise<
  */
 export async function checkCalendarPermission() {
   try {
-    const status = await RNCalendarEvents.authorizationStatus();
+    const status = await RNCalendarEvents.checkPermissions();
     // If the permission is already granted return true
     return status === "authorized";
   } catch {
@@ -127,6 +125,7 @@ export const searchEventInCalendar = async (
             evs.find(
               e =>
                 e.title === title &&
+                e.endDate &&
                 new Date(e.endDate).getDay() === endDate.getDay()
             )
           )
@@ -140,7 +139,7 @@ export const searchEventInCalendar = async (
 
 export const saveCalendarEvent = (
   calendar: Calendar,
-  message: CreatedMessageWithContent,
+  message: CreatedMessageWithContentAndAttachments,
   dueDate: Date,
   title: string,
   onAddCalendarEvent?: (calendarEvent: AddCalendarEventPayload) => void

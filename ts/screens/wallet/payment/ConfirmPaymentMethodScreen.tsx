@@ -7,14 +7,13 @@ import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { ImportoEuroCents } from "../../../../definitions/backend/ImportoEuroCents";
 import { PaymentRequestsGetResponse } from "../../../../definitions/backend/PaymentRequestsGetResponse";
-import { ContextualHelp } from "../../../components/ContextualHelp";
+import ContextualInfo from "../../../components/ContextualInfo";
 import ButtonDefaultOpacity from "../../../components/ButtonDefaultOpacity";
 import { withLightModalContext } from "../../../components/helpers/withLightModalContext";
 import { withLoadingSpinner } from "../../../components/helpers/withLoadingSpinner";
 import BaseScreenComponent, {
   ContextualHelpPropsMarkdown
 } from "../../../components/screens/BaseScreenComponent";
-import TouchableDefaultOpacity from "../../../components/TouchableDefaultOpacity";
 import IconFont from "../../../components/ui/IconFont";
 import { LightModalContextInterface } from "../../../components/ui/LightModal";
 import Markdown from "../../../components/ui/Markdown";
@@ -63,6 +62,7 @@ import { isPaymentOutcomeCodeSuccessfully } from "../../../utils/payment";
 import { fetchTransactionsRequestWithExpBackoff } from "../../../store/actions/wallet/transactions";
 import { OutcomeCodesKey } from "../../../types/outcomeCode";
 import { getLookUpIdPO } from "../../../utils/pmLookUpId";
+import { Link } from "../../../components/core/typography/Link";
 
 export type NavigationParams = Readonly<{
   rptId: RptId;
@@ -140,7 +140,7 @@ const ConfirmPaymentMethodScreen: React.FC<Props> = (props: Props) => {
 
   const showHelp = () => {
     props.showModal(
-      <ContextualHelp
+      <ContextualInfo
         onClose={props.hideModal}
         title={I18n.t("wallet.whyAFee.title")}
         body={() => <Markdown>{I18n.t("wallet.whyAFee.text")}</Markdown>}
@@ -151,9 +151,8 @@ const ConfirmPaymentMethodScreen: React.FC<Props> = (props: Props) => {
     ? pagoPaApiUrlPrefixTest
     : pagoPaApiUrlPrefix;
 
-  const verifica: PaymentRequestsGetResponse = props.navigation.getParam(
-    "verifica"
-  );
+  const verifica: PaymentRequestsGetResponse =
+    props.navigation.getParam("verifica");
   const wallet: Wallet = props.navigation.getParam("wallet");
   const idPayment: string = props.navigation.getParam("idPayment");
   const paymentReason = verifica.causaleVersamento;
@@ -186,10 +185,8 @@ const ConfirmPaymentMethodScreen: React.FC<Props> = (props: Props) => {
       props.loadTransactions();
     } else {
       props.dispatchPaymentFailure(
-        maybeOutcomeCode.fold(undefined, oc => {
-          const maybeCode = OutcomeCodesKey.decode(oc);
-          return maybeCode.isRight() ? maybeCode.value : undefined;
-        })
+        maybeOutcomeCode.filter(OutcomeCodesKey.is).toUndefined(),
+        idPayment
       );
     }
     props.dispatchEndPaymentWebview("EXIT_PATH");
@@ -251,15 +248,13 @@ const ConfirmPaymentMethodScreen: React.FC<Props> = (props: Props) => {
               <H4>{` ${maybePsp.value.businessName}`}</H4>
             </H4>
           )}
-          <TouchableDefaultOpacity onPress={props.pickPsp}>
-            <Text link={true} bold={true}>
-              {I18n.t("payment.changePsp")}
-            </Text>
-          </TouchableDefaultOpacity>
+          <Link onPress={props.pickPsp} weight={"Bold"}>
+            {I18n.t("payment.changePsp")}
+          </Link>
           <View spacer={true} large={true} />
-          <TouchableDefaultOpacity testID="why-a-fee" onPress={showHelp}>
-            <Text link={true}>{I18n.t("wallet.whyAFee.title")}</Text>
-          </TouchableDefaultOpacity>
+          <Link onPress={showHelp} testID="why-a-fee">
+            {I18n.t("wallet.whyAFee.title")}
+          </Link>
         </View>
       </Content>
 
@@ -323,6 +318,7 @@ const ConfirmPaymentMethodScreen: React.FC<Props> = (props: Props) => {
           onFinish={handlePaymentOutcome}
           outcomeQueryparamName={webViewOutcomeParamName}
           onGoBack={handlePayWebviewGoBack}
+          modalHeaderTitle={I18n.t("wallet.challenge3ds.header")}
         />
       )}
     </BaseScreenComponent>
@@ -414,8 +410,10 @@ const mapDispatchToProps = (dispatch: Dispatch, props: OwnProps) => {
           transaction: undefined
         })
       ),
-    dispatchPaymentFailure: (outcomeCode: OutcomeCodesKey | undefined) =>
-      dispatch(paymentCompletedFailure(outcomeCode))
+    dispatchPaymentFailure: (
+      outcomeCode: OutcomeCodesKey | undefined,
+      paymentId: string
+    ) => dispatch(paymentCompletedFailure({ outcomeCode, paymentId }))
   };
 };
 

@@ -1,25 +1,28 @@
 import * as React from "react";
 import { View } from "native-base";
 import { FlatList, ListRenderItemInfo } from "react-native";
-import { TmpMerchantType } from "../../screens/merchants/CgnMerchantsListScreen";
 import { IOStyles } from "../../../../../components/core/variables/IOStyles";
 import ItemSeparatorComponent from "../../../../../components/ItemSeparatorComponent";
 import { EdgeBorderComponent } from "../../../../../components/screens/EdgeBorderComponent";
+import { OfflineMerchant } from "../../../../../../definitions/cgn/merchants/OfflineMerchant";
+import { OnlineMerchant } from "../../../../../../definitions/cgn/merchants/OnlineMerchant";
+import { Merchant } from "../../../../../../definitions/cgn/merchants/Merchant";
 import CgnMerchantListItem from "./CgnMerchantListItem";
 
 type Props = {
-  merchantList: ReadonlyArray<TmpMerchantType>;
-  onItemPress: () => void;
+  merchantList: ReadonlyArray<OfflineMerchant | OnlineMerchant>;
+  onItemPress: (id: Merchant["id"]) => void;
 };
 
 // Component that renders the list of merchants as a FlatList
 const CgnMerchantsListView: React.FunctionComponent<Props> = (props: Props) => {
-  const renderListItem = (listItem: ListRenderItemInfo<TmpMerchantType>) => (
+  const renderListItem = (
+    listItem: ListRenderItemInfo<OfflineMerchant | OnlineMerchant>
+  ) => (
     <CgnMerchantListItem
-      category={listItem.item.category}
+      categories={listItem.item.productCategories}
       name={listItem.item.name}
-      location={listItem.item.location}
-      onPress={props.onItemPress}
+      onPress={() => props.onItemPress(listItem.item.id)}
     />
   );
 
@@ -32,7 +35,7 @@ const CgnMerchantsListView: React.FunctionComponent<Props> = (props: Props) => {
           <ItemSeparatorComponent noPadded={true} />
         )}
         renderItem={renderListItem}
-        keyExtractor={c => `${c.name}-${c.category}`}
+        keyExtractor={c => c.id}
         keyboardShouldPersistTaps={"handled"}
         ListFooterComponent={
           props.merchantList.length > 0 && <EdgeBorderComponent />

@@ -2,10 +2,19 @@
  * Entities reducer
  */
 import { combineReducers } from "redux";
-
-import { PersistPartial } from "redux-persist";
+import {
+  createMigrate,
+  MigrationManifest,
+  PersistConfig,
+  PersistedState,
+  PersistPartial
+} from "redux-persist";
+import _ from "lodash";
+import AsyncStorage from "@react-native-community/async-storage";
+import * as pot from "italia-ts-commons/lib/pot";
 import { Action } from "../../actions/types";
 import { GlobalState } from "../types";
+import { isDevEnv } from "../../../utils/environment";
 import calendarEventsReducer, { CalendarEventsState } from "./calendarEvents";
 import messagesReducer, { MessagesState } from "./messages";
 import messagesStatusReducer, {
@@ -30,6 +39,44 @@ export type EntitiesState = Readonly<{
 }>;
 
 export type PersistedEntitiesState = EntitiesState & PersistPartial;
+
+const CURRENT_REDUX_ENTITIES_STORE_VERSION = 1;
+const migrations: MigrationManifest = {
+  // version 0
+  // remove "currentSelectedService" section
+  "0": (state: PersistedState): PersistedEntitiesState => {
+    const entities = state as PersistedEntitiesState;
+    return {
+      ...entities,
+      services: { ..._.omit(entities.services, "currentSelectedService") }
+    };
+  },
+  // version 1
+  // remove services section from persisted entities
+  "1": (state: PersistedState): PersistedEntitiesState => {
+    const entities = state as PersistedEntitiesState;
+    return {
+      ...entities,
+      services: {
+        servicePreference: pot.none,
+        byId: {},
+        byOrgFiscalCode: {},
+        readState: {},
+        visible: pot.none,
+        firstLoading: { isFirstServicesLoadingCompleted: false }
+      }
+    };
+  }
+};
+
+// A custom configuration to avoid to persist messages section
+export const entitiesPersistConfig: PersistConfig = {
+  key: "entities",
+  storage: AsyncStorage,
+  version: CURRENT_REDUX_ENTITIES_STORE_VERSION,
+  blacklist: ["messages", "services"],
+  migrate: createMigrate(migrations, { debug: isDevEnv })
+};
 
 const reducer = combineReducers<EntitiesState, Action>({
   messages: messagesReducer,

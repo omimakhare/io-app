@@ -23,10 +23,11 @@ import {
   identificationSuccess
 } from "../store/actions/identification";
 import {
-  navigateToMessageDetailScreenAction,
+  navigateToMessageRouterScreen,
   navigateToOnboardingPinScreenAction
 } from "../store/actions/navigation";
 import { clearNotificationPendingMessage } from "../store/actions/notifications";
+import { updatePin } from "../store/actions/pinset";
 import {
   paymentDeletePayment,
   runDeleteActivePaymentSaga
@@ -43,7 +44,6 @@ import { isPaymentOngoingSelector } from "../store/reducers/wallet/payment";
 import { PinString } from "../types/PinString";
 import { SagaCallReturnType } from "../types/utils";
 import { deletePin } from "../utils/keychain";
-import { updatePin } from "../store/actions/pinset";
 
 type ResultAction =
   | ActionType<typeof identificationCancel>
@@ -69,9 +69,8 @@ function* waitIdentificationResult(): Generator<
 
     case getType(identificationPinReset): {
       // If a payment is occurring, delete the active payment from pagoPA
-      const paymentState: ReturnType<typeof paymentsCurrentStateSelector> = yield select(
-        paymentsCurrentStateSelector
-      );
+      const paymentState: ReturnType<typeof paymentsCurrentStateSelector> =
+        yield select(paymentsCurrentStateSelector);
       if (paymentState.kind === "ACTIVATED") {
         yield put(runDeleteActivePaymentSaga());
         // we try to wait untinl the payment deactivation is completed. If the request to backend fails for any reason, we proceed anyway with session invalidation
@@ -162,14 +161,12 @@ function* startAndHandleIdentificationResult(
     yield put(startApplicationInitialization());
   } else if (identificationResult === IdentificationResult.success) {
     // Check if we have a pending notification message
-    const pendingMessageState: ReturnType<typeof pendingMessageStateSelector> = yield select(
-      pendingMessageStateSelector
-    );
+    const pendingMessageState: ReturnType<typeof pendingMessageStateSelector> =
+      yield select(pendingMessageStateSelector);
 
     // Check if there is a payment ongoing
-    const isPaymentOngoing: ReturnType<typeof isPaymentOngoingSelector> = yield select(
-      isPaymentOngoingSelector
-    );
+    const isPaymentOngoing: ReturnType<typeof isPaymentOngoingSelector> =
+      yield select(isPaymentOngoingSelector);
 
     if (!isPaymentOngoing && pendingMessageState) {
       // We have a pending notification message to handle
@@ -178,8 +175,8 @@ function* startAndHandleIdentificationResult(
       // Remove the pending message from the notification state
       yield put(clearNotificationPendingMessage());
 
-      // Navigate to message details screen
-      yield put(navigateToMessageDetailScreenAction({ messageId }));
+      // Navigate to message router screen
+      yield put(navigateToMessageRouterScreen({ messageId }));
     }
   }
 }

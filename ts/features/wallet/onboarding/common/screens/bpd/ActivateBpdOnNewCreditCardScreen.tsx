@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NavigationScreenProps } from "react-navigation";
+import { NavigationStackScreenProps } from "react-navigation-stack";
 import I18n from "../../../../../../i18n";
 import { PaymentMethod } from "../../../../../../types/pagopa";
 import { emptyContextualHelp } from "../../../../../../utils/emptyContextualHelp";
@@ -8,9 +8,8 @@ import ActivateBpdOnNewPaymentMethodScreen from "./ActivateBpdOnNewPaymentMethod
 type ActivateBpdOnNewCreditCardScreenNavigationParams = {
   creditCards: ReadonlyArray<PaymentMethod>;
 };
-type Props = NavigationScreenProps<
-  ActivateBpdOnNewCreditCardScreenNavigationParams
->;
+type Props =
+  NavigationStackScreenProps<ActivateBpdOnNewCreditCardScreenNavigationParams>;
 
 export const ActivateBpdOnNewCreditCardScreen: React.FC<Props> = (
   props: Props

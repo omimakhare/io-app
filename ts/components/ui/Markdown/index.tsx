@@ -1,8 +1,9 @@
 import { fromNullable } from "fp-ts/lib/Option";
 import React from "react";
-import { AppState, AppStateStatus } from "react-native";
 import {
   ActivityIndicator,
+  AppState,
+  AppStateStatus,
   InteractionManager,
   LayoutAnimation,
   Platform,
@@ -20,6 +21,7 @@ import { filterXSS } from "xss";
 import I18n from "../../../i18n";
 import { ReduxProps } from "../../../store/actions/types";
 import customVariables from "../../../theme/variables";
+import { WithTestID } from "../../../types/WithTestID";
 import { remarkProcessor } from "../../../utils/markdown";
 import { AVOID_ZOOM_JS, closeInjectedScript } from "../../../utils/webview";
 import { handleLinkMessage } from "./handlers/link";
@@ -73,6 +75,8 @@ body {
   color: ${customVariables.textColor};
   font-size: ${customVariables.fontSize1}px;
   font-family: 'Titillium Web';
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -184,7 +188,7 @@ const OLD_DEMO_TAG_MARKDOWN_REGEX = /^\[demo\]([\s\S]+?)\[\/demo\]\s*\n{2,}/;
 const convertOldDemoMarkdownTag = (markdown: string) =>
   markdown.replace(
     OLD_DEMO_TAG_MARKDOWN_REGEX,
-    (_, g1: string) => `[[IO-DEMO]]\n| ${g1}\n`
+    (_, g1: string) => `::div[${g1}]{.io-demo-block}\n`
   );
 
 type OwnProps = {
@@ -205,7 +209,7 @@ type OwnProps = {
   letUserZoom?: boolean;
 };
 
-type Props = OwnProps & ReduxProps;
+type Props = WithTestID<OwnProps> & ReduxProps;
 
 type State = {
   html?: string;
@@ -254,13 +258,8 @@ class Markdown extends React.PureComponent<Props, State> {
 
   public componentDidUpdate(prevProps: Props) {
     const { children: prevChildren } = prevProps;
-    const {
-      children,
-      animated,
-      onError,
-      cssStyle,
-      useCustomSortedList
-    } = this.props;
+    const { children, animated, onError, cssStyle, useCustomSortedList } =
+      this.props;
 
     // If the children changes we need to re-compile it
     if (children !== prevChildren) {
@@ -307,6 +306,7 @@ class Markdown extends React.PureComponent<Props, State> {
       <React.Fragment>
         {isLoading && (
           <ActivityIndicator
+            testID={this.props.testID}
             size={"large"}
             color={customVariables.brandPrimary}
             animating={true}
@@ -324,6 +324,9 @@ class Markdown extends React.PureComponent<Props, State> {
           <ScrollView nestedScrollEnabled={false} style={containerStyle}>
             <View style={containerStyle}>
               <WebView
+                androidCameraAccessDisabled={true}
+                androidMicrophoneAccessDisabled={true}
+                testID={this.props.testID}
                 accessible={false}
                 key={this.state.webviewKey}
                 textZoom={100}

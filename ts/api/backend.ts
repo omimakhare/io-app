@@ -11,12 +11,9 @@ import {
   ioResponseDecoder as ioD,
   IPostApiRequestType,
   IResponseType,
-  RequestHeaderProducer,
-  RequestHeaders,
   ResponseDecoder
 } from "italia-ts-commons/lib/requests";
 import { Tuple2 } from "italia-ts-commons/lib/tuples";
-import { Omit } from "italia-ts-commons/lib/types";
 import { Millisecond } from "italia-ts-commons/lib/units";
 import { InitializedProfile } from "../../definitions/backend/InitializedProfile";
 import { ProblemJson } from "../../definitions/backend/ProblemJson";
@@ -31,6 +28,8 @@ import {
   getPaymentInfoDefaultDecoder,
   GetPaymentInfoT,
   getServiceDefaultDecoder,
+  getServicePreferencesDefaultDecoder,
+  GetServicePreferencesT,
   GetServiceT,
   getSessionStateDefaultDecoder,
   GetSessionStateT,
@@ -40,7 +39,6 @@ import {
   GetUserDataProcessingT,
   getUserMessageDefaultDecoder,
   getUserMessagesDefaultDecoder,
-  GetUserMessagesT,
   GetUserMessageT,
   getUserMetadataDefaultDecoder,
   GetUserMetadataT,
@@ -51,6 +49,8 @@ import {
   StartEmailValidationProcessT,
   updateProfileDefaultDecoder,
   UpdateProfileT,
+  upsertServicePreferencesDefaultDecoder,
+  UpsertServicePreferencesT,
   upsertUserDataProcessingDefaultDecoder,
   UpsertUserDataProcessingT,
   upsertUserMetadataDefaultDecoder,
@@ -58,6 +58,11 @@ import {
 } from "../../definitions/backend/requestTypes";
 import { SessionToken } from "../types/SessionToken";
 import { constantPollingFetch, defaultRetryingFetch } from "../utils/fetch";
+import {
+  tokenHeaderProducer,
+  withBearerToken as withToken
+} from "../utils/api";
+import { PaginatedPublicMessagesCollection } from "../../definitions/backend/PaginatedPublicMessagesCollection";
 
 /**
  * We will retry for as many times when polling for a payment ID.
@@ -117,14 +122,6 @@ export type LogoutT = IPostApiRequestType<
   BaseResponseType<SuccessResponse>
 >;
 
-function ParamAuthorizationBearerHeaderProducer<
-  P extends { readonly Bearer: string }
->(): RequestHeaderProducer<P, "Authorization"> {
-  return (p: P): RequestHeaders<"Authorization"> => ({
-    Authorization: `Bearer ${p.Bearer}`
-  });
-}
-
 //
 // Create client
 //
@@ -139,8 +136,6 @@ export function BackendClient(
     baseUrl,
     fetchApi
   };
-
-  const tokenHeaderProducer = ParamAuthorizationBearerHeaderProducer();
 
   const getSessionT: GetSessionStateT = {
     method: "get",
@@ -158,6 +153,23 @@ export function BackendClient(
     response_decoder: getServiceDefaultDecoder()
   };
 
+  const getServicePreferenceT: GetServicePreferencesT = {
+    method: "get",
+    url: params => `/api/v1/services/${params.service_id}/preferences`,
+    query: _ => ({}),
+    headers: tokenHeaderProducer,
+    response_decoder: getServicePreferencesDefaultDecoder()
+  };
+
+  const upsertServicePreferenceT: UpsertServicePreferencesT = {
+    method: "post",
+    url: params => `/api/v1/services/${params.service_id}/preferences`,
+    headers: composeHeaderProducers(tokenHeaderProducer, ApiHeaderJson),
+    query: _ => ({}),
+    body: body => JSON.stringify(body.servicePreference),
+    response_decoder: upsertServicePreferencesDefaultDecoder()
+  };
+
   const getVisibleServicesT: GetVisibleServicesT = {
     method: "get",
     url: () => "/api/v1/services",
@@ -166,9 +178,30 @@ export function BackendClient(
     response_decoder: getVisibleServicesDefaultDecoder()
   };
 
-  const getMessagesT: GetUserMessagesT = {
+  // TODO: this is a temporary fix due to a bug in openapi-codegen-ts
+  // https://github.com/pagopa/openapi-codegen-ts/pull/265
+  // Please remove it once we upgrade
+  type GetUserMessagesTCustom = r.IGetApiRequestType<
+    {
+      readonly enrich_result_data?: boolean;
+      readonly page_size?: number;
+      readonly maximum_id?: number;
+      readonly minimum_id?: number;
+      readonly Bearer: string;
+    },
+    "Authorization",
+    never,
+    | r.IResponseType<200, PaginatedPublicMessagesCollection>
+    | r.IResponseType<400, ProblemJson>
+    | r.IResponseType<401, undefined>
+    | r.IResponseType<404, ProblemJson>
+    | r.IResponseType<429, ProblemJson>
+    | r.IResponseType<500, ProblemJson>
+  >;
+
+  const getMessagesT: GetUserMessagesTCustom = {
     method: "get",
-    url: () => `/api/v1/messages`,
+    url: _ => "/api/v1/messages",
     query: _ => ({}),
     headers: tokenHeaderProducer,
     response_decoder: getUserMessagesDefaultDecoder()
@@ -376,19 +409,16 @@ export function BackendClient(
     query: () => ({}),
     response_decoder: getSupportTokenDefaultDecoder()
   };
-
-  // withBearerToken injects the field 'Baerer' with value token into the parameter P
-  // of the f function
-  const withBearerToken = <P extends { Bearer: string }, R>(
-    f: (p: P) => Promise<R>
-  ) => async (po: Omit<P, "Bearer">): Promise<R> => {
-    const params = Object.assign({ Bearer: String(token) }, po) as P;
-    return f(params);
-  };
-
+  const withBearerToken = withToken(token);
   return {
     getSession: withBearerToken(createFetchRequestForApi(getSessionT, options)),
     getService: withBearerToken(createFetchRequestForApi(getServiceT, options)),
+    getServicePreference: withBearerToken(
+      createFetchRequestForApi(getServicePreferenceT, options)
+    ),
+    upsertServicePreference: withBearerToken(
+      createFetchRequestForApi(upsertServicePreferenceT, options)
+    ),
     getVisibleServices: withBearerToken(
       createFetchRequestForApi(getVisibleServicesT, options)
     ),

@@ -2,6 +2,8 @@ import { right } from "fp-ts/lib/Either";
 import * as pot from "italia-ts-commons/lib/pot";
 import { testSaga } from "redux-saga-test-plan";
 import { put } from "redux-saga/effects";
+import { NonEmptyString } from "italia-ts-commons/lib/strings";
+
 import { CreatedMessageWithContentAndAttachments } from "../../../../definitions/backend/CreatedMessageWithContentAndAttachments";
 import { ServicePublic } from "../../../../definitions/backend/ServicePublic";
 import {
@@ -17,7 +19,10 @@ import {
 } from "../../../store/reducers/entities/messages/messagesById";
 import { messagesStatusSelector } from "../../../store/reducers/entities/messages/messagesStatus";
 import { servicesByIdSelector } from "../../../store/reducers/entities/services/servicesById";
-import { loadMessages } from "../../startup/watchLoadMessagesSaga";
+
+import { testLoadMessages } from "../watchLoadMessagesSaga";
+
+const loadMessages = testLoadMessages!;
 
 const testMessageId1 = "01BX9NSMKAAAS5PSP2FATZM6BQ";
 const testMessageId2 = "01CD4QN3Q2KS2T791PPMT2H9DM";
@@ -28,10 +33,11 @@ const testMessageWithContent1: CreatedMessageWithContentAndAttachments = {
   fiscal_code: "" as any,
   created_at: new Date(),
   content: {
-    markdown: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin eget fringilla neque, laoreet volutpat elit. Nunc leo nisi, dignissim eget lobortis non, faucibus in augue." as any,
+    markdown:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin eget fringilla neque, laoreet volutpat elit. Nunc leo nisi, dignissim eget lobortis non, faucibus in augue." as any,
     subject: "Lorem ipsum..." as any
   },
-  sender_service_id: testServiceId1
+  sender_service_id: testServiceId1 as NonEmptyString
 };
 
 const testMessageMeta1: MessageState = {
@@ -49,10 +55,11 @@ const testMessageWithContent2: CreatedMessageWithContentAndAttachments = {
   fiscal_code: "" as any,
   created_at: new Date(),
   content: {
-    markdown: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin eget fringilla neque, laoreet volutpat elit. Nunc leo nisi, dignissim eget lobortis non, faucibus in augue." as any,
+    markdown:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin eget fringilla neque, laoreet volutpat elit. Nunc leo nisi, dignissim eget lobortis non, faucibus in augue." as any,
     subject: "Lorem ipsum..." as any
   },
-  sender_service_id: testServiceId1
+  sender_service_id: testServiceId1 as NonEmptyString
 };
 
 const testMessageMeta2: MessageState = {

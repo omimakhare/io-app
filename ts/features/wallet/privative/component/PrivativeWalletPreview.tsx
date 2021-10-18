@@ -1,10 +1,16 @@
-import { Option } from "fp-ts/lib/Option";
 import * as React from "react";
-import { Image, ImageStyle, StyleProp, StyleSheet } from "react-native";
+import {
+  Image,
+  ImageStyle,
+  ImageURISource,
+  StyleProp,
+  StyleSheet
+} from "react-native";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import unknownGdo from "../../../../../img/wallet/unknown-gdo.png";
 import { IOStyles } from "../../../../components/core/variables/IOStyles";
+import I18n from "../../../../i18n";
 import { navigateToPrivativeDetailScreen } from "../../../../store/actions/navigation";
 import { GlobalState } from "../../../../store/reducers/types";
 import { isImageURISource } from "../../../../types/image";
@@ -40,8 +46,11 @@ const fallbackLoyaltyLogo: React.ReactElement = (
   />
 );
 
-const renderRight = (props: Props, size: Option<[number, number]>) =>
-  size.fold(fallbackLoyaltyLogo, imgDim => {
+const Right = (
+  props: Props & Pick<ImageURISource, "uri">
+): React.ReactElement => {
+  const size = useImageResize(BASE_IMG_W, BASE_IMG_H, props.uri);
+  return size.fold(fallbackLoyaltyLogo, imgDim => {
     const imageUrl = props.privative.icon;
 
     const imageStyle: StyleProp<ImageStyle> = {
@@ -58,6 +67,15 @@ const renderRight = (props: Props, size: Option<[number, number]>) =>
       />
     );
   });
+};
+
+const getAccessibilityRepresentation = (privative: PrivativePaymentMethod) => {
+  const cardRepresentation = I18n.t("wallet.accessibility.folded.privative", {
+    blurredNumber: privative.info.blurredNumber
+  });
+  const cta = I18n.t("wallet.accessibility.folded.cta");
+  return `${cardRepresentation}, ${cta}`;
+};
 
 /**
  * A card preview for a privative card
@@ -65,15 +83,15 @@ const renderRight = (props: Props, size: Option<[number, number]>) =>
  * @constructor
  */
 const PrivativeWalletPreview: React.FunctionComponent<Props> = props => {
-  const rightElement = isImageURISource(props.privative.icon)
-    ? renderRight(
-        props,
-        useImageResize(BASE_IMG_W, BASE_IMG_H, props.privative.icon.uri)
-      )
-    : fallbackLoyaltyLogo;
+  const rightElement = isImageURISource(props.privative.icon) ? (
+    <Right {...props} uri={props.privative.icon.uri} />
+  ) : (
+    fallbackLoyaltyLogo
+  );
 
   return (
     <CardLayoutPreview
+      accessibilityLabel={getAccessibilityRepresentation(props.privative)}
       left={
         <BlurredPan style={IOStyles.flex} numberOfLines={1} testID={"caption"}>
           {props.privative.caption}

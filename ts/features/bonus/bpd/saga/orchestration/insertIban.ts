@@ -6,7 +6,6 @@ import { ActionType, getType, isActionOf } from "typesafe-actions";
 import { navigationHistoryPop } from "../../../../../store/actions/navigationHistory";
 import { navigationCurrentRouteSelector } from "../../../../../store/reducers/navigation";
 import { paymentMethodsSelector } from "../../../../../store/reducers/wallet/wallets";
-import { EnableableFunctionsTypeEnum } from "../../../../../types/pagopa";
 import { hasFunctionEnabled } from "../../../../../utils/walletv2";
 import {
   navigateToBpdIbanInsertion,
@@ -21,6 +20,7 @@ import {
 } from "../../store/actions/iban";
 import { bpdOnboardingCompleted } from "../../store/actions/onboarding";
 import { isBpdOnboardingOngoing } from "../../store/reducers/onboarding/ongoing";
+import { EnableableFunctionsEnum } from "../../../../../../definitions/pagopa/EnableableFunctions";
 
 // TODO: if isOnboarding===true, change with an action that triggers a saga that choose
 //  which screen to display, (the user already have payment methods or not)
@@ -33,9 +33,8 @@ export const isMainScreen = (screenName: string) =>
   screenName === BPD_ROUTES.IBAN;
 
 function* ensureMainScreen() {
-  const currentRoute: ReturnType<typeof navigationCurrentRouteSelector> = yield select(
-    navigationCurrentRouteSelector
-  );
+  const currentRoute: ReturnType<typeof navigationCurrentRouteSelector> =
+    yield select(navigationCurrentRouteSelector);
 
   if (currentRoute.isSome() && !isMainScreen(currentRoute.value)) {
     yield put(navigateToBpdIbanInsertion());
@@ -43,9 +42,8 @@ function* ensureMainScreen() {
 }
 
 export function* bpdIbanInsertionWorker() {
-  const onboardingOngoing: ReturnType<typeof isBpdOnboardingOngoing> = yield select(
-    isBpdOnboardingOngoing
-  );
+  const onboardingOngoing: ReturnType<typeof isBpdOnboardingOngoing> =
+    yield select(isBpdOnboardingOngoing);
   // ensure the first screen of the saga is the iban main screen.
   yield call(ensureMainScreen);
 
@@ -60,9 +58,8 @@ export function* bpdIbanInsertionWorker() {
     yield put(NavigationActions.back());
   } else {
     if (onboardingOngoing) {
-      const paymentMethods: ReturnType<typeof paymentMethodsSelector> = yield select(
-        paymentMethodsSelector
-      );
+      const paymentMethods: ReturnType<typeof paymentMethodsSelector> =
+        yield select(paymentMethodsSelector);
 
       // Error while loading the wallet, display a message that informs the user about the error
       if (paymentMethods.kind === "PotNoneError") {
@@ -74,7 +71,7 @@ export function* bpdIbanInsertionWorker() {
 
       const hasAtLeastOnePaymentMethodWithBpd = pot.getOrElse(
         pot.map(paymentMethods, pm =>
-          pm.some(p => hasFunctionEnabled(p, EnableableFunctionsTypeEnum.BPD))
+          pm.some(p => hasFunctionEnabled(p, EnableableFunctionsEnum.BPD))
         ),
         false
       );

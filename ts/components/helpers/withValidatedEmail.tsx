@@ -1,11 +1,9 @@
 import { none } from "fp-ts/lib/Option";
 import React from "react";
 import { View } from "react-native";
-import {
-  NavigationEvents,
-  NavigationScreenProps,
-  StackActions
-} from "react-navigation";
+import { NavigationEvents, StackActions } from "react-navigation";
+import { NavigationStackScreenProps } from "react-navigation-stack";
+
 import { connect } from "react-redux";
 import { withLightModalContext } from "../../components/helpers/withLightModalContext";
 import RemindEmailValidationOverlay from "../../components/RemindEmailValidationOverlay";
@@ -20,7 +18,7 @@ import { withConditionalView } from "./withConditionalView";
 
 export type ModalProps = LightModalContextInterface &
   ReturnType<typeof mapDispatchToProps> &
-  NavigationScreenProps;
+  NavigationStackScreenProps;
 
 /*
   ModalRemindEmailValidationOverlay is the component that allows viewing the email reminder via light modal.
@@ -51,11 +49,8 @@ class ModalRemindEmailValidationOverlay extends React.Component<ModalProps> {
     // due a known bug (see https://github.com/react-navigation/react-navigation/issues/4867)
     // when the user is in onboarding phase and he asks to go to insert email screen
     // the navigation is forced reset
-    const resetAction = StackActions.reset({
-      index: 0,
-      actions: [navigateToEmailInsertScreen()]
-    });
-    this.props.navigation.dispatch(resetAction);
+    this.props.navigation.dispatch(StackActions.popToTop());
+    this.props.navigation.dispatch(navigateToEmailInsertScreen());
   };
 
   public render() {
@@ -92,8 +87,8 @@ type Props = ReturnType<typeof mapStateToProps>;
 
 const mapStateToProps = (state: GlobalState) => {
   const isEmailValidated = isProfileEmailValidatedSelector(state);
-  const acknowledgeOnEmailValidated = emailValidationSelector(state)
-    .acknowledgeOnEmailValidated;
+  const acknowledgeOnEmailValidated =
+    emailValidationSelector(state).acknowledgeOnEmailValidated;
   // we consider the email validated (-> hide the reminder screen) when
   // the profile has the email validated flag on ON AND (if it is some) when the user
   // knows about the validation completed

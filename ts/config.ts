@@ -7,7 +7,8 @@ import { Millisecond, Second } from "italia-ts-commons/lib/units";
 import Config from "react-native-config";
 
 // default repository for fetching app content (e.g. services metadata)
-const DEFAULT_CONTENT_REPO_URL = "https://assets.cdn.io.italia.it" as NonEmptyString;
+const DEFAULT_CONTENT_REPO_URL =
+  "https://assets.cdn.io.italia.it" as NonEmptyString;
 
 // default timeout of fetch (in ms)
 const DEFAULT_FETCH_TIMEOUT_MS = 8000;
@@ -53,7 +54,6 @@ export const bpdTestOverlay: boolean = Config.BPD_TEST_OVERLAY === "YES";
 
 export const bpdTransactionsPaging: boolean =
   Config.BPD_TRANSACTIONS_PAGING === "YES";
-export const bpdTechnicalIban: boolean = Config.BPD_TECHNICAL_IBAN === "YES";
 
 export const bpdApiUrlPrefix: string = Config.BPD_API_URL_PREFIX;
 
@@ -67,8 +67,18 @@ export const isPlaygroundsEnabled: boolean =
 export const cgnEnabled: boolean = Config.CGN_ENABLED === "YES";
 export const cgnTestOverlay: boolean = Config.CGN_TEST_OVERLAY === "YES";
 
+// EU Covid Certificate feature flag
+export const euCovidCertificateEnabled: boolean =
+  Config.EU_COVID_CERT_ENABLED === "YES";
+
+// SiciliaVola Feature Flag
+export const svEnabled: boolean = Config.SICILIAVOLA_ENABLED === "YES";
+
+// Paypal configuration
+export const payPalEnabled: boolean = Config.PAYPAL_ENABLED === "YES";
+
 // version of ToS
-export const tosVersion: NonNegativeNumber = 2.1 as NonNegativeNumber;
+export const tosVersion: NonNegativeNumber = 2.4 as NonNegativeNumber;
 
 export const fetchTimeout = t.Integer.decode(
   parseInt(Config.FETCH_TIMEOUT_MS, 10)

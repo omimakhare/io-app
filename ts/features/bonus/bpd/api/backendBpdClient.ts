@@ -7,8 +7,6 @@ import { defaultRetryingFetch } from "../../../../utils/fetch";
 import { awardPeriodsGET } from "./award-period/v1";
 import {
   citizenDELETE,
-  citizenEnrollPUT,
-  citizenFindGET,
   citizenPaymentMethodPATCH,
   citizenRankingGET,
   PatchOptions
@@ -55,26 +53,16 @@ export function BackendBpdClient(
     ["Ocp-Apim-Subscription-Key"]?: string;
   };
 
-  const withBearerToken = <P extends extendHeaders, R>(
-    f: (p: P) => Promise<R>
-  ) => async (po: P): Promise<R> => {
-    const params = Object.assign({ Bearer: token }, po) as P;
-    return f(params);
-  };
+  const withBearerToken =
+    <P extends extendHeaders, R>(f: (p: P) => Promise<R>) =>
+    async (po: P): Promise<R> => {
+      const params = Object.assign({ Bearer: token }, po) as P;
+      return f(params);
+    };
 
   return {
-    /**
-     * @deprecated
-     */
-    find: withBearerToken(createFetchRequestForApi(citizenFindGET, options)),
     findV2: withBearerToken(
       createFetchRequestForApi(citizenV2FindGET, options)
-    ),
-    /**
-     * @deprecated
-     */
-    enrollCitizenIO: withBearerToken(
-      createFetchRequestForApi(citizenEnrollPUT, options)
     ),
     enrollCitizenV2IO: withBearerToken(
       createFetchRequestForApi(citizenV2EnrollPUT, options)

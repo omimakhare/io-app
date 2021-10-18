@@ -15,16 +15,16 @@ export function* handleLoadAllBonusActivations(
   >["getAllBonusActivations"]
 ): SagaIterator {
   try {
-    const allBonusActivationsResponse: SagaCallReturnType<typeof getAllBonusActivations> = yield call(
-      getAllBonusActivations,
-      {}
-    );
+    const allBonusActivationsResponse: SagaCallReturnType<
+      typeof getAllBonusActivations
+    > = yield call(getAllBonusActivations, {});
     if (allBonusActivationsResponse.isRight()) {
       if (allBonusActivationsResponse.value.status === 200) {
         // for each bonus load details
         const items = allBonusActivationsResponse.value.value.items;
         const ids = items.map(i => i.id);
         yield all(ids.map(id => put(loadBonusVacanzeFromId.request(id))));
+        yield put(loadAllBonusActivations.success(items));
         return;
       }
       throw Error(

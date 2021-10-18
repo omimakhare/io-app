@@ -17,9 +17,9 @@ export const resetProfileState = createStandardAction("RESET_PROFILE_STATE")();
 export const profileLoadRequest = createStandardAction(
   "PROFILE_LOAD_REQUEST"
 )();
-export const profileLoadSuccess = createStandardAction("PROFILE_LOAD_SUCCESS")<
-  InitializedProfile
->();
+export const profileLoadSuccess = createStandardAction(
+  "PROFILE_LOAD_SUCCESS"
+)<InitializedProfile>();
 
 export const profileLoadFailure = createAction(
   "PROFILE_LOAD_FAILURE",
@@ -28,11 +28,16 @@ export const profileLoadFailure = createAction(
 
 type ProfileUpsertPayload = Partial<Omit<InitializedProfile, "version">>;
 
+type UpsertProfileSuccessPayload = {
+  value: InitializedProfile;
+  newValue: InitializedProfile;
+};
+
 export const profileUpsert = createAsyncAction(
   "PROFILE_UPSERT_REQUEST",
   "PROFILE_UPSERT_SUCCESS",
   "PROFILE_UPSERT_FAILURE"
-)<ProfileUpsertPayload, InitializedProfile, Error>();
+)<ProfileUpsertPayload, UpsertProfileSuccessPayload, Error>();
 
 export const startEmailValidation = createAsyncAction(
   "START_EMAIL_VALIDATION_REQUEST",

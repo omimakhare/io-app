@@ -5,7 +5,6 @@
  */
 import { fromNullable, none, Option } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { createSelector } from "reselect";
 import { getType } from "typesafe-actions";
 import { EmailAddress } from "../../../definitions/backend/EmailAddress";
@@ -19,6 +18,7 @@ import {
   resetProfileState
 } from "../actions/profile";
 import { Action } from "../actions/types";
+import { ServicesPreferencesModeEnum } from "../../../definitions/backend/ServicesPreferencesMode";
 import { GlobalState } from "./types";
 
 export type ProfileState = pot.Pot<InitializedProfile, Error>;
@@ -46,10 +46,6 @@ export const isInboxEnabledSelector = createSelector(profileSelector, profile =>
 export const getProfileEmail = (
   user: InitializedProfile
 ): Option<EmailAddress> => fromNullable(user.email);
-
-export const getProfileMobilePhone = (
-  user: InitializedProfile
-): Option<NonEmptyString> => fromNullable(user.spid_mobile_phone);
 
 export const getProfileSpidEmail = (
   user: InitializedProfile
@@ -89,26 +85,6 @@ export const profileNameSurnameSelector = createSelector(
     )
 );
 
-// return the spid email address (as a string)
-export const profileSpidEmailSelector = createSelector(
-  profileSelector,
-  (profile: ProfileState): Option<string> =>
-    pot.getOrElse(
-      pot.map(profile, p => getProfileSpidEmail(p)),
-      none
-    )
-);
-
-// return the mobile phone number (as a string)
-export const profileMobilePhoneSelector = createSelector(
-  profileSelector,
-  (profile: ProfileState): Option<string> =>
-    pot.getOrElse(
-      pot.map(profile, p => getProfileMobilePhone(p)),
-      none
-    )
-);
-
 // return true if the profile has an email
 export const hasProfileEmail = (user: InitializedProfile): boolean =>
   user.email !== undefined;
@@ -122,6 +98,24 @@ export const hasProfileEmailSelector = createSelector(
       false
     )
 );
+
+// return the profile services preference mode
+export const profileServicePreferencesModeSelector = createSelector(
+  profileSelector,
+  (profile: ProfileState): ServicesPreferencesModeEnum | undefined =>
+    pot.getOrElse(
+      pot.map(profile, p => p.service_preferences_settings.mode),
+      undefined
+    )
+);
+
+// return true if the profile services preference mode is set (mode is set only when AUTO or MANUAL is the current mode)
+export const isServicesPreferenceModeSet = (
+  mode: ServicesPreferencesModeEnum | undefined
+): boolean =>
+  [ServicesPreferencesModeEnum.AUTO, ServicesPreferencesModeEnum.MANUAL].some(
+    sp => sp === mode
+  );
 
 // return true if the profile has an email and it is validated
 export const isProfileEmailValidated = (user: InitializedProfile): boolean =>
@@ -172,7 +166,7 @@ const reducer = (
     case getType(profileUpsert.success):
       if (pot.isSome(state)) {
         const currentProfile = state.value;
-        const newProfile = action.payload;
+        const newProfile = action.payload.newValue;
         // The API profile is still absent
         if (
           !currentProfile.has_profile &&
@@ -190,6 +184,8 @@ const reducer = (
             preferred_languages: newProfile.preferred_languages,
             blocked_inbox_or_channels: newProfile.blocked_inbox_or_channels,
             accepted_tos_version: newProfile.accepted_tos_version,
+            service_preferences_settings:
+              newProfile.service_preferences_settings,
             version: 0
           });
         }
@@ -210,6 +206,8 @@ const reducer = (
             preferred_languages: newProfile.preferred_languages,
             blocked_inbox_or_channels: newProfile.blocked_inbox_or_channels,
             accepted_tos_version: newProfile.accepted_tos_version,
+            service_preferences_settings:
+              newProfile.service_preferences_settings,
             version: newProfile.version
           });
         }

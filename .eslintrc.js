@@ -5,16 +5,23 @@ module.exports = {
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
     "plugin:sonarjs/recommended",
-    "prettier",
-    "prettier/@typescript-eslint"
+    "prettier"
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: "tsconfig.json",
     sourceType: "module"
   },
-  plugins: ["@typescript-eslint", "react", "import", "functional", "sonarjs"],
+  plugins: [
+    "@typescript-eslint",
+    "react",
+    "react-hooks",
+    "import",
+    "functional",
+    "sonarjs"
+  ],
   rules: {
     "no-case-declarations": "off",
     "no-inner-declarations": "off",
@@ -83,8 +90,17 @@ module.exports = {
     "functional/no-let": "error",
     "functional/immutable-data": "error",
     "sonarjs/no-small-switch": "off",
-    "sonarjs/no-duplicate-string": "off"
+    "sonarjs/no-duplicate-string": "off",
+    "sonarjs/no-nested-template-literals": "warn"
   },
+  overrides: [
+    {
+      files: ["**/*.test.*"],
+      rules: {
+        "@typescript-eslint/no-non-null-assertion": "off"
+      }
+    }
+  ],
   settings: {
     react: {
       version: "detect"

@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import * as React from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
@@ -7,7 +8,6 @@ import { Content } from "native-base";
 import BaseScreenComponent from "../../../../../components/screens/BaseScreenComponent";
 import I18n from "../../../../../i18n";
 import { GlobalState } from "../../../../../store/reducers/types";
-import { SectionStatusKey } from "../../../../../types/backendStatus";
 import {
   isError,
   isLoading,
@@ -19,8 +19,9 @@ import { fetchPagoPaTimeout } from "../../../../../config";
 import { emptyContextualHelp } from "../../../../../utils/emptyContextualHelp";
 import FooterWithButtons from "../../../../../components/ui/FooterWithButtons";
 import { cancelButtonProps } from "../../../../bonus/bonusVacanze/components/buttons/ButtonConfigurations";
-import SectionStatusComponent from "../../../../../components/SectionStatusComponent";
+import SectionStatusComponent from "../../../../../components/SectionStatus";
 import { IOStyles } from "../../../../../components/core/variables/IOStyles";
+import { SectionStatusKey } from "../../../../../store/reducers/backendStatus";
 import { SearchBankComponent } from "./SearchBankComponent";
 
 type MethodType = "bancomatPay" | "bancomat";
@@ -53,15 +54,17 @@ const getSectionName = (methodType: MethodType): SectionStatusKey => {
  * @constructor
  */
 const SearchBankScreen: React.FunctionComponent<Props> = (props: Props) => {
-  // eslint-disable-next-line functional/no-let
-  let errorRetry: number | undefined;
+  const errorRetry = useRef<number | undefined>(undefined);
+  const { bankRemoteValue, loadAbis } = props;
+
   React.useEffect(() => {
-    if (isUndefined(props.bankRemoteValue)) {
-      props.loadAbis();
-    } else if (isError(props.bankRemoteValue)) {
-      errorRetry = setTimeout(props.loadAbis, fetchPagoPaTimeout);
+    if (isUndefined(bankRemoteValue)) {
+      loadAbis();
+    } else if (isError(bankRemoteValue)) {
+      // eslint-disable-next-line functional/immutable-data
+      errorRetry.current = setTimeout(loadAbis, fetchPagoPaTimeout);
     }
-  }, [props.bankRemoteValue]);
+  }, [bankRemoteValue, loadAbis]);
 
   return (
     <BaseScreenComponent
@@ -74,7 +77,7 @@ const SearchBankScreen: React.FunctionComponent<Props> = (props: Props) => {
       })}
       contextualHelp={emptyContextualHelp}
     >
-      <NavigationEvents onDidBlur={() => clearTimeout(errorRetry)} />
+      <NavigationEvents onDidBlur={() => clearTimeout(errorRetry.current)} />
       <SafeAreaView style={IOStyles.flex}>
         <Content style={IOStyles.flex}>
           <SearchBankComponent

@@ -1,7 +1,7 @@
 import { SagaIterator } from "redux-saga";
 import { put, select } from "redux-saga/effects";
 import { ApplicationState } from "../../store/actions/application";
-import { navigateToMessageDetailScreenAction } from "../../store/actions/navigation";
+import { navigateToMessageRouterScreen } from "../../store/actions/navigation";
 import { clearNotificationPendingMessage } from "../../store/actions/notifications";
 import { pendingMessageStateSelector } from "../../store/reducers/notifications/pendingMessage";
 import { isPaymentOngoingSelector } from "../../store/reducers/wallet/payment";
@@ -18,14 +18,12 @@ export function* watchNotificationSaga(
 ): SagaIterator {
   if (lastState !== "active" && newState === "active") {
     // Check if there is a payment ongoing
-    const isPaymentOngoing: ReturnType<typeof isPaymentOngoingSelector> = yield select(
-      isPaymentOngoingSelector
-    );
+    const isPaymentOngoing: ReturnType<typeof isPaymentOngoingSelector> =
+      yield select(isPaymentOngoingSelector);
 
     // Check if we have a pending notification message
-    const pendingMessageState: ReturnType<typeof pendingMessageStateSelector> = yield select(
-      pendingMessageStateSelector
-    );
+    const pendingMessageState: ReturnType<typeof pendingMessageStateSelector> =
+      yield select(pendingMessageStateSelector);
 
     // We only navigate to the new message from a push if we're not in a
     // payment flow
@@ -37,7 +35,7 @@ export function* watchNotificationSaga(
       yield put(clearNotificationPendingMessage());
 
       // Navigate to message details screen
-      yield put(navigateToMessageDetailScreenAction({ messageId }));
+      yield put(navigateToMessageRouterScreen({ messageId }));
     }
   }
 }

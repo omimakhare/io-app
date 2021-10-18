@@ -3,14 +3,19 @@ import React from "react";
 import { Modal, StyleSheet, View } from "react-native";
 import _ from "lodash";
 import { fromNullable, Option } from "fp-ts/lib/Option";
-import uuid from "uuid/v4";
+import { v4 as uuid } from "uuid";
 import { WebViewNavigation } from "react-native-webview/lib/WebViewTypes";
 import URLParse from "url-parse";
+
 import BaseScreenComponent from "../screens/BaseScreenComponent";
 import { emptyContextualHelp } from "../../utils/emptyContextualHelp";
 import { RefreshIndicator } from "../ui/RefreshIndicator";
 import { useHardwareBackButton } from "../../features/bonus/bonusVacanze/components/hooks/useHardwareBackButton";
 import { isTestEnv } from "../../utils/environment";
+import I18n from "../../i18n";
+import { InfoBox } from "../../components/box/InfoBox";
+import { IOColors } from "../../components/core/variables/IOColors";
+import { Label } from "../../components/core/typography/Label";
 
 type Props = {
   // the uri to send the form data thought POST
@@ -40,6 +45,7 @@ type Props = {
 };
 
 const styles = StyleSheet.create({
+  descriptionContainer: { paddingHorizontal: 20, paddingVertical: 14 },
   refreshIndicatorContainer: {
     position: "absolute",
     left: 0,
@@ -57,15 +63,16 @@ const formId = `io-form-id-${uuid()}`;
 // the javascript submit command
 const injectedJSPostForm: string = `<script type="application/javascript">document.getElementById("${formId}").submit();</script>`;
 
+const kvToString = (kv: [string, unknown]) =>
+  `<input type="text" name="${kv[0]}" value="${kv[1]}">`;
+
 // create an html form giving a form data and an uri
 const crateAutoPostForm = (
   form: Record<string, unknown>,
   uri: string
 ): string =>
   `<html><body><form action="${uri}" method="post" id="${formId}" enctype="application/x-www-form-urlencoded" style="display: none;">
-    ${_.toPairs(form)
-      .map(kv => `<input type="text" name="${kv[0]}" value="${kv[1]}">`)
-      .join("<br/>")}
+    ${_.toPairs(form).map(kvToString).join("<br/>")}
   </form></body></html>`;
 
 /**
@@ -167,6 +174,21 @@ export const PayWebViewModal = (props: Props) => {
         contextualHelp={emptyContextualHelp}
         headerTitle={props.modalHeaderTitle}
       >
+        <View
+          style={styles.descriptionContainer}
+          testID={"PayWebViewModal-description"}
+        >
+          <InfoBox
+            iconName={"io-info"}
+            iconColor={IOColors.bluegreyDark}
+            iconSize={24}
+          >
+            <Label weight={"Regular"} color={"bluegrey"}>
+              {I18n.t("wallet.challenge3ds.description")}
+            </Label>
+          </InfoBox>
+        </View>
+
         <WebView
           textZoom={100}
           source={{
@@ -174,6 +196,8 @@ export const PayWebViewModal = (props: Props) => {
               crateAutoPostForm(props.formData, props.postUri) +
               injectedJSPostForm
           }}
+          androidCameraAccessDisabled={true}
+          androidMicrophoneAccessDisabled={true}
           onShouldStartLoadWithRequest={handleOnShouldStartLoadWithRequest}
           startInLoadingState={true}
           renderLoading={renderLoading}

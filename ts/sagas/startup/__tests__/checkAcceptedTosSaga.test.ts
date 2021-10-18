@@ -4,52 +4,38 @@ import {
   NonNegativeInteger,
   NonNegativeNumber
 } from "italia-ts-commons/lib/numbers";
-import {
-  EmailString,
-  FiscalCode,
-  NonEmptyString
-} from "italia-ts-commons/lib/strings";
-import { InitializedProfile } from "../../../../definitions/backend/InitializedProfile";
 import { tosVersion } from "../../../config";
 import { navigateToTosScreen } from "../../../store/actions/navigation";
 import { tosAccepted } from "../../../store/actions/onboarding";
 import { isProfileFirstOnBoarding } from "../../../store/reducers/profile";
+import mockedProfile from "../../../__mocks__/initializedProfile";
 import { checkAcceptedTosSaga } from "../checkAcceptedTosSaga";
 
 describe("checkAcceptedTosSaga", () => {
-  const firstOnboardingProfile: InitializedProfile = {
+  const firstOnboardingProfile = {
+    ...mockedProfile,
     has_profile: false,
     is_email_enabled: true,
     is_inbox_enabled: true,
     is_webhook_enabled: true,
-    version: 0 as NonNegativeInteger,
-    spid_email: "test@example.com" as EmailString,
-    family_name: "Connor",
-    name: "John",
-    fiscal_code: "XYZ" as FiscalCode,
-    spid_mobile_phone: "123" as NonEmptyString
+    version: 0 as NonNegativeInteger
   };
 
-  const oldOnboardedProfile: InitializedProfile = {
+  const oldOnboardedProfile = {
+    ...mockedProfile,
     has_profile: true,
+    is_email_enabled: false,
     is_inbox_enabled: true,
     is_webhook_enabled: true,
-    is_email_enabled: false,
-    email: "test@example.com" as EmailString,
-    spid_email: "test@example.com" as EmailString,
-    family_name: "Connor",
-    name: "John",
-    fiscal_code: "XYZ" as FiscalCode,
-    spid_mobile_phone: "123" as NonEmptyString,
     version: 1 as NonNegativeInteger
   };
 
-  const notUpdatedProfile: InitializedProfile = {
+  const notUpdatedProfile = {
     ...oldOnboardedProfile,
     accepted_tos_version: (tosVersion - 1) as NonNegativeNumber
   };
 
-  const updatedProfile: InitializedProfile = {
+  const updatedProfile = {
     ...oldOnboardedProfile,
     accepted_tos_version: tosVersion
   };
@@ -71,10 +57,13 @@ describe("checkAcceptedTosSaga", () => {
         .run());
   });
 
-  describe("when user has accepted ToS before its version was persisted", () => {
-    it("should do nothing", () =>
-      expectSaga(checkAcceptedTosSaga, oldOnboardedProfile)
-        .not.put(navigateToTosScreen)
+  describe("when user has not accepted ToS", () => {
+    it("should navigate to ToS screen", () =>
+      expectSaga(checkAcceptedTosSaga, {
+        ...oldOnboardedProfile,
+        accepted_tos_version: undefined
+      })
+        .put(navigateToTosScreen)
         .run());
   });
 

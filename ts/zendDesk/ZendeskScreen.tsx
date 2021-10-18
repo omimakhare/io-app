@@ -50,7 +50,7 @@ const zendeskDefaultJwtConfig: ZendeskConfig = {
 };
 const zendeskDefaultAnonymousConfig: ZendeskConfig = {
   key: "6e2c01f7-cebc-4c77-b878-3ed3c749a835",
-  appId: "f7e19679ac1ea5dcd46bc5c10964a72d789fab22d9cfe180",
+  appId: "7f23d5b0eadc5b4f2cc83df3898c6f607bad769fe053a186",
   clientId: "mobile_sdk_client_a33378642f966d8e9e11",
   url: "https://pagopa.zendesk.com",
   token: ""

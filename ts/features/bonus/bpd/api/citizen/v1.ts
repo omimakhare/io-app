@@ -1,64 +1,12 @@
 import { left } from "fp-ts/lib/Either";
 import * as t from "io-ts";
 import * as r from "italia-ts-commons/lib/requests";
-import {
-  ApiHeaderJson,
-  composeHeaderProducers,
-  MapResponseType
-} from "italia-ts-commons/lib/requests";
 import { CitizenPatchDTO } from "../../../../../../definitions/bpd/citizen/CitizenPatchDTO";
 import {
-  enrollmentDecoder,
-  EnrollmentT,
   findRankingUsingGETDefaultDecoder,
-  FindRankingUsingGETT,
-  findUsingGETDecoder,
-  FindUsingGETT
+  FindRankingUsingGETT
 } from "../../../../../../definitions/bpd/citizen/requestTypes";
 import { bpdHeadersProducers } from "../common";
-import { PatchedCitizenResource } from "../patchedTypes";
-
-/* CITIZEN (status, enroll, delete) */
-/**
- * @deprecated
- */
-type FindUsingGETTExtra = MapResponseType<
-  FindUsingGETT,
-  200,
-  PatchedCitizenResource
->;
-
-/**
- * @deprecated
- */
-export const citizenFindGET: FindUsingGETTExtra = {
-  method: "get",
-  url: () => `/bpd/io/citizen`,
-  query: _ => ({}),
-  headers: bpdHeadersProducers(),
-  response_decoder: findUsingGETDecoder(PatchedCitizenResource)
-};
-
-/**
- * @deprecated
- */
-type EnrollmentTTExtra = MapResponseType<
-  EnrollmentT,
-  200,
-  PatchedCitizenResource
->;
-
-/**
- * @deprecated
- */
-export const citizenEnrollPUT: EnrollmentTTExtra = {
-  method: "put",
-  url: () => `/bpd/io/citizen`,
-  query: _ => ({}),
-  body: _ => "",
-  headers: composeHeaderProducers(bpdHeadersProducers(), ApiHeaderJson),
-  response_decoder: enrollmentDecoder(PatchedCitizenResource)
-};
 
 const deleteResponseDecoders = r.composeResponseDecoders(
   r.composeResponseDecoders(
@@ -140,25 +88,30 @@ export function patchIbanDecoders<A, O>(type: t.Type<A, O>) {
 
 // custom implementation of patch request
 // TODO abstract the usage of fetch
-export const citizenPaymentMethodPATCH = (
-  options: PatchOptions,
-  token: string,
-  payload: CitizenPatchDTO,
-  headers: Record<string, string>
-): (() => Promise<t.Validation<finalType>>) => async () => {
-  const response = await options.fetchApi(`${options.baseUrl}/bpd/io/citizen`, {
-    method: "patch",
-    headers: { ...headers, Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload)
-  });
-  const decode = await patchIbanDecoders(PatchIban)(response);
-  return (
-    decode ??
-    left([
+export const citizenPaymentMethodPATCH =
+  (
+    options: PatchOptions,
+    token: string,
+    payload: CitizenPatchDTO,
+    headers: Record<string, string>
+  ): (() => Promise<t.Validation<finalType>>) =>
+  async () => {
+    const response = await options.fetchApi(
+      `${options.baseUrl}/bpd/io/citizen`,
       {
-        context: [],
-        value: response
+        method: "patch",
+        headers: { ...headers, Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload)
       }
-    ])
-  );
-};
+    );
+    const decode = await patchIbanDecoders(PatchIban)(response);
+    return (
+      decode ??
+      left([
+        {
+          context: [],
+          value: response
+        }
+      ])
+    );
+  };
