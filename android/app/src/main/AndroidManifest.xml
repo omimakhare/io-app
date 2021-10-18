@@ -110,6 +110,22 @@
         <data android:scheme="ioit" android:host="ioit" />
       </intent-filter>
     </activity>
+
+    <!-- Zendesk activities style -->
+    <activity android:name="zendesk.support.guide.HelpCenterActivity"
+              android:theme="@style/ZendeskTheme" />
+
+    <activity android:name="zendesk.support.guide.ViewArticleActivity"
+              android:theme="@style/ZendeskTheme" />
+
+    <activity android:name="zendesk.support.request.RequestActivity"
+              android:theme="@style/ZendeskTheme" />
+
+    <activity android:name="zendesk.support.requestlist.RequestListActivity"
+              android:theme="@style/ZendeskTheme" />
+    <activity android:name="zendesk.messaging.MessagingActivity"
+              android:theme="@style/ZendeskTheme" />
+    <!-- END Zendesk -->
   </application>
 
 </manifest>
