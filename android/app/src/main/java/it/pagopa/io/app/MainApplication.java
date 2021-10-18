@@ -6,7 +6,6 @@ import com.facebook.react.ReactPackage;
 import com.facebook.soloader.SoLoader;
 import com.instabug.reactlibrary.RNInstabugReactnativePackage;
 import it.ipzs.cieidsdk.native_bridge.CiePackage;
-import com.saranshmalik.rnzendeskchat.RNZendeskChatPackage;
 import com.reactnativecommunity.rnpermissions.RNPermissionsPackage;
 import com.reactnativecommunity.art.ARTPackage;
 
@@ -39,7 +38,6 @@ public class MainApplication extends Application implements ReactApplication {
       List<ReactPackage> packages = new PackageList(this).getPackages();
       packages.add(new RNPermissionsPackage());
       packages.add(new CiePackage());
-      packages.add(new RNZendeskChatPackage());
       packages.add(new ARTPackage());
       return packages;
     }
