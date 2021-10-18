@@ -340,6 +340,13 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
           isFirstItem={true}
         />
 
+        {/* zendesk */}
+        <ListItemComponent
+          title={"Zendesk showroom"}
+          onPress={() => navigation.navigate(ROUTES.ZENDESK)}
+          isFirstItem={true}
+        />
+
         {this.developerListItem(
           I18n.t("profile.main.pagoPaEnvironment.pagoPaEnv"),
           isPagoPATestEnabled,

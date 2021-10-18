@@ -12,6 +12,7 @@ import { GlobalState } from "../store/reducers/types";
 import { profileSelector } from "../store/reducers/profile";
 import { EdgeBorderComponent } from "../components/screens/EdgeBorderComponent";
 import { isStringNullyOrEmpty } from "../utils/strings";
+import { isIos } from "../utils/platform";
 
 /**
  * considerazioni
@@ -50,8 +51,8 @@ const zendeskDefaultJwtConfig: ZendeskConfig = {
 };
 const zendeskDefaultAnonymousConfig: ZendeskConfig = {
   key: "6e2c01f7-cebc-4c77-b878-3ed3c749a835",
-  appId: "7f23d5b0eadc5b4f2cc83df3898c6f607bad769fe053a186",
-  clientId: "mobile_sdk_client_a33378642f966d8e9e11",
+  appId: "8547479b47fdacd0e8f74a4fb076a41014dee620d1d890b3",
+  clientId: "mobile_sdk_client_518ee6a8160220698f97",
   url: "https://pagopa.zendesk.com",
   token: ""
 };
@@ -138,6 +139,13 @@ const ZendeskScreen = (props: Props) => {
   };
 
   const resetIdentity = () => {
+    if (isIos) {
+      Alert.alert(
+        "non implemtato",
+        "il reset è stato implementato solo su Android (repo matteob)"
+      );
+      return;
+    }
     ZendDesk.resetUserIdentity();
     Alert.alert("identificazione", "reset eseguito");
   };

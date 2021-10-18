@@ -12766,6 +12766,10 @@ react-native-webview@^11.13.0:
     escape-string-regexp "2.0.0"
     invariant "2.2.4"
 
+"react-native-zendesk-v2@https://github.com/Undermaken/react-native-zendesk.git#f880c842020233152a94b256d5c54b55b2817007":
+  version "0.2.1"
+  resolved "https://github.com/Undermaken/react-native-zendesk.git#f880c842020233152a94b256d5c54b55b2817007"
+
 react-native@0.64.2:
   version "0.64.2"
   resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.64.2.tgz#233b6ed84ac4749c8bc2a2d6cf63577a1c437d18"

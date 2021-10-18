@@ -113,6 +113,7 @@ const ROUTES = {
 
   // Developer Mode
   SHOWROOM: "SHOWROOM",
+  ZENDESK: "ZENDESK",
   WEB_PLAYGROUND: "WEB_PLAYGROUND",
 
   // Preferences

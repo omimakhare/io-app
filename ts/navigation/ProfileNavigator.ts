@@ -21,6 +21,7 @@ import { Showroom } from "../screens/showroom/Showroom";
 import ServicesPreferenceScreen from "../screens/profile/ServicesPreferenceScreen";
 import ProfileDataScreen from "../screens/profile/ProfileDataScreen";
 import SecurityScreen from "../screens/profile/SecurityScreen";
+import ZendeskScreen from "../zendDesk/ZendeskScreen";
 import ROUTES from "./routes";
 
 /**
@@ -81,6 +82,9 @@ const ProfileNavigator = createStackNavigator(
     },
     [ROUTES.SHOWROOM]: {
       screen: Showroom
+    },
+    [ROUTES.ZENDESK]: {
+      screen: ZendeskScreen
     },
     [ROUTES.WEB_PLAYGROUND]: {
       screen: WebPlayground
