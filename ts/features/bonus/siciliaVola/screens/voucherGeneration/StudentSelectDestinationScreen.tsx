@@ -5,11 +5,14 @@ import { Dispatch } from "redux";
 import { SafeAreaView, ScrollView } from "react-native";
 import { isSome } from "fp-ts/lib/Option";
 import BaseScreenComponent from "../../../../../components/screens/BaseScreenComponent";
+import ListItemComponent from "../../../../../components/screens/ListItemComponent";
+import TextboxWithSuggestion from "../../../../../components/ui/TextboxWithSuggestion";
 import { emptyContextualHelp } from "../../../../../utils/emptyContextualHelp";
 import { IOStyles } from "../../../../../components/core/variables/IOStyles";
 import { H1 } from "../../../../../components/core/typography/H1";
 import { GlobalState } from "../../../../../store/reducers/types";
 import {
+  svGenerateVoucherAvailableMunicipality,
   svGenerateVoucherBack,
   svGenerateVoucherCancel,
   svGenerateVoucherFailure,
@@ -66,6 +69,13 @@ const StudentSelectDestinationScreen = (
               "bonus.sv.voucherGeneration.student.selectDestination.title"
             )}
           </H1>
+          <TextboxWithSuggestion<string>
+            data={props.data}
+            renderItem={s => (
+              <ListItemComponent title={s.item} subTitle={s.item} />
+            )}
+            onChangeText={t => props.municipality()}
+          />
         </ScrollView>
         <FooterWithButtons
           type={"TwoButtonsInlineHalf"}
@@ -76,18 +86,36 @@ const StudentSelectDestinationScreen = (
     </BaseScreenComponent>
   );
 };
+
+function makeid(length) {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   back: () => dispatch(svGenerateVoucherBack()),
   cancel: () => dispatch(svGenerateVoucherCancel()),
+  municipality: () =>
+    dispatch(svGenerateVoucherAvailableMunicipality.request("asd")),
   failure: (reason: string) => dispatch(svGenerateVoucherFailure(reason)),
   selectUniversity: (university: University) =>
     dispatch(svGenerateVoucherSelectUniversity(university)),
   navigateToSelectFlightsDateScreen: () =>
     dispatch(navigateToSvSelectFlightsDateScreen())
 });
-const mapStateToProps = (state: GlobalState) => ({
-  selectedBeneficiaryCategory: selectedBeneficiaryCategorySelector(state)
-});
+const mapStateToProps = (state: GlobalState) => {
+  console.log("state update");
+  return {
+    selectedBeneficiaryCategory: selectedBeneficiaryCategorySelector(state),
+    data: [makeid(1), makeid(1)]
+  };
+};
 
 export default connect(
   mapStateToProps,

@@ -72,7 +72,7 @@ export const euCovidCertificateEnabled: boolean =
   Config.EU_COVID_CERT_ENABLED === "YES";
 
 // SiciliaVola Feature Flag
-export const svEnabled: boolean = Config.SICILIAVOLA_ENABLED === "YES";
+export const svEnabled: boolean = true;
 
 // Paypal configuration
 export const payPalEnabled: boolean = Config.PAYPAL_ENABLED === "YES";

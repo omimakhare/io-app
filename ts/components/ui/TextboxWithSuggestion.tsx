@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import {
   Body,
   Container,
@@ -122,7 +122,7 @@ const TextboxWithSuggestionModal = <T extends unknown>(
           <View spacer large />
 
           <FlatList
-            data={props.data}
+            data={props.data.current}
             ListFooterComponent={props.isLoading && <FooterLoading />}
             renderItem={props.renderItem}
             keyExtractor={props.keyExtractor}
@@ -149,6 +149,8 @@ const TextboxWithSuggestion = <T extends unknown>(props: Props<T>) => {
   const [selectedValue, setSelectedValue] = useState<string | undefined>(
     undefined
   );
+  const refVal = useRef<ReadonlyArray<T>>();
+  refVal.current = props.data;
 
   return (
     <>
@@ -160,7 +162,7 @@ const TextboxWithSuggestion = <T extends unknown>(props: Props<T>) => {
           onPress={() =>
             showModal(
               <TextboxWithSuggestionModal<T>
-                data={props.data}
+                data={refVal}
                 keyExtractor={props.keyExtractor}
                 renderItem={i => (
                   <ListItem
