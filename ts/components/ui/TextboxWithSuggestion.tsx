@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   FlatList,
   ListRenderItemInfo,
+  Modal,
   StyleSheet
 } from "react-native";
 import { SafeAreaView } from "react-native";
@@ -122,7 +123,7 @@ const TextboxWithSuggestionModal = <T extends unknown>(
           <View spacer large />
 
           <FlatList
-            data={props.data.current}
+            data={props.data}
             ListFooterComponent={props.isLoading && <FooterLoading />}
             renderItem={props.renderItem}
             keyExtractor={props.keyExtractor}
@@ -149,41 +150,42 @@ const TextboxWithSuggestion = <T extends unknown>(props: Props<T>) => {
   const [selectedValue, setSelectedValue] = useState<string | undefined>(
     undefined
   );
-  const refVal = useRef<ReadonlyArray<T>>();
-  refVal.current = props.data;
+
+  const [modal, setModal] = useState<boolean>(false);
+
+  console.log("render" + props.data);
 
   return (
     <>
+      <Modal visible={modal}>
+        <TextboxWithSuggestionModal<T>
+          data={props.data}
+          keyExtractor={props.keyExtractor}
+          renderItem={i => (
+            <ListItem
+              icon={false}
+              onPress={() => {
+                setSelectedValue(props.onSelectValue(i.item));
+                setModal(false);
+              }}
+            >
+              {props.renderItem(i)}
+            </ListItem>
+          )}
+          title={props.title}
+          label={props.label}
+          placeholder={props.placeholder}
+          onClose={() => setModal(false)}
+          onChangeText={props.onChangeText}
+          isLoading={props.isLoading}
+        />
+      </Modal>
       <View style={styles.container}>
         <H5 color={"bluegreyDark"}>{props.label}</H5>
         <View spacer={true} />
         <TouchableDefaultOpacity
           style={styles.inputContainer}
-          onPress={() =>
-            showModal(
-              <TextboxWithSuggestionModal<T>
-                data={refVal}
-                keyExtractor={props.keyExtractor}
-                renderItem={i => (
-                  <ListItem
-                    icon={false}
-                    onPress={() => {
-                      setSelectedValue(props.onSelectValue(i.item));
-                      hideModal();
-                    }}
-                  >
-                    {props.renderItem(i)}
-                  </ListItem>
-                )}
-                title={props.title}
-                label={props.label}
-                placeholder={props.placeholder}
-                onClose={hideModal}
-                onChangeText={props.onChangeText}
-                isLoading={props.isLoading}
-              />
-            )
-          }
+          onPress={() => setModal(true)}
         >
           {selectedValue ? (
             <H4 weight={"Regular"} color={"bluegrey"}>

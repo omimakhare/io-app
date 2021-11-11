@@ -51,6 +51,7 @@ const StudentSelectDestinationScreen = (
     props.failure("The selected category is not Student");
     return null;
   }
+  console.log("render StudentSelectDestinationScreen " + props.data);
 
   return (
     <BaseScreenComponent
@@ -109,10 +110,11 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   navigateToSelectFlightsDateScreen: () => navigateToSvSelectFlightsDateScreen()
 });
 const mapStateToProps = (state: GlobalState) => {
-  console.log("state update");
+  const newId = makeid(1);
+  console.log("state update " + newId);
   return {
     selectedBeneficiaryCategory: selectedBeneficiaryCategorySelector(state),
-    data: [makeid(1), makeid(1)]
+    data: [newId, newId]
   };
 };
 
