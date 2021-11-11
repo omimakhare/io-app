@@ -2,6 +2,52 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.38.0-rc.1](https://github.com/pagopa/io-app/compare/1.38.0-rc.0...1.38.0-rc.1) (2021-11-11)
+
+
+### Features
+
+* [[IA-278](https://pagopa.atlassian.net/browse/IA-278)] Use pagination API for messages ([#3441](https://github.com/pagopa/io-app/issues/3441)) ([c6089bb](https://github.com/pagopa/io-app/commit/c6089bb8b47e66dba8a9770f4293b4a0c6380f01))
+* [[IA-375](https://pagopa.atlassian.net/browse/IA-375)] Fixes the color contrast when the StatusMessage has aqua background color ([#3456](https://github.com/pagopa/io-app/issues/3456)) ([6178be7](https://github.com/pagopa/io-app/commit/6178be7e04d12191dbaaf0197a08d7edeab062d2))
+* [[IA-382](https://pagopa.atlassian.net/browse/IA-382)] Added a label read by screen reader ([#3477](https://github.com/pagopa/io-app/issues/3477)) ([2ab46f5](https://github.com/pagopa/io-app/commit/2ab46f5abb74a81aa9c8da10cd4ffd30826b22db))
+
+
+### Bug Fixes
+
+* [[IA-440](https://pagopa.atlassian.net/browse/IA-440)] Wrong color assignment in SectionStatus ([#3484](https://github.com/pagopa/io-app/issues/3484)) ([1a8ff2a](https://github.com/pagopa/io-app/commit/1a8ff2a2def5a9c57b47e6ee91e190b9313ffdb0))
+* [[IA-444](https://pagopa.atlassian.net/browse/IA-444)] Credit card holder is always the user using the app ([#3486](https://github.com/pagopa/io-app/issues/3486)) ([a3f7246](https://github.com/pagopa/io-app/commit/a3f7246ff0fe1262c3a4f0c71d9f53ec65038e06))
+
+
+### Chores
+
+* [[IA-407](https://pagopa.atlassian.net/browse/IA-407)] Refactoring the list of available payment method to add  ([#3465](https://github.com/pagopa/io-app/issues/3465)) ([99d7de4](https://github.com/pagopa/io-app/commit/99d7de402f1ebdf48ce486a023a0ff43b9853f5e))
+* [[IA-424](https://pagopa.atlassian.net/browse/IA-424)] Upgrade @pagopa/io-pagopa-commons ([#3481](https://github.com/pagopa/io-app/issues/3481)) ([4acb115](https://github.com/pagopa/io-app/commit/4acb1158625cc288d19b6d29da02e48e808e702b))
+* [[IAI-76](https://pagopa.atlassian.net/browse/IAI-76)] Remove react-navigation-redux-helpers ([#3448](https://github.com/pagopa/io-app/issues/3448)) ([900d7fb](https://github.com/pagopa/io-app/commit/900d7fb52444d2424b0fbfc1637e91724b73e754))
+* [[IAI-86](https://pagopa.atlassian.net/browse/IAI-86),[IAI-87](https://pagopa.atlassian.net/browse/IAI-87)] Add credit card e2e test and refactoring ([#3482](https://github.com/pagopa/io-app/issues/3482)) ([e17ed67](https://github.com/pagopa/io-app/commit/e17ed67fc88faaa5fc67e7b4bf5621e17b9120a1))
+* **deps:** bump browserslist from 4.16.1 to 4.17.6 ([#3474](https://github.com/pagopa/io-app/issues/3474)) ([6ae7699](https://github.com/pagopa/io-app/commit/6ae7699a1c136b0c7dbfe50be5251a6252688096))
+* **Zendesk:** [[ASZ-104](https://pagopa.atlassian.net/browse/ASZ-104)] Add zendesk package ([#3462](https://github.com/pagopa/io-app/issues/3462)) ([1e30dd7](https://github.com/pagopa/io-app/commit/1e30dd762b04bfd7ed98b0862739865600e85601))
+
+## [1.38.0-rc.0](https://github.com/pagopa/io-app/compare/1.37.0-rc.4...1.38.0-rc.0) (2021-11-08)
+
+## [1.37.0-rc.4](https://github.com/pagopa/io-app/compare/1.37.0-rc.3...1.37.0-rc.4) (2021-11-05)
+
+
+### Features
+
+* [[IA-304](https://pagopa.atlassian.net/browse/IA-304)] Add "what is a psp" bottom sheet info ([#3469](https://github.com/pagopa/io-app/issues/3469)) ([53e617d](https://github.com/pagopa/io-app/commit/53e617d2a043b8daf7b37b8ef584187dcb260fef))
+
+
+### Bug Fixes
+
+* Linking.openURL doesn't open urls on Android ([#3478](https://github.com/pagopa/io-app/issues/3478)) ([ce57b85](https://github.com/pagopa/io-app/commit/ce57b859b9f6ab44683bd2d447ef3c4d952370c5))
+
+
+### Chores
+
+* **deps:** bump color-string from 1.5.3 to 1.6.0 ([#3473](https://github.com/pagopa/io-app/issues/3473)) ([f27382d](https://github.com/pagopa/io-app/commit/f27382d3a75bc2a7c61b41b86b8b668d6dc08d7d))
+* **deps:** bump ua-parser-js from 0.7.21 to 0.7.31 ([#3472](https://github.com/pagopa/io-app/issues/3472)) ([dfbd473](https://github.com/pagopa/io-app/commit/dfbd47378a53973baa5418c91c779e11771652e3))
+* **deps:** bump url-parse from 1.4.7 to 1.5.2 ([#3471](https://github.com/pagopa/io-app/issues/3471)) ([fdac5aa](https://github.com/pagopa/io-app/commit/fdac5aaf6a820b9ab8298e1861525b3658cd7229))
+
 ## [1.37.0-rc.3](https://github.com/pagopa/io-app/compare/1.37.0-rc.2...1.37.0-rc.3) (2021-11-04)
 
 
