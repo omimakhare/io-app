@@ -428,6 +428,9 @@ PODS:
     - React
   - RNScreens (2.18.1):
     - React-Core
+  - RNSentry (3.2.3):
+    - React-Core
+    - Sentry (= 7.5.1)
   - RNSha256 (1.2.3):
     - React
   - RNShare (3.7.0):
@@ -441,6 +444,9 @@ PODS:
     - ZendeskAnswerBotSDK
     - ZendeskChatSDK
     - ZendeskSupportSDK (~> 5.0.5)
+  - Sentry (7.5.1):
+    - Sentry/Core (= 7.5.1)
+  - Sentry/Core (7.5.1)
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
     - Yoga (~> 1.14)
@@ -563,6 +569,7 @@ DEPENDENCIES:
   - RNPermissions (from `../node_modules/react-native-permissions/`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - "RNSentry (from `../node_modules/@sentry/react-native`)"
   - RNSha256 (from `../node_modules/react-native-sha256`)
   - RNShare (from `../node_modules/react-native-share`)
   - RNSVG (from `../node_modules/react-native-svg`)
@@ -585,6 +592,7 @@ SPEC REPOS:
     - libevent
     - Mixpanel
     - OpenSSL-Universal
+    - Sentry
     - YogaKit
     - ZendeskAnswerBotProvidersSDK
     - ZendeskAnswerBotSDK
@@ -739,6 +747,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RNSentry:
+    :path: "../node_modules/@sentry/react-native"
   RNSha256:
     :path: "../node_modules/react-native-sha256"
   RNShare:
@@ -836,11 +846,13 @@ SPEC CHECKSUMS:
   RNPermissions: 5df468064df661a4c8c017e2791ce90d7695eea5
   RNReanimated: dd8c286ab5dd4ba36d3a7fef8bff7e08711b5476
   RNScreens: f7ad633b2e0190b77b6a7aab7f914fad6f198d8d
+  RNSentry: 97bc62fa65b7d663daee16fbf9771470852217cf
   RNSha256: ab608b2185fb806185a2cc112e0474065842e085
   RNShare: a1d5064df7a0ebe778d001869b3f0a124bf0a491
   RNSVG: 551acb6562324b1d52a4e0758f7ca0ec234e278f
   RNVectorIcons: da6fe858f5a65d7bbc3379540a889b0b12aa5976
   RNZendeskChat: cfd82228c7601d9c100d0a4ed6266944d81e7600
+  Sentry: 0718c3ad7a08e1107599610795adaf08864102f3
   Yoga: 575c581c63e0d35c9a83f4b46d01d63abc1100ac
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
   ZendeskAnswerBotProvidersSDK: 294a835f26545e5da4e0e9b168cceab8aca930c6

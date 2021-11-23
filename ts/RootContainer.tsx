@@ -4,6 +4,7 @@ import { AppState, Linking, Platform, StatusBar } from "react-native";
 import SplashScreen from "react-native-splash-screen";
 import { createAppContainer } from "react-navigation";
 import { connect } from "react-redux";
+import { routingInstrumentation } from "./App";
 import { initialiseInstabug } from "./boot/configureInstabug";
 import configurePushNotifications from "./boot/configurePushNotification";
 import { BetaTestingOverlay } from "./components/BetaTestingOverlay";
@@ -147,6 +148,7 @@ class RootContainer extends React.PureComponent<Props> {
         {Platform.OS === "android" && <FlagSecureComponent />}
         <AppContainer
           ref={navigatorRef => {
+            routingInstrumentation.registerAppContainer(navigatorRef);
             NavigationService.setTopLevelNavigator(navigatorRef);
           }}
           onNavigationStateChange={(prevState, currentState) => {

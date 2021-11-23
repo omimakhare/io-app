@@ -2,6 +2,7 @@ import * as pot from "italia-ts-commons/lib/pot";
 import { fromNullable } from "fp-ts/lib/Option";
 import { call, put, select } from "redux-saga/effects";
 import { ActionType } from "typesafe-actions";
+import * as Sentry from "@sentry/react-native";
 import { Certificate } from "../../../../../definitions/eu_covid_cert/Certificate";
 import { mixpanelTrack } from "../../../../mixpanel";
 import { SagaCallReturnType } from "../../../../types/utils";
@@ -88,6 +89,12 @@ export function* handleGetEuCovidCertificate(
   const profile: ReturnType<typeof profileSelector> = yield select(
     profileSelector
   );
+  const transaction = Sentry.startTransaction({ name: "getCertificate" });
+  Sentry.getCurrentHub().configureScope(scope => scope.setSpan(transaction));
+  const span = transaction.startChild({
+    op: "saga.saga",
+    description: `/getCertificate`
+  });
 
   try {
     const getCertificateResult: SagaCallReturnType<typeof getCertificate> =
@@ -101,6 +108,8 @@ export function* handleGetEuCovidCertificate(
         }
       });
     if (getCertificateResult.isRight()) {
+      span.setStatus("ok");
+      transaction.setStatus("ok");
       if (getCertificateResult.value.status === 200) {
         // handled success
         yield put(
@@ -131,6 +140,8 @@ export function* handleGetEuCovidCertificate(
         })
       );
     } else {
+      span.setStatus("internal_error");
+      transaction.setStatus("internal_error");
       // cannot decode response
       yield put(
         euCovidCertificateGet.failure({
@@ -142,8 +153,14 @@ export function* handleGetEuCovidCertificate(
       );
     }
   } catch (e) {
+    span.setStatus("internal_error");
+    transaction.setStatus("internal_error");
+    Sentry.captureException(e);
     yield put(
       euCovidCertificateGet.failure({ ...getNetworkError(e), authCode })
     );
+  } finally {
+    span.finish();
+    transaction.finish();
   }
 }

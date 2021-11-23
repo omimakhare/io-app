@@ -17,8 +17,8 @@ import {
   setNativeExceptionHandler
 } from "react-native-exception-handler";
 
-import { App } from "./ts/App";
 import { mixpanel } from "./ts/mixpanel";
+import App from "./ts/App";
 
 const errorHandler = (e, isFatal) => {
   if (isFatal) {
