@@ -12,6 +12,7 @@ import {
   UIMessageDetails,
   UIMessageId
 } from "./types";
+import { EUCovidCertificateAuthCode } from "../../../../features/euCovidCert/types/EUCovidCertificate";
 
 /**
  * Map an enriched message item from API to the app domain.
@@ -88,7 +89,7 @@ const getEUCovidCertificate = ({
   | undefined => {
   if (eu_covid_cert) {
     return {
-      authCode: eu_covid_cert.auth_code
+      authCode: eu_covid_cert.auth_code as EUCovidCertificateAuthCode
     };
   }
   return undefined;

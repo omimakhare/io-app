@@ -8,6 +8,7 @@ import { PaymentNoticeNumber } from "../../../../../definitions/backend/PaymentN
 import { PublicMessage } from "../../../../../definitions/backend/PublicMessage";
 import { ServiceId } from "../../../../../definitions/backend/ServiceId";
 import { TimeToLiveSeconds } from "../../../../../definitions/backend/TimeToLiveSeconds";
+import { EUCovidCertificateAuthCode } from "../../../../features/euCovidCert/types/EUCovidCertificate";
 
 // TODO: use type from API definitions once they are available
 export type MessageCategory =
@@ -66,7 +67,7 @@ export type PrescriptionData = {
   prescriberFiscalCode?: FiscalCode;
 };
 
-export type EUCovidCertificate = { authCode: string };
+export type EUCovidCertificate = { authCode: EUCovidCertificateAuthCode };
 
 export type PaymentData = {
   payee: {

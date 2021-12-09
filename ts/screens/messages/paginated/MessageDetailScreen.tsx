@@ -1,6 +1,6 @@
 import * as pot from "italia-ts-commons/lib/pot";
 import { Text, View } from "native-base";
-import React from "react";
+import React, { useEffect } from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import { NavigationStackScreenProps } from "react-navigation-stack";
 import { connect } from "react-redux";
@@ -14,7 +14,10 @@ import {
   loadMessageDetails,
   setMessageReadState
 } from "../../../store/actions/messages";
-import { navigateToServiceDetailsScreen } from "../../../store/actions/navigation";
+import {
+  navigateBack,
+  navigateToServiceDetailsScreen
+} from "../../../store/actions/navigation";
 import { loadServiceDetail } from "../../../store/actions/services";
 import { Dispatch, ReduxProps } from "../../../store/actions/types";
 import { getDetailsByMessageId } from "../../../store/reducers/entities/messages/detailsById";
@@ -30,10 +33,9 @@ import {
 } from "../../../store/reducers/entities/services/servicesById";
 import { toUIService } from "../../../store/reducers/entities/services/transformers";
 import { GlobalState } from "../../../store/reducers/types";
-import { InferNavigationParams } from "../../../types/react";
 import { useOnFirstRender } from "../../../utils/hooks/useOnFirstRender";
-import ServiceDetailsScreen from "../../services/ServiceDetailsScreen";
 import ErrorState from "../MessageDetailScreen/ErrorState";
+import { navigateToEuCovidCertificateDetailScreen } from "../../../features/euCovidCert/navigation/actions";
 
 const styles = StyleSheet.create({
   notFullStateContainer: {
@@ -92,9 +94,24 @@ const MessageDetailScreen = ({
       pot.isError(messageDetails) ||
       (pot.isNone(messageDetails) && !pot.isLoading(messageDetails))
     ) {
+      // TODO: shall we get the GP here?
       loadMessageDetails(message.id);
     }
   });
+
+  useEffect(() => {
+    const authCode = pot.toUndefined(
+      pot.map(messageDetails, md => md.euCovidCertificate?.authCode)
+    );
+    if (authCode) {
+      // TODO: navigate to Covid Cert
+      navigateBack();
+      navigateToEuCovidCertificateDetailScreen({
+        authCode,
+        messageId: message.id
+      });
+    }
+  }, [messageDetails]);
 
   const onServiceLinkPressHandler = () => {
     // When a service gets selected, before navigating to the service detail
@@ -182,10 +199,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   loadMessageDetails: (id: UIMessageId) =>
     dispatch(loadMessageDetails.request({ id })),
   setMessageReadState: (messageId: string, isRead: boolean) =>
-    dispatch(setMessageReadState(messageId, isRead)),
-  navigateToServiceDetailsScreen: (
-    params: InferNavigationParams<typeof ServiceDetailsScreen>
-  ) => navigateToServiceDetailsScreen(params)
+    dispatch(setMessageReadState(messageId, isRead))
 });
 
 export default connect(

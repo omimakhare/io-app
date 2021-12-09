@@ -55,13 +55,17 @@ const MessagesHomeScreen = ({
   const navigateToMessageDetail = (message: UIMessage) => {
     // TODO: https://pagopa.atlassian.net/browse/IA-463
     // if message is a EUCovidCertificate, navigate to the dedicated navigator
-    //   navigateToEuCovidCertificate(
-    //     message.content.eu_covid_cert.auth_code as EUCovidCertificateAuthCode,
-    //     message.id
-    //   );
-    navigation.dispatch(
-      navigateToPaginatedMessageDetailScreenAction({ message })
-    );
+    if (message.category.tag === "EU_COVID_CERT") {
+      // TODO: get the auth_code
+      navigateToEuCovidCertificate(
+        // message.content.eu_covid_cert.auth_code as EUCovidCertificateAuthCode,
+        message.id
+      );
+    } else {
+      navigation.dispatch(
+        navigateToPaginatedMessageDetailScreenAction({ message })
+      );
+    }
   };
 
   useEffect(() => {
