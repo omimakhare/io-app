@@ -16,7 +16,6 @@ import {
   StyleSheet
 } from "react-native";
 import { AmountInEuroCents, RptId } from "@pagopa/io-pagopa-commons/lib/pagopa";
-
 import * as ImagePicker from "react-native-image-picker";
 import { ImageLibraryOptions } from "react-native-image-picker/src/types";
 import * as ReaderQR from "react-native-lewin-qrcode";
@@ -31,8 +30,8 @@ import BaseScreenComponent, {
 import FooterWithButtons from "../../../components/ui/FooterWithButtons";
 import { CameraMarker } from "../../../components/wallet/CameraMarker";
 import { cancelButtonProps } from "../../../features/bonus/bonusVacanze/components/buttons/ButtonConfigurations";
-
 import I18n from "../../../i18n";
+import NavigationService from "../../../navigation/NavigationService";
 import {
   navigateToPaymentManualDataInsertion,
   navigateToPaymentTransactionSummaryScreen,
@@ -40,13 +39,13 @@ import {
 } from "../../../store/actions/navigation";
 import { Dispatch } from "../../../store/actions/types";
 import { paymentInitializeState } from "../../../store/actions/wallet/payment";
-import variables from "../../../theme/variables";
 import customVariables from "../../../theme/variables";
 import { ComponentProps } from "../../../types/react";
 import { openAppSettings } from "../../../utils/appSettings";
 import { AsyncAlert } from "../../../utils/asyncAlert";
 import { decodePagoPaQrCode } from "../../../utils/payment";
 import { showToast } from "../../../utils/showToast";
+import { isAndroid } from "../../../utils/platform";
 
 type OwnProps = NavigationInjectedProps;
 
@@ -65,12 +64,12 @@ const cameraTextOverlapping = 20;
 
 const styles = StyleSheet.create({
   padded: {
-    paddingRight: variables.contentPadding,
-    paddingLeft: variables.contentPadding
+    paddingRight: customVariables.contentPadding,
+    paddingLeft: customVariables.contentPadding
   },
 
   white: {
-    backgroundColor: variables.brandPrimaryInverted
+    backgroundColor: customVariables.brandPrimaryInverted
   },
 
   bottomText: {
@@ -78,7 +77,7 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    backgroundColor: variables.colorWhite,
+    backgroundColor: customVariables.colorWhite,
     marginTop: -cameraTextOverlapping,
     zIndex: 1
   },
@@ -95,8 +94,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignSelf: "center",
     marginTop: -cameraTextOverlapping,
-    width: screenWidth - variables.contentPadding * 2,
-    backgroundColor: variables.colorWhite,
+    width: screenWidth - customVariables.contentPadding * 2,
+    backgroundColor: customVariables.colorWhite,
     zIndex: 999
   },
 
@@ -108,7 +107,7 @@ const styles = StyleSheet.create({
   },
 
   notAuthorizedContainer: {
-    padding: variables.contentPadding,
+    padding: customVariables.contentPadding,
     flex: 1,
     alignItems: "center",
     alignSelf: "stretch",
@@ -175,6 +174,24 @@ class ScanQrCodeScreen extends React.Component<Props, State> {
   private onQrCodeData = (data: string) => {
     const resultOrError = decodePagoPaQrCode(data);
     resultOrError.foldL<void>(this.onInvalidQrCode, this.onValidQrCode);
+  };
+
+  private onShowImagePicker = async () => {
+    // on Android we have to show a prominent disclosure on how we use READ_EXTERNAL_STORAGE permission
+    // see https://pagopa.atlassian.net/wiki/spaces/IOAPP/pages/444727486/2021-11-18+Android#2021-12-08
+    if (isAndroid) {
+      await AsyncAlert(
+        I18n.t("wallet.QRtoPay.readStorageDisclosure.title"),
+        I18n.t("wallet.QRtoPay.readStorageDisclosure.message"),
+        [
+          {
+            text: I18n.t("global.buttons.choose"),
+            style: "default"
+          }
+        ]
+      );
+    }
+    this.showImagePicker();
   };
 
   /**
@@ -301,7 +318,7 @@ class ScanQrCodeScreen extends React.Component<Props, State> {
                 bottomContent={
                   <View>
                     <ButtonDefaultOpacity
-                      onPress={this.showImagePicker}
+                      onPress={this.onShowImagePicker}
                       style={styles.button}
                       bordered={true}
                     >
@@ -371,7 +388,8 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     navigateToPaymentTransactionSummaryScreen({
       rptId,
       initialAmount,
-      paymentStartOrigin: "qrcode_scan"
+      paymentStartOrigin: "qrcode_scan",
+      startRoute: NavigationService.getCurrentRoute()
     });
   }
 });

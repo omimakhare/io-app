@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { connect } from "react-redux";
 
-import { pageSize } from "../../../../config";
+import { maximumItemsFromAPI, pageSize } from "../../../../config";
 import I18n from "../../../../i18n";
 import {
   loadNextPageMessages,
@@ -36,6 +36,7 @@ import { showToast } from "../../../../utils/showToast";
 import { isIos } from "../../../../utils/platform";
 import { EdgeBorderComponent } from "../../../screens/EdgeBorderComponent";
 import { isNoticePaid } from "../../../../store/reducers/entities/payments";
+import { getMessageStatus } from "../../../../store/reducers/entities/messages/messagesStatus";
 import {
   AnimatedFlatList,
   EmptyComponent,
@@ -92,7 +93,17 @@ type OwnProps = {
 };
 
 const Loader = () => (
-  <ActivityIndicator animating={true} style={styles.activityIndicator} />
+  <ActivityIndicator
+    animating={true}
+    size={"large"}
+    style={styles.activityIndicator}
+    color={customVariables.brandPrimary}
+    accessible={true}
+    accessibilityHint={I18n.t("global.accessibility.activityIndicator.hint")}
+    accessibilityLabel={I18n.t("global.accessibility.activityIndicator.label")}
+    importantForAccessibility={"no-hide-descendants"}
+    testID={"activityIndicator"}
+  />
 );
 
 const animated = {
@@ -137,6 +148,7 @@ const MessageList = ({
   // extracted from the store
   allMessages,
   error,
+  getMessageStatus,
   isLoadingMore,
   isRefreshing,
   isReloadingAll,
@@ -213,6 +225,16 @@ const MessageList = ({
     />
   );
 
+  const renderListFooter = () => {
+    if (isLoadingMore || isReloadingAll) {
+      return <Loader />;
+    }
+    if (messages.length > 0 && !nextCursor) {
+      return <EdgeBorderComponent />;
+    }
+    return null;
+  };
+
   return (
     <>
       {/* in iOS refresh indicator is shown only when user does pull to refresh on list
@@ -236,7 +258,7 @@ const MessageList = ({
         refreshing={isRefreshing}
         renderItem={renderItem({
           hasPaidBadge,
-          isRead: false, // TODO: likely an information to be added on the BE
+          getMessageStatus,
           onLongPress,
           onPress: onPressItem,
           selectedMessageIds
@@ -253,15 +275,7 @@ const MessageList = ({
         onLayout={handleOnLayoutChange}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.1}
-        ListFooterComponent={() => {
-          if (isLoadingMore || isReloadingAll) {
-            return <Loader />;
-          }
-          if (messages.length > 0 && !nextCursor) {
-            <EdgeBorderComponent />;
-          }
-          return null;
-        }}
+        ListFooterComponent={renderListFooter}
       />
     </>
   );
@@ -285,8 +299,10 @@ const mapStateToProps = (state: GlobalState) => {
 
   return {
     allMessages,
+    getMessageStatus: (id: string) => getMessageStatus(state, id),
     error,
-    hasPaidBadge: isNoticePaid(state),
+    hasPaidBadge: (category: UIMessage["category"]) =>
+      isNoticePaid(state, category),
     isLoadingMore: isLoadingNextPage(state),
     isRefreshing: isLoadingPreviousPage(state),
     isReloadingAll: isReloading(state),
@@ -312,7 +328,12 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
    * true backwards pagination. Is just to refresh the data.
    */
   loadPreviousPage: (cursor: Cursor) => {
-    dispatch(loadPreviousPageMessages.request({ pageSize: 100, cursor }));
+    dispatch(
+      loadPreviousPageMessages.request({
+        pageSize: maximumItemsFromAPI,
+        cursor
+      })
+    );
   }
 });
 

@@ -8,6 +8,7 @@ import {
   bpdTransactionsLoadPage,
   bpdTransactionsLoadRequiredData
 } from "../../features/bonus/bpd/store/actions/transactions";
+import { mvlDetailsLoad } from "../../features/mvl/store/actions";
 import { Action } from "../actions/types";
 import {
   fetchTransactionsFailure,
@@ -27,6 +28,7 @@ import {
   svVoucherListGet
 } from "../../features/bonus/siciliaVola/store/actions/voucherList";
 import { svGetPdfVoucher } from "../../features/bonus/siciliaVola/store/actions/voucherGeneration";
+import { computedProp } from "../../types/utils";
 import { GlobalState } from "./types";
 
 /**
@@ -49,6 +51,7 @@ const monitoredActions: ReadonlyArray<
     bpdTransactionsLoadRequiredData.success
   ],
   [euCovidCertificateGet.failure, euCovidCertificateGet.success],
+  [mvlDetailsLoad.failure, mvlDetailsLoad.success],
   [svPossibleVoucherStateGet.failure, svPossibleVoucherStateGet.success],
   [svVoucherListGet.failure, svVoucherListGet.success],
   [svGetPdfVoucher.failure, svGetPdfVoucher.success]
@@ -83,13 +86,13 @@ const reducer = (
   if (failure) {
     return {
       ...state,
-      [failure]: {
+      ...computedProp(failure, {
         lastUpdate: new Date(),
         attempts: Math.min(
           (state[failure]?.attempts ?? 0) + 1,
           backoffConfig().maxAttempts
         )
-      }
+      })
     };
   }
   const successIndex = successActionTypes().indexOf(action.type);

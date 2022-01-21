@@ -33,8 +33,7 @@ import {
   apiUrlPrefix,
   bpdEnabled,
   fetchPagoPaTimeout,
-  fetchPaymentManagerLongTimeout,
-  payPalEnabled
+  fetchPaymentManagerLongTimeout
 } from "../config";
 import { bpdEnabledSelector } from "../features/bonus/bpd/store/reducers/details/activation";
 import {
@@ -117,6 +116,8 @@ import {
   paymentInitializeState,
   paymentUpdateWalletPsp,
   paymentVerifica,
+  pspForPaymentV2,
+  pspForPaymentV2WithCallbacks,
   runDeleteActivePaymentSaga,
   runStartOrResumePaymentActivationSaga
 } from "../store/actions/wallet/payment";
@@ -179,6 +180,8 @@ import {
   fetchPspRequestHandler,
   fetchTransactionRequestHandler,
   fetchTransactionsRequestHandler,
+  getPspV2,
+  getPspV2WithCallbacks,
   getWallets,
   paymentAttivaRequestHandler,
   paymentCheckRequestHandler,
@@ -836,6 +839,18 @@ export function* watchWalletSaga(
     pmSessionManager
   );
 
+  yield takeLatest(
+    getType(pspForPaymentV2.request),
+    getPspV2,
+    paymentManagerClient.getPspV2,
+    pmSessionManager
+  );
+
+  yield takeLatest(
+    getType(pspForPaymentV2WithCallbacks),
+    getPspV2WithCallbacks
+  );
+
   if (bpdEnabled) {
     const contentClient = ContentClient();
 
@@ -948,13 +963,11 @@ export function* watchWalletSaga(
       pmSessionManager
     );
 
-    if (payPalEnabled) {
-      yield fork(
-        watchPaypalOnboardingSaga,
-        paymentManagerClient,
-        pmSessionManager
-      );
-    }
+    yield fork(
+      watchPaypalOnboardingSaga,
+      paymentManagerClient,
+      pmSessionManager
+    );
   }
 
   // Check if a user has a bancomat and has not requested a cobadge yet and send

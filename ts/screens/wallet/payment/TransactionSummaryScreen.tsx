@@ -1,4 +1,4 @@
-import { none, Option, some } from "fp-ts/lib/Option";
+import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import {
   AmountInEuroCents,
   PaymentNoticeNumberFromString,
@@ -8,7 +8,11 @@ import * as pot from "italia-ts-commons/lib/pot";
 import { ActionSheet, Text, View } from "native-base";
 import * as React from "react";
 import { StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
+import {
+  NavigationInjectedProps,
+  NavigationLeafRoute,
+  StackActions
+} from "react-navigation";
 import { connect } from "react-redux";
 
 import { PaymentRequestsGetResponse } from "../../../../definitions/backend/PaymentRequestsGetResponse";
@@ -20,6 +24,7 @@ import IconFont from "../../../components/ui/IconFont";
 import { PaymentSummaryComponent } from "../../../components/wallet/PaymentSummaryComponent";
 import { SlidedContentComponent } from "../../../components/wallet/SlidedContentComponent";
 import I18n from "../../../i18n";
+import ROUTES from "../../../navigation/routes";
 import {
   navigateToPaymentManualDataInsertion,
   navigateToPaymentPickPaymentMethodScreen,
@@ -59,12 +64,15 @@ import {
   formatNumberAmount
 } from "../../../utils/stringBuilder";
 import { formatTextRecipient } from "../../../utils/strings";
+import { isRawPayPal } from "../../../types/pagopa";
+import { isPaypalEnabledSelector } from "../../../store/reducers/backendStatus";
 import { dispatchPickPspOrConfirm } from "./common";
 
 export type NavigationParams = Readonly<{
   rptId: RptId;
   initialAmount: AmountInEuroCents;
   paymentStartOrigin: PaymentStartOrigin;
+  startRoute: NavigationLeafRoute | undefined;
 }>;
 
 type OwnProps = NavigationInjectedProps<NavigationParams>;
@@ -157,7 +165,23 @@ class TransactionSummaryScreen extends React.Component<Props> {
         }
       );
     } else {
-      this.props.navigation.goBack();
+      /**
+       * Since the payment flow starts from the next screen, even though we are already
+       * in the payment flow, it is really difficult to make up for the static stack organization in a homogeneous way.
+       * The only solution that allows to avoid to heavily modify the existing logic is to distinguish based on the starting screen,
+       * in order to perform the right navigation actions if we are not in the wallet stack.
+       * TODO: This is a temporary (and not scalable) solution, a complete refactoring of the payment workflow is strongly recommended
+       */
+      const startRoute = this.props.navigation.getParam("startRoute");
+      if (startRoute !== undefined) {
+        // The payment flow is inside the wallet stack, if we start outside this stack we need to reset the stack
+        if (startRoute.routeName === ROUTES.MESSAGE_DETAIL) {
+          this.props.navigation.dispatch(StackActions.popToTop());
+        }
+        this.props.navigation.navigate(startRoute);
+      } else {
+        this.props.navigation.goBack();
+      }
     }
   };
 
@@ -341,8 +365,19 @@ class TransactionSummaryScreen extends React.Component<Props> {
 const mapStateToProps = (state: GlobalState) => {
   const { verifica, attiva, paymentId, check, psps } = state.wallet.payment;
   const walletById = state.wallet.wallets.walletById;
-
-  const maybeFavoriteWallet = pot.toOption(getFavoriteWallet(state));
+  const isPaypalEnabled = isPaypalEnabledSelector(state);
+  const favouriteWallet = pot.toUndefined(getFavoriteWallet(state));
+  /**
+   * if the favourite wallet is Paypal but the relative feature is not enabled,
+   * the favourite wallet will be undefined
+   */
+  const maybeFavoriteWallet = fromNullable(
+    favouriteWallet &&
+      isRawPayPal(favouriteWallet.paymentMethod) &&
+      !isPaypalEnabled
+      ? undefined
+      : favouriteWallet
+  );
 
   const error: Option<
     PayloadForAction<

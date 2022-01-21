@@ -6,25 +6,55 @@ import {
   NavigationParams,
   NavigationState
 } from "react-navigation";
+import { instabugLog, TypeLogs } from "../boot/configureInstabug";
+import { mixpanelTrack } from "../mixpanel";
 import {
-  getCurrentRouteName as deprecatedGetCurrentRouteName,
-  getCurrentRouteKey as deprecatedGetCurrentRouteKey,
-  getCurrentRoute as utilsGetCurrentRoute
+  getCurrentRoute as utilsGetCurrentRoute,
+  getCurrentRouteKey as utilsGetCurrentRouteKey,
+  getCurrentRouteName as utilsGetCurrentRouteName
 } from "../utils/navigation";
 
 // eslint-disable-next-line functional/no-let
-let navigator: NavigationContainerComponent | null;
+let navigator: NavigationContainerComponent | null | undefined;
 // eslint-disable-next-line functional/no-let
-let currentRouteState: NavigationState | null;
+let currentRouteState: NavigationState | null = null;
+
+const withLogging =
+  <A extends Array<unknown>, R>(f: (...a: A) => R) =>
+  (...args: A): R => {
+    if (navigator === null || navigator === undefined) {
+      instabugLog(
+        `call to NavigationService.${f.name} but navigator is ${navigator}`,
+        TypeLogs.ERROR,
+        "NavigationService"
+      );
+      void mixpanelTrack("NAVIGATION_SERVICE_NAVIGATOR_UNDEFINED", {
+        method: f.name
+      });
+    }
+    return f(...args);
+  };
 
 const setTopLevelNavigator = (
-  navigatorRef: NavigationContainerComponent | null
+  navigatorRef: NavigationContainerComponent | null | undefined
 ) => {
+  // TODO: remove when the bug is confirmed as solved
+  instabugLog(
+    `Initialize setTopLevelNavigator with argument ${
+      navigator !== null && navigator !== undefined
+    }`,
+    TypeLogs.DEBUG,
+    "NavigationService"
+  );
   navigator = navigatorRef;
 };
 
+const getNavigator = (): NavigationContainerComponent | null | undefined =>
+  navigator;
+
 const setCurrentState = (state: NavigationState) => {
-  currentRouteState = state;
+  // This is a security check since sometime the onNavigationStateChange could return an undefined state ignoring the type
+  currentRouteState = state ?? null;
 };
 
 const navigate = (routeName: string, params?: NavigationParams) => {
@@ -36,14 +66,10 @@ const dispatchNavigationAction = (action: NavigationAction) => {
 };
 
 const getCurrentRouteName = (): string | undefined =>
-  currentRouteState
-    ? deprecatedGetCurrentRouteName(currentRouteState)
-    : undefined;
+  currentRouteState ? utilsGetCurrentRouteName(currentRouteState) : undefined;
 
 const getCurrentRouteKey = (): string | undefined =>
-  currentRouteState
-    ? deprecatedGetCurrentRouteKey(currentRouteState)
-    : undefined;
+  currentRouteState ? utilsGetCurrentRouteKey(currentRouteState) : undefined;
 
 const getCurrentRoute = (): NavigationLeafRoute | undefined =>
   currentRouteState ? utilsGetCurrentRoute(currentRouteState) : undefined;
@@ -52,9 +78,10 @@ const getCurrentState = (): NavigationState | null => currentRouteState;
 
 // add other navigation functions that you need and export them
 export default {
-  navigate,
+  navigate: withLogging(navigate),
+  getNavigator,
   setTopLevelNavigator,
-  dispatchNavigationAction,
+  dispatchNavigationAction: withLogging(dispatchNavigationAction),
   setCurrentState,
   getCurrentRouteName,
   getCurrentRouteKey,

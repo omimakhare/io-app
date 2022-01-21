@@ -34,7 +34,6 @@ import { LevelEnum } from "../../../definitions/content/SectionStatus";
 
 type OwnProps = Readonly<{
   paymentMethods: ReadonlyArray<IPaymentMethod>;
-  navigateToAddCreditCard: () => void;
 }>;
 
 type Props = OwnProps &
@@ -107,7 +106,11 @@ const getBadgeStatus = (
     .fold(null, sections => {
       const section = sections[itemSection];
       // no badge if section is not visible or badge is not defined
-      if (section.is_visible === false || section.badge === undefined) {
+      if (
+        section === undefined ||
+        section.is_visible === false ||
+        section.badge === undefined
+      ) {
         return null;
       }
       const locale = getFullLocale();

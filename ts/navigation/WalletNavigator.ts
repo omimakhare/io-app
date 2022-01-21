@@ -1,5 +1,5 @@
 import { createStackNavigator } from "react-navigation-stack";
-import { bonusVacanzeEnabled, bpdEnabled, cgnEnabled } from "../config";
+import { bonusVacanzeEnabled, bpdEnabled } from "../config";
 import BonusVacanzeNavigator from "../features/bonus/bonusVacanze/navigation/navigator";
 import BONUSVACANZE_ROUTES from "../features/bonus/bonusVacanze/navigation/routes";
 import ActiveBonusScreen from "../features/bonus/bonusVacanze/screens/ActiveBonusScreen";
@@ -10,12 +10,6 @@ import {
 } from "../features/bonus/bpd/navigation/navigator";
 import BPD_ROUTES from "../features/bonus/bpd/navigation/routes";
 import IbanCTAEditScreen from "../features/bonus/bpd/screens/iban/IbanCTAEditScreen";
-import {
-  CgnActivationNavigator,
-  CgnDetailsNavigator,
-  CgnEYCAActivationNavigator
-} from "../features/bonus/cgn/navigation/navigator";
-import CGN_ROUTES from "../features/bonus/cgn/navigation/routes";
 import BancomatDetailScreen from "../features/wallet/bancomat/screen/BancomatDetailScreen";
 import BPayDetailScreen from "../features/wallet/bancomatpay/screen/BPayDetailScreen";
 import CobadgeDetailScreen from "../features/wallet/cobadge/screen/CobadgeDetailScreen";
@@ -57,6 +51,8 @@ import PaymentsHistoryScreen from "../screens/wallet/PaymentsHistoryScreen";
 import TransactionDetailsScreen from "../screens/wallet/TransactionDetailsScreen";
 import WalletHomeScreen from "../screens/wallet/WalletHomeScreen";
 import PaypalDetailScreen from "../features/wallet/paypal/screen/PaypalDetailScreen";
+import { paypalOnboardingNavigator } from "../features/wallet/onboarding/paypal/navigation/navigator";
+import PAYPAL_ROUTES from "../features/wallet/onboarding/paypal/navigation/routes";
 import ROUTES from "./routes";
 
 const baseRouteConfigMap = {
@@ -198,25 +194,17 @@ const bpdConfigMap = bpdEnabled
     }
   : {};
 
-const cgnConfigMap = cgnEnabled
-  ? {
-      [CGN_ROUTES.ACTIVATION.MAIN]: {
-        screen: CgnActivationNavigator
-      },
-      [CGN_ROUTES.DETAILS.MAIN]: {
-        screen: CgnDetailsNavigator
-      },
-      [CGN_ROUTES.EYCA.ACTIVATION.MAIN]: {
-        screen: CgnEYCAActivationNavigator
-      }
-    }
-  : {};
+const paypalConfigMap = {
+  [PAYPAL_ROUTES.ONBOARDING.MAIN]: {
+    screen: paypalOnboardingNavigator
+  }
+};
 
 const routeConfig = {
   ...baseRouteConfigMap,
   ...bonusVacanzeConfigMap,
   ...bpdConfigMap,
-  ...cgnConfigMap
+  ...paypalConfigMap
 };
 
 /**
