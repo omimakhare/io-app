@@ -41,16 +41,16 @@ const errorHandler = (e, isFatal) => {
   }
 };
 
-setJSExceptionHandler(errorHandler);
-setNativeExceptionHandler(exceptionString => {
-  if (mixpanel) {
-    mixpanel.track("APPLICATION_ERROR", {
-      TYPE: "native",
-      ERROR: exceptionString,
-      APP_VERSION: DeviceInfo.getReadableVersion()
-    });
-  }
-});
+// setJSExceptionHandler(errorHandler);
+// setNativeExceptionHandler(exceptionString => {
+//   if (mixpanel) {
+//     mixpanel.track("APPLICATION_ERROR", {
+//       TYPE: "native",
+//       ERROR: exceptionString,
+//       APP_VERSION: DeviceInfo.getReadableVersion()
+//     });
+//   }
+// });
 
 // Please note that any LogBox can cause e2e tests to fail.
 // TODO: temp only, to complete the porting to 0.63.x

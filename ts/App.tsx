@@ -1,8 +1,11 @@
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 import * as Sentry from "@sentry/react-native";
+import { LogLevel } from "@sentry/types/dist/loglevel";
 import { StyleProvider } from "native-base";
 import * as React from "react";
+import { Platform } from "react-native";
+import DeviceInfo from "react-native-device-info";
 import { MenuProvider } from "react-native-popup-menu";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -24,13 +27,17 @@ Sentry.init({
   // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
   // We recommend adjusting this value in production.
   release: getAppVersion(),
-  dist: "it.pagopa.app.io",
+  dist: Platform.OS === "ios" ? "ios" : DeviceInfo.getBuildNumber(),
   tracesSampleRate: 1.0,
-  debug: true,
+  logLevel: LogLevel.Debug,
+  // debug: true,
   integrations: [
     new Sentry.ReactNativeTracing({
       // Pass instrumentation to be used as `routingInstrumentation`
       routingInstrumentation,
+      enableStallTracking: true,
+      enableNativeFramesTracking: true,
+      traceFetch: true,
       tracingOrigins: ["localhost", "127.0.0.1", /^\//]
     })
   ]
