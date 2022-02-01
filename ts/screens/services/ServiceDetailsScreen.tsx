@@ -39,7 +39,6 @@ import { SpecialServiceMetadata } from "../../../definitions/backend/SpecialServ
 import { ServiceId } from "../../../definitions/backend/ServiceId";
 import { loadServiceDetail } from "../../store/actions/services";
 import { serviceByIdSelector } from "../../store/reducers/entities/services/servicesById";
-import { navigateToSSOWebview } from "../../features/sso/navigation/action";
 
 type NavigationParams = Readonly<{
   service: ServicePublic;
@@ -192,10 +191,6 @@ const ServiceDetailsScreen = (props: Props) => {
                 serviceId={service.service_id}
                 isDebugModeEnabled={props.isDebugModeEnabled}
               />
-
-              <View>
-                <Button onPress={navigateToSSOWebview}><Text>SSO</Text></Button>
-              </View>
 
               <EdgeBorderComponent />
 

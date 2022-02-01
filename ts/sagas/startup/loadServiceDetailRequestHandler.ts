@@ -21,29 +21,23 @@ import { ServiceMetadata } from "../../../definitions/backend/ServiceMetadata";
 import { ServicePublic } from "../../../definitions/backend/ServicePublic";
 
 function FakeCTA(): NonEmptyString {
-  return `
----
+  return `---
 it:
-    cta_1: 
-        text: "Richiedi il Bonus Vacanze"
-        action: "ioit://BONUS_AVAILABLE_LIST"
-    cta_2: 
-        text: "Vai"
-        action: "iohandledlink://https://www.io.italia.it"
+  cta_1: 
+    text: "Prenota appuntamento"
+    action: "iosso://https://postman-echo.com/get"
 en:
-    cta_1: 
-        text: "Request Bonus Vacanze"
-        action: "ioit://BONUS_AVAILABLE_LIST"
-    cta_2: 
-        text: "Go"
-        action: "iohandledlink://https://www.io.italia.it"
+  cta_1: 
+    text: "Book appointment"
+    action: "iosso://https://postman-echo.com/get"
 ---
+
   ` as NonEmptyString;
 }
 
 function patchService(service: ServicePublic): ServicePublic {
   const serviceMetadata = service.service_metadata;
-  if (serviceMetadata !== undefined) {
+  if (serviceMetadata !== undefined && serviceMetadata.cta === undefined) {
     const patchedServiceMetadata: ServiceMetadata = {
       ...serviceMetadata,
       cta: FakeCTA()

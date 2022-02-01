@@ -30,6 +30,8 @@ import { ServiceId } from "../../definitions/backend/ServiceId";
 import { mixpanelTrack } from "../mixpanel";
 import { CreatedMessageWithContent } from "../../definitions/backend/CreatedMessageWithContent";
 import { ServiceMetadata } from "../../definitions/backend/ServiceMetadata";
+import { getSSOCTA } from "../features/sso/utils/cta";
+import { navigateToSSOWebview } from "../features/sso/navigation/action";
 import { getExpireStatus } from "./dates";
 import { getLocalePrimaryWithFallback } from "./locale";
 import { isTextIncludedCaseInsensitive } from "./strings";
@@ -73,6 +75,12 @@ export const handleCtaAction = (
   dispatch: Dispatch,
   service?: ServicePublic
 ) => {
+  const maybeSSOCTA = getSSOCTA(cta);
+  if (maybeSSOCTA.isSome()) {
+    navigateToSSOWebview({ url: maybeSSOCTA.value.url });
+    return;
+  }
+
   const maybeInternalLink = getInternalRoute(cta.action);
   if (maybeInternalLink.isSome()) {
     handleInternalLink(
@@ -230,14 +238,14 @@ const extractCTA = (
 
     if (hasFM) {
       // eslint-disable-next-line no-console
-      console.log("FM detected", hasFM);
+      console.log("FM detected", hasFM, text, serviceId, serviceMetadata);
     }
 
     return hasFM;
   })(text)
     .mapNullable(m => {
       try {
-        console.log("I am here 1");
+        console.log("I am here 1", text, m, serviceId, serviceMetadata);
         return FM<MessageCTA>(m).attributes;
       } catch (e) {
         void mixpanelTrack("CTA_FRONT_MATTER_DECODING_ERROR", {
@@ -248,11 +256,18 @@ const extractCTA = (
       }
     })
     .chain(attrs => {
-      console.log("I am here 2");
+      console.log("I am here 2", attrs, getRemoteLocale());
       return CTAS.decode(attrs[getRemoteLocale()]).fold(
-        _ => none,
+        _ => {
+          console.log("Error decoding CTAS");
+          return none;
+        },
         // check if the decoded actions are valid
-        cta => (hasCtaValidActions(cta, serviceMetadata) ? some(cta) : none)
+        cta => {
+          const hVA = hasCtaValidActions(cta, serviceMetadata);
+          console.log("hVA", hVA);
+          return hVA ? some(cta) : none;
+        }
       );
     });
 
@@ -306,6 +321,12 @@ export const isCtaActionValid = (
   cta: CTA,
   serviceMetadata?: ServiceMetadata
 ): boolean => {
+  // Check if it is a SSO related CTA
+  const maybeSSOCTA = getSSOCTA(cta);
+  if (maybeSSOCTA.isSome()) {
+    return true;
+  }
+
   // check if it is an internal navigation
   const maybeInternalRoute = getInternalRoute(cta.action);
   if (maybeInternalRoute.isSome()) {
