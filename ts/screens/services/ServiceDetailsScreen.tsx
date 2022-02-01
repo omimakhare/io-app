@@ -1,5 +1,5 @@
 import * as pot from "italia-ts-commons/lib/pot";
-import { Content, Grid, View } from "native-base";
+import { Button, Content, Grid, Text, View } from "native-base";
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { SafeAreaView, StyleSheet } from "react-native";
@@ -39,6 +39,7 @@ import { SpecialServiceMetadata } from "../../../definitions/backend/SpecialServ
 import { ServiceId } from "../../../definitions/backend/ServiceId";
 import { loadServiceDetail } from "../../store/actions/services";
 import { serviceByIdSelector } from "../../store/reducers/entities/services/servicesById";
+import { navigateToSSOWebview } from "../../features/sso/navigation/action";
 
 type NavigationParams = Readonly<{
   service: ServicePublic;
@@ -184,6 +185,10 @@ const ServiceDetailsScreen = (props: Props) => {
                 serviceId={service.service_id}
                 isDebugModeEnabled={props.isDebugModeEnabled}
               />
+
+              <View>
+                <Button onPress={navigateToSSOWebview}><Text>SSO</Text></Button>
+              </View>
 
               <EdgeBorderComponent />
 
