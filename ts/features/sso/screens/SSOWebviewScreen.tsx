@@ -24,10 +24,9 @@ const styles = StyleSheet.create({
 });
 
 const SSOWebviewScreen: React.FunctionComponent<Props> = (props: Props) => {
-  // eslint-disable-next-line no-console
-  console.log("Hello!");
   const uri = props.navigation.getParam("uri");
-
+  
+  // TODO: Add other parameters to WebView component
   return (
     <BaseScreenComponent headerTitle="SSO">
         <Content contentContainerStyle={styles.flex}>

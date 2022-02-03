@@ -233,19 +233,9 @@ const extractCTA = (
   serviceMetadata?: ServiceMetadata,
   serviceId?: ServiceId
 ): Option<CTAS> =>
-  fromPredicate((t: string) => {
-    const hasFM = FM.test(t);
-
-    if (hasFM) {
-      // eslint-disable-next-line no-console
-      console.log("FM detected", hasFM, text, serviceId, serviceMetadata);
-    }
-
-    return hasFM;
-  })(text)
+  fromPredicate((t: string) => FM.test(t))(text)
     .mapNullable(m => {
       try {
-        console.log("I am here 1", text, m, serviceId, serviceMetadata);
         return FM<MessageCTA>(m).attributes;
       } catch (e) {
         void mixpanelTrack("CTA_FRONT_MATTER_DECODING_ERROR", {
@@ -255,21 +245,13 @@ const extractCTA = (
         return null;
       }
     })
-    .chain(attrs => {
-      console.log("I am here 2", attrs, getRemoteLocale());
-      return CTAS.decode(attrs[getRemoteLocale()]).fold(
-        _ => {
-          console.log("Error decoding CTAS");
-          return none;
-        },
+    .chain(attrs =>
+      CTAS.decode(attrs[getRemoteLocale()]).fold(
+        _ => none,
         // check if the decoded actions are valid
-        cta => {
-          const hVA = hasCtaValidActions(cta, serviceMetadata);
-          console.log("hVA", hVA);
-          return hVA ? some(cta) : none;
-        }
-      );
-    });
+        cta => (hasCtaValidActions(cta, serviceMetadata) ? some(cta) : none)
+      )
+    );
 
 /**
  * extract the CTAs if they are nested inside the message markdown content
@@ -350,14 +332,11 @@ export const hasCtaValidActions = (
   ctas: CTAS,
   serviceMetadata?: ServiceMetadata
 ): boolean => {
-  console.log("Checking for valid CTAs", ctas);
   const isCTA1Valid = isCtaActionValid(ctas.cta_1, serviceMetadata);
   if (ctas.cta_2 === undefined) {
-    console.log("Invalid CTA");
     return isCTA1Valid;
   }
   const isCTA2Valid = isCtaActionValid(ctas.cta_2, serviceMetadata);
-  console.log("IS CTA Valid", isCTA1Valid || isCTA2Valid);
   return isCTA1Valid || isCTA2Valid;
 };
 

@@ -1,5 +1,5 @@
 import * as pot from "italia-ts-commons/lib/pot";
-import { Button, Content, Grid, Text, View } from "native-base";
+import { Content, Grid, View } from "native-base";
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { SafeAreaView, StyleSheet } from "react-native";
@@ -117,8 +117,6 @@ const ServiceDetailsScreen = (props: Props) => {
     return null;
   }
 
-  console.log("Service", service);
-
   const metadata = service.service_metadata;
 
   // if markdown content is not available, render immediately what is possible
@@ -128,11 +126,6 @@ const ServiceDetailsScreen = (props: Props) => {
   const canRenderItems = isMarkdownAvailable ? isMarkdownLoaded : true;
 
   const maybeCTA = getServiceCTA(metadata);
-
-  if(maybeCTA.isSome()) {
-    // eslint-disable-next-line no-console
-    console.log("CTA", maybeCTA.value);
-  }
 
   return (
     <BaseScreenComponent

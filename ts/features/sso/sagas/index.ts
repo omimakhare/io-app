@@ -23,17 +23,11 @@ function* handleLoginSuccess(
 ): Generator<Effect, void, any> {
   try {
     yield call(setFederationCookie, action.payload.token);
-    // eslint-disable-next-line no-console
-    console.log("Federation cookie set");
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.log("Error setting federation cookie");
-  }
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
 }
 
 function* watchLoginSuccessSaga() {
-  // eslint-disable-next-line no-console
-  console.log("SSO: watchLoginSuccessSaga started");
   yield takeLatest(getType(loginSuccess), handleLoginSuccess);
 }
 

@@ -3,7 +3,6 @@ import { call, Effect, fork, put, take, takeLatest } from "redux-saga/effects";
 import { ActionType, getType } from "typesafe-actions";
 import { buffers, channel, Channel } from "redux-saga";
 import { Millisecond } from "italia-ts-commons/lib/units";
-import { NonEmptyString } from "italia-ts-commons/lib/strings";
 import { BackendClient } from "../../api/backend";
 import {
   loadServiceDetail,
@@ -17,41 +16,6 @@ import { totServiceFetchWorkers } from "../../config";
 import { applicationChangeState } from "../../store/actions/application";
 import { mixpanelTrack } from "../../mixpanel";
 import { ServiceId } from "../../../definitions/backend/ServiceId";
-import { ServiceMetadata } from "../../../definitions/backend/ServiceMetadata";
-import { ServicePublic } from "../../../definitions/backend/ServicePublic";
-
-function FakeCTA(): NonEmptyString {
-  return `---
-it:
-  cta_1: 
-    text: "Prenota appuntamento"
-    action: "iosso://https://io-openid-rp.loca.lt/profile"
-en:
-  cta_1: 
-    text: "Book appointment"
-    action: "iosso://https://io-openid-rp.loca.lt/profile"
----
-
-  ` as NonEmptyString;
-}
-
-function patchService(service: ServicePublic): ServicePublic {
-  const serviceMetadata = service.service_metadata;
-  if (serviceMetadata !== undefined && serviceMetadata.cta === undefined) {
-    const patchedServiceMetadata: ServiceMetadata = {
-      ...serviceMetadata,
-      cta: FakeCTA()
-    };
-    return {
-      ...service,
-      service_metadata: patchedServiceMetadata
-    };
-  } else {
-    return {
-      ...service
-    };
-  }
-}
 
 /**
  * A generator to load the service details from the Backend
@@ -72,9 +36,7 @@ export function* loadServiceDetailRequestHandler(
     }
 
     if (response.value.status === 200) {
-      const service = response.value.value;
-      const patchedService = patchService(service);
-      yield put(loadServiceDetail.success(service));
+      yield put(loadServiceDetail.success(response.value.value));
 
       // If it is occurring during the first load of serivces,
       // mark the service as read (it will not display the badge on the list item)

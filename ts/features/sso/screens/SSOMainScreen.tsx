@@ -15,11 +15,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 }
 });
 
-const SSOMainScreen: React.FunctionComponent<Props> = (props: Props) => {
-  // eslint-disable-next-line no-console
-  console.log("Hello!");
-
-  return (
+const SSOMainScreen: React.FunctionComponent<Props> = (props: Props) => (
     <BaseScreenComponent>
       <SafeAreaView style={styles.flex}>
         <Content contentContainerStyle={styles.flex}>
@@ -30,7 +26,6 @@ const SSOMainScreen: React.FunctionComponent<Props> = (props: Props) => {
       </SafeAreaView>
     </BaseScreenComponent>
   );
-};
 const mapStateToProps = (state: GlobalState) => ({});
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({});
