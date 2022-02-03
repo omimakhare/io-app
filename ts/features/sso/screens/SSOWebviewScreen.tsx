@@ -26,15 +26,13 @@ const styles = StyleSheet.create({
 const SSOWebviewScreen: React.FunctionComponent<Props> = (props: Props) => {
   // eslint-disable-next-line no-console
   console.log("Hello!");
-  const uri = props.navigation.getParam("url");
+  const uri = props.navigation.getParam("uri");
 
   return (
-    <BaseScreenComponent>
-      <SafeAreaView style={styles.flex}>
+    <BaseScreenComponent headerTitle="SSO">
         <Content contentContainerStyle={styles.flex}>
           <WebView source={{ uri }} />
         </Content>
-      </SafeAreaView>
     </BaseScreenComponent>
   );
 };

@@ -25,11 +25,11 @@ function FakeCTA(): NonEmptyString {
 it:
   cta_1: 
     text: "Prenota appuntamento"
-    action: "iosso://https://postman-echo.com/get"
+    action: "iosso://https://io-openid-rp.loca.lt/profile"
 en:
   cta_1: 
     text: "Book appointment"
-    action: "iosso://https://postman-echo.com/get"
+    action: "iosso://https://io-openid-rp.loca.lt/profile"
 ---
 
   ` as NonEmptyString;
@@ -74,7 +74,7 @@ export function* loadServiceDetailRequestHandler(
     if (response.value.status === 200) {
       const service = response.value.value;
       const patchedService = patchService(service);
-      yield put(loadServiceDetail.success(patchedService));
+      yield put(loadServiceDetail.success(service));
 
       // If it is occurring during the first load of serivces,
       // mark the service as read (it will not display the badge on the list item)

@@ -77,7 +77,7 @@ export const handleCtaAction = (
 ) => {
   const maybeSSOCTA = getSSOCTA(cta);
   if (maybeSSOCTA.isSome()) {
-    navigateToSSOWebview({ url: maybeSSOCTA.value.url });
+    navigateToSSOWebview({ uri: maybeSSOCTA.value.url });
     return;
   }
 

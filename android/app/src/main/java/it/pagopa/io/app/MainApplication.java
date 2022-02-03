@@ -16,6 +16,8 @@ import android.content.Context;
 import com.facebook.react.ReactInstanceManager;
 import java.lang.reflect.InvocationTargetException;
 
+import android.webkit.WebView;
+
 import java.util.List;
 
 public class MainApplication extends Application implements ReactApplication {
@@ -52,6 +54,7 @@ public class MainApplication extends Application implements ReactApplication {
   public void onCreate() {
 
     super.onCreate();
+    WebView.setWebContentsDebuggingEnabled(true);
     new RNInstabugReactnativePackage
       .Builder(BuildConfig.INSTABUG_TOKEN, MainApplication.this)
       .setInvocationEvent("none")

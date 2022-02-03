@@ -5,7 +5,7 @@ import { loginSuccess } from "../../../store/actions/authentication";
 import { SessionToken } from "../../../types/SessionToken";
 
 // TODO: Move to configuration
-const SSO_DOMAIN = "https://postman-echo.com";
+const SSO_DOMAIN = "https://io-openid-provider.loca.lt";
 const SSO_TOKEN_NAME = "X-IO-Federation-Token";
 
 type LoginSuccessType = ActionType<typeof loginSuccess>;
