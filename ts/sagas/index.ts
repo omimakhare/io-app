@@ -3,7 +3,6 @@
  */
 import { all, call } from "redux-saga/effects";
 
-import { ssoSaga } from "../features/sso/sagas";
 import backendInfoSaga from "./backendInfo";
 import backendStatusSaga from "./backendStatus";
 import { watchContentSaga } from "./contentLoaders";
@@ -19,7 +18,6 @@ import { watchNavigateToDeepLinkSaga } from "./watchNavigateToDeepLinkSaga";
 
 export default function* root() {
   yield all([
-    call(ssoSaga),
     call(startupSaga),
     call(backendStatusSaga),
     call(backendInfoSaga),

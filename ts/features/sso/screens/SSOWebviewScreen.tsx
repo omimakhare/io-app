@@ -7,8 +7,10 @@ import { connect } from "react-redux";
 
 import BaseScreenComponent from "../../../components/screens/BaseScreenComponent";
 import { Dispatch } from "../../../store/actions/types";
+import { sessionTokenSelector } from "../../../store/reducers/authentication";
 import { GlobalState } from "../../../store/reducers/types";
 import { goBack } from "../navigation/action";
+import { setFederationCookie } from "../utils/cookie";
 
 type NavigationParams = Readonly<{
   uri: string;
@@ -24,7 +26,32 @@ const styles = StyleSheet.create({
   webViewWrapper: { flex: 1 }
 });
 
+// TODO: Add unset federation cookie on goBack
 const SSOWebviewScreen: React.FunctionComponent<Props> = (props: Props) => {
+  const sessionToken = props.sessionToken;
+
+  // TODO: Bad code just for the demo
+  const setInitialStatus = React.useCallback(async () => {
+    if (sessionToken !== undefined) {
+      try {
+        await setFederationCookie(sessionToken);
+        // eslint-disable-next-line no-console
+        console.log("Federation token set");
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log("Error setting federation token");
+      }
+    } else {
+      // eslint-disable-next-line no-console
+      console.log("Error setting federation token");
+    }
+  }, [sessionToken]);
+
+  React.useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    setInitialStatus();
+  }, [setInitialStatus]);
+
   const uri = props.navigation.getParam("uri");
 
   // TODO: Add other parameters to WebView component
@@ -39,7 +66,9 @@ const SSOWebviewScreen: React.FunctionComponent<Props> = (props: Props) => {
     </BaseScreenComponent>
   );
 };
-const mapStateToProps = (state: GlobalState) => ({});
+const mapStateToProps = (state: GlobalState) => ({
+  sessionToken: sessionTokenSelector(state)
+});
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   handleGoBack: () => goBack(dispatch)
