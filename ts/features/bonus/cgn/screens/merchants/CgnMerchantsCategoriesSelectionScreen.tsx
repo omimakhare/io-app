@@ -23,8 +23,8 @@ import {
 } from "../../store/actions/categories";
 import { cgnCategoriesListSelector } from "../../store/reducers/categories";
 import { getCategorySpecs } from "../../utils/filters";
-import { IOWhiteBadge } from "../../../../../components/core/IOBadge";
 import { ProductCategoryWithNewDiscountsCount } from "../../../../../../definitions/cgn/merchants/ProductCategoryWithNewDiscountsCount";
+import { IOPrimaryBadge } from "../../../../../components/core/IOBadge";
 
 const CgnMerchantsCategoriesSelectionScreen = () => {
   const isFirstRender = useRef<boolean>(true);
@@ -66,7 +66,8 @@ const CgnMerchantsCategoriesSelectionScreen = () => {
           child={
             <View style={[{ alignItems: "flex-end" }, IOStyles.flex]}>
               <View spacer />
-              <IOWhiteBadge
+              <IOPrimaryBadge
+                labelColor={"blue"}
                 small
                 text={`${info.item.newDiscounts} ${I18n.t(
                   "bonus.cgn.merchantsList.news"
@@ -89,8 +90,9 @@ const CgnMerchantsCategoriesSelectionScreen = () => {
         >
           {countAvailable && (
             <View style={IOStyles.flex}>
-              <IOWhiteBadge
+              <IOPrimaryBadge
                 small
+                labelColor={"blue"}
                 text={`${info.item.newDiscounts} ${I18n.t(
                   "bonus.cgn.merchantsList.news"
                 )}`}
