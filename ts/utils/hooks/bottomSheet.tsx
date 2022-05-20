@@ -1,8 +1,10 @@
 import * as React from "react";
-import { ComponentProps, useEffect, useState } from "react";
+import { ComponentProps, useEffect, useMemo, useState } from "react";
 import {
   BottomSheetModal,
   BottomSheetScrollView,
+  BottomSheetView,
+  useBottomSheetDynamicSnapPoints,
   useBottomSheetModal
 } from "@gorhom/bottom-sheet";
 import { Dimensions, Modal, Platform } from "react-native";
@@ -24,16 +26,8 @@ type Props = {
  * Build the base content of a BottomSheet including content padding and a ScrollView
  */
 const BottomSheetContent: React.FunctionComponent<Props> = ({
-  children,
-  testID
-}: Props) => (
-  <View
-    style={{ flex: 1, ...IOStyles.horizontalContentPadding }}
-    testID={testID}
-  >
-    <BottomSheetScrollView>{children}</BottomSheetScrollView>
-  </View>
-);
+  children
+}: Props) => <BottomSheetScrollView>{children}</BottomSheetScrollView>;
 
 export type BottomSheetModalProps = {
   content: React.ReactNode;
@@ -82,18 +76,27 @@ export const bottomSheetContent = (
  * @param title
  * @param snapPoint
  * @param footer
+ * @param dynamicHeight
  */
 export const useIOBottomSheetModal = (
   component: React.ReactNode,
   title: string | React.ReactNode,
   snapPoint: number,
-  footer?: React.ReactElement
+  footer?: React.ReactElement,
+  dynamicHeight?: true
 ) => {
   const { dismissAll } = useBottomSheetModal();
   const bottomSheetModalRef = React.useRef<BottomSheetModal>(null);
   const setBSOpened = useHardwareBackButtonToDismiss(dismissAll);
   const [screenReaderEnabled, setIsScreenReaderEnabled] =
     useState<boolean>(false);
+  const snaps = useMemo(() => [100, "CONTENT_HEIGHT"], []);
+  const {
+    animatedHandleHeight,
+    animatedSnapPoints,
+    animatedContentHeight,
+    handleContentLayout
+  } = useBottomSheetDynamicSnapPoints(snaps);
 
   const bottomSheetProps = bottomSheetContent(
     component,
@@ -117,13 +120,23 @@ export const useIOBottomSheetModal = (
     <BottomSheetModal
       footerComponent={(_: BottomSheetFooterProps) =>
         footer !== undefined ? (
-          <>
+          <View footer>
             {footer}
             <View spacer />
-          </>
+          </View>
         ) : null
       }
-      snapPoints={[snapPoint]}
+      // If dynamic height feature is requested the maximum snap point is calculated by the library itself
+      // since to work this feature requires at least one predefined snap point
+      // the onChange is used to snap at the maximum one
+      onChange={i => {
+        if (dynamicHeight && i === 0) {
+          bottomSheetModalRef.current?.snapToIndex(1);
+        }
+      }}
+      snapPoints={dynamicHeight ? animatedSnapPoints : [snapPoint]}
+      handleHeight={dynamicHeight && animatedHandleHeight}
+      contentHeight={dynamicHeight && animatedContentHeight}
       ref={bottomSheetModalRef}
       handleComponent={_ => bottomSheetProps.config.handleComponent}
       backdropComponent={bottomSheetProps.config.backdropComponent}
@@ -140,7 +153,9 @@ export const useIOBottomSheetModal = (
         <Modal>
           <View style={IOStyles.flex} accessible={true}>
             {bottomSheetProps.config.handleComponent}
-            {bottomSheetProps.content}
+            <View style={[IOStyles.flex, IOStyles.horizontalContentPadding]}>
+              {bottomSheetProps.content}
+            </View>
           </View>
           <>
             {footer !== undefined ? (
@@ -153,9 +168,18 @@ export const useIOBottomSheetModal = (
           </>
         </Modal>
       ) : (
-        bottomSheetProps.content
+        <BottomSheetView
+          style={[IOStyles.flex, IOStyles.horizontalContentPadding]}
+          onLayout={dynamicHeight && handleContentLayout}
+        >
+          {bottomSheetProps.content}
+        </BottomSheetView>
       )}
     </BottomSheetModal>
   );
-  return { present, dismiss: dismissAll, bottomSheet };
+  return {
+    present,
+    dismiss: dismissAll,
+    bottomSheet
+  };
 };
