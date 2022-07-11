@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import { call, put } from "redux-saga/effects";
 import { ActionType } from "typesafe-actions";
 import { Attachment } from "../../../../../definitions/backend/Attachment";
@@ -99,6 +100,7 @@ export function* handleGetMvl(
   action: ActionType<typeof mvlDetailsLoad.request>
 ) {
   const messageId = action.payload;
+
   try {
     const getUserLegalMessageRequest: SagaCallReturnType<
       typeof getUserLegalMessage

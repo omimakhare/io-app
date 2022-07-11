@@ -1,8 +1,10 @@
+import { useProfiler } from "@sentry/react-native";
 import { View } from "native-base";
 import * as React from "react";
 import { useContext } from "react";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
+import * as Sentry from "@sentry/react-native";
 import image from "../../../../../img/servicesStatus/error-detail-icon.png";
 import { Body } from "../../../../components/core/typography/Body";
 import WorkunitGenericFailure from "../../../../components/error/WorkunitGenericFailure";
@@ -20,21 +22,24 @@ import { EUCovidContext } from "../EuCovidCertificateRouterScreen";
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps>;
 
-const EuCovidCertGenericErrorKoComponent = () => (
-  <>
-    <View spacer={true} extralarge={true} />
-    <View spacer={true} extralarge={true} />
-    <InfoScreenComponent
-      image={renderInfoRasterImage(image)}
-      title={I18n.t("features.euCovidCertificate.ko.genericError.title")}
-      body={
-        <Body style={{ textAlign: "center" }}>
-          {I18n.t("features.euCovidCertificate.ko.genericError.subtitle")}
-        </Body>
-      }
-    />
-  </>
-);
+const EuCovidCertGenericErrorKoComponent = () => {
+  useProfiler("EuCovidCertGenericErrorKoComponent");
+  return (
+    <>
+      <View spacer={true} extralarge={true} />
+      <View spacer={true} extralarge={true} />
+      <InfoScreenComponent
+        image={renderInfoRasterImage(image)}
+        title={I18n.t("features.euCovidCertificate.ko.genericError.title")}
+        body={
+          <Body style={{ textAlign: "center" }}>
+            {I18n.t("features.euCovidCertificate.ko.genericError.subtitle")}
+          </Body>
+        }
+      />
+    </>
+  );
+};
 
 type FooterProps = {
   onPress: () => void;

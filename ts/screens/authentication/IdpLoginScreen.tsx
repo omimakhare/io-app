@@ -11,6 +11,7 @@ import {
 } from "react-native-webview/lib/WebViewTypes";
 import { NavigationStackScreenProps } from "react-navigation-stack";
 import { connect } from "react-redux";
+import { ToolEnum } from "../../../definitions/content/AssistanceToolConfig";
 import brokenLinkImage from "../../../img/broken-link.png";
 import { TypeLogs } from "../../boot/configureInstabug";
 import ButtonDefaultOpacity from "../../components/ButtonDefaultOpacity";
@@ -33,6 +34,7 @@ import {
   isLoggedOutWithIdp,
   selectedIdentityProviderSelector
 } from "../../store/reducers/authentication";
+import { assistanceToolConfigSelector } from "../../store/reducers/backendStatus";
 import { idpContextualHelpDataFromIdSelector } from "../../store/reducers/content";
 import { GlobalState } from "../../store/reducers/types";
 import { SessionToken } from "../../types/SessionToken";
@@ -42,14 +44,11 @@ import {
   onLoginUriChanged
 } from "../../utils/login";
 import { getSpidErrorCodeDescription } from "../../utils/spidErrorCode";
-import { getUrlBasepath } from "../../utils/url";
-import { assistanceToolConfigSelector } from "../../store/reducers/backendStatus";
 import {
   assistanceToolRemoteConfig,
   handleSendAssistanceLog
 } from "../../utils/supportAssistance";
-import { ToolEnum } from "../../../definitions/content/AssistanceToolConfig";
-import { originSchemasWhiteList } from "./originSchemasWhiteList";
+import { getUrlBasepath } from "../../utils/url";
 
 type Props = NavigationStackScreenProps &
   ReturnType<typeof mapStateToProps> &
@@ -325,7 +324,7 @@ class IdpLoginScreen extends React.Component<Props, State> {
               androidCameraAccessDisabled={true}
               androidMicrophoneAccessDisabled={true}
               textZoom={100}
-              originWhitelist={originSchemasWhiteList}
+              originWhitelist={["https://*", "intent://*", "http://*"]}
               source={{ uri: loginUri }}
               onError={this.handleLoadingError}
               javaScriptEnabled={true}

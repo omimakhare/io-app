@@ -1,3 +1,5 @@
+import { captureMessage } from "@sentry/minimal";
+import { Severity } from "@sentry/types/dist/severity";
 import * as pot from "italia-ts-commons/lib/pot";
 import { fromNullable } from "fp-ts/lib/Option";
 import { call, put, select } from "redux-saga/effects";
@@ -44,8 +46,24 @@ const convertSuccess = (
   authCode: EUCovidCertificateAuthCode
 ): EUCovidCertificateResponse => {
   const getCertificate = (): EUCovidCertificate | undefined => {
+    const transactionOriginal = Sentry.getCurrentHub()
+      .getScope()
+      ?.getTransaction();
+    // const transaction = Sentry.startTransaction({ name: "convertCertificate" });
+    Sentry.getCurrentHub().configureScope(scope =>
+      scope.setSpan(transactionOriginal)
+    );
+    const span = transactionOriginal?.startChild({
+      op: "func",
+      description: `convertCertificate`
+    });
+
     switch (certificate.status) {
       case "valid":
+        span?.setStatus("ok");
+        span?.finish();
+        transactionOriginal?.finish();
+
         return {
           kind: "valid",
           id: certificate.uvci as EUCovidCertificate["id"],
@@ -102,9 +120,12 @@ export function* handleGetEuCovidCertificate(
   const profile: ReturnType<typeof profileSelector> = yield select(
     profileSelector
   );
-  const transaction = Sentry.startTransaction({ name: "getCertificate" });
+
+  const transaction = Sentry.getCurrentHub().getScope()?.getTransaction(); // ??
+  // Sentry.startTransaction({ name: "getCertificate" });
+
   Sentry.getCurrentHub().configureScope(scope => scope.setSpan(transaction));
-  const span = transaction.startChild({
+  const span = transaction?.startChild({
     op: "saga.saga",
     description: `/getCertificate`
   });
@@ -121,6 +142,8 @@ export function* handleGetEuCovidCertificate(
         }
       });
     if (getCertificateResult.isRight()) {
+      throw new Error("Simulate decode error");
+      // Sentry.captureMessage("Fake message failures", Severity.Error);
       span.setStatus("ok");
       transaction.setStatus("ok");
       if (getCertificateResult.value.status === 200) {
@@ -166,14 +189,17 @@ export function* handleGetEuCovidCertificate(
       );
     }
   } catch (e) {
-    span.setStatus("internal_error");
-    transaction.setStatus("internal_error");
-    Sentry.captureException(e);
+    console.log(e);
+    // span.setStatus("internal_error");
+    // transaction.setStatus("internal_error");
+    // Sentry.captureException(new Error("asd"));
+    yield call(Sentry.captureException, new Error("asd"));
+    // Sentry.captureMessage("Fake message failures", Severity.Error);
     yield put(
       euCovidCertificateGet.failure({ ...getNetworkError(e), authCode })
     );
   } finally {
     span.finish();
-    transaction.finish();
+    // transaction.finish();
   }
 }

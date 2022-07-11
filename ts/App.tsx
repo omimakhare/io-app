@@ -1,4 +1,5 @@
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { Breadcrumb } from "@sentry/react-native";
 
 import * as Sentry from "@sentry/react-native";
 import { LogLevel } from "@sentry/types/dist/loglevel";
@@ -29,7 +30,7 @@ Sentry.init({
   release: getAppVersion(),
   dist: Platform.OS === "ios" ? "ios" : DeviceInfo.getBuildNumber(),
   tracesSampleRate: 1.0,
-  logLevel: LogLevel.Debug,
+  // logLevel: LogLevel.Debug,
   // debug: true,
   integrations: [
     new Sentry.ReactNativeTracing({
@@ -41,6 +42,16 @@ Sentry.init({
       tracingOrigins: ["localhost", "127.0.0.1", /^\//]
     })
   ]
+  // beforeBreadcrumb(breadcrumb: Breadcrumb) {
+  //   // console.log("breadcrumb" + breadcrumb.data.url);
+  //
+  //   if (breadcrumb?.data?.url?.includes("/api/v1/messages/")) {
+  //     // console.log("YES");
+  //     breadcrumb.data.url = "http://127.0.0.1:3000/api/v1/messages/_msg_id_";
+  //   }
+  //
+  //   return breadcrumb;
+  // }
 });
 
 /**

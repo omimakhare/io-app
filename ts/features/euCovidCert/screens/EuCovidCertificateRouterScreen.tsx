@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
+import * as Sentry from "@sentry/react-native";
 import { setMessageReadState } from "../../../store/actions/messages";
 import { GlobalState } from "../../../store/reducers/types";
 import { euCovidCertificateGet } from "../store/actions";
@@ -161,7 +162,6 @@ const mapStateToProps = (state: GlobalState) => ({
     euCovidCertificateFromAuthCodeSelector(state, authCode)
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(EuCovidCertificateRouterScreen);
+export default Sentry.withProfiler(
+  connect(mapStateToProps, mapDispatchToProps)(EuCovidCertificateRouterScreen)
+);

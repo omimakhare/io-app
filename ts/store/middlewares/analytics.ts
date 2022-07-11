@@ -1,4 +1,5 @@
 /* eslint-disable no-fallthrough */
+import * as Sentry from "@sentry/react-native";
 // disabled in order to allows comments between the switch
 import { getType } from "typesafe-actions";
 import { setInstabugUserAttribute } from "../../boot/configureInstabug";
@@ -120,10 +121,46 @@ import {
 import { trackContentAction } from "./contentAnalytics";
 import { trackServiceAction } from "./serviceAnalytics";
 
+// let transaction;
+
 const trackAction =
   (mp: NonNullable<typeof mixpanel>) =>
   // eslint-disable-next-line complexity
   (action: Action): Promise<void | ReadonlyArray<null>> => {
+    if (action.type.endsWith("_REQUEST")) {
+      if (Sentry.getCurrentHub().getScope()?.getTransaction() === undefined) {
+        const transaction = Sentry.startTransaction({
+          name: action.type.replace("_REQUEST", ""),
+          op: "async.action"
+        });
+        Sentry.getCurrentHub().configureScope(scope =>
+          scope.setSpan(transaction)
+        );
+        console.log("Created new transaction");
+        // transaction?.startChild({
+        //   op: "async.action",
+        //   description: action.type.replace("_REQUEST", "")
+        // });
+      } else {
+        console.log(
+          "Already existing transaction -> " +
+            Sentry.getCurrentHub().getScope()?.getTransaction()?.name
+        );
+      }
+    }
+
+    if (action.type.endsWith("_FAILURE")) {
+      const transaction = Sentry.getCurrentHub().getScope()?.getTransaction();
+      console.log("end+ " + transaction?.op);
+      // console.log("scope+ " + Sentry.getCurrentHub().getScope());
+
+      transaction?.setStatus("internal_error");
+      if (transaction?.op === "async.action") {
+        transaction?.finish();
+        console.log("completed");
+      }
+    }
+
     // eslint-disable-next-line sonarjs/max-switch-cases
     switch (action.type) {
       //

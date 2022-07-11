@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import { fromNullable, none } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import { Content, Text, View } from "native-base";
@@ -12,6 +13,7 @@ import { connect } from "react-redux";
 import { BonusActivationWithQrCode } from "../../../definitions/bonus_vacanze/BonusActivationWithQrCode";
 import { TypeEnum } from "../../../definitions/pagopa/Wallet";
 import ButtonDefaultOpacity from "../../components/ButtonDefaultOpacity";
+import { Body } from "../../components/core/typography/Body";
 import { H3 } from "../../components/core/typography/H3";
 import { withLightModalContext } from "../../components/helpers/withLightModalContext";
 import { withValidatedEmail } from "../../components/helpers/withValidatedEmail";
@@ -55,7 +57,6 @@ import NewPaymentMethodAddedNotifier from "../../features/wallet/component/NewMe
 import I18n from "../../i18n";
 import {
   navigateBack,
-  navigateToPaymentScanQrCode,
   navigateToTransactionDetailsScreen,
   navigateToWalletAddPaymentMethod
 } from "../../store/actions/navigation";
@@ -69,6 +70,7 @@ import {
   fetchWalletsRequestWithExpBackoff,
   runSendAddCobadgeTrackSaga
 } from "../../store/actions/wallet/wallets";
+import { isCGNEnabledSelector } from "../../store/reducers/backendStatus";
 import { transactionsReadSelector } from "../../store/reducers/entities";
 import { paymentsHistorySelector } from "../../store/reducers/payments/history";
 import { isPagoPATestEnabledSelector } from "../../store/reducers/persistedPreferences";
@@ -90,8 +92,6 @@ import { isUpdateNeeded } from "../../utils/appVersion";
 import { isStrictSome } from "../../utils/pot";
 import { showToast } from "../../utils/showToast";
 import { setStatusBarColorAndBackground } from "../../utils/statusBar";
-import { Body } from "../../components/core/typography/Body";
-import { isCGNEnabledSelector } from "../../store/reducers/backendStatus";
 
 type NavigationParams = Readonly<{
   newMethodAdded: boolean;
@@ -643,7 +643,10 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   loadCgnData: () => dispatch(cgnDetails.request()),
   navigateToWalletAddPaymentMethod: (keyFrom?: string) =>
     navigateToWalletAddPaymentMethod({ inPayment: none, keyFrom }),
-  navigateToPaymentScanQrCode: () => navigateToPaymentScanQrCode(),
+  navigateToPaymentScanQrCode: () => {
+    // throw new Error("Hello Sentry");
+    Sentry.captureException(new Error("wallet home render"));
+  },
   navigateToTransactionDetailsScreen: (transaction: Transaction) => {
     dispatch(readTransaction(transaction));
 
@@ -669,11 +672,13 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   runSendAddCobadgeMessageSaga: () => dispatch(runSendAddCobadgeTrackSaga())
 });
 
-export default withValidatedPagoPaVersion(
-  withValidatedEmail(
-    connect(
-      mapStateToProps,
-      mapDispatchToProps
-    )(withLightModalContext(WalletHomeScreen))
+export default Sentry.withProfiler(
+  withValidatedPagoPaVersion(
+    withValidatedEmail(
+      connect(
+        mapStateToProps,
+        mapDispatchToProps
+      )(withLightModalContext(WalletHomeScreen))
+    )
   )
 );
