@@ -32,28 +32,14 @@ import {
   isReady
 } from "../../../bpd/model/RemoteValue";
 import { LoadingErrorComponent } from "../../../bonusVacanze/components/loadingErrorScreen/LoadingErrorComponent";
+import { mixAndSortMerchants } from "../../utils/merchants";
 
 type Props = ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps>;
 
-const OFFLINE_FIXED_BOUNDINGBOX = {
-  userCoordinates: {
-    latitude: 41.827701462326985,
-    longitude: 12.66444625336996
-  },
-  boundingBox: {
-    coordinates: {
-      latitude: 34.845459548,
-      longitude: 6.5232427904
-    },
-    deltaLatitude: 6.9822419143,
-    deltaLongitude: 6.141203463
-  }
-};
-
 const DEBOUNCE_SEARCH: Millisecond = 300 as Millisecond;
 
-type MerchantsAll = OfflineMerchant | OnlineMerchant;
+export type MerchantsAll = OfflineMerchant | OnlineMerchant;
 /**
  * Screen that renders the list of the merchants which have an active discount for CGN
  * @param props
@@ -69,24 +55,14 @@ const CgnMerchantsListScreen: React.FunctionComponent<Props> = (
 
   // Mixes online and offline merchants to render on the same list
   // merchants are sorted by name
-  const merchantsAll = useMemo(() => {
-    const onlineMerchants = getValueOrElse(props.onlineMerchants, []);
-    const offlineMerchants = getValueOrElse(props.offlineMerchants, []);
-
-    const merchantsAll = [...offlineMerchants, ...onlineMerchants];
-
-    // Removes possible duplicated merchant:
-    // a merchant can be both online and offline, or may have multiple result by offlineMerchant search API
-    const uniquesMerchants = [
-      ...new Map<OfflineMerchant["id"] | OnlineMerchant["id"], MerchantsAll>(
-        merchantsAll.map(m => [m.id, m])
-      ).values()
-    ];
-
-    return [...uniquesMerchants].sort((m1: MerchantsAll, m2: MerchantsAll) =>
-      m1.name.localeCompare(m2.name)
-    );
-  }, [props.onlineMerchants, props.offlineMerchants]);
+  const merchantsAll = useMemo(
+    () =>
+      mixAndSortMerchants(
+        getValueOrElse(props.onlineMerchants, []),
+        getValueOrElse(props.offlineMerchants, [])
+      ),
+    [props.onlineMerchants, props.offlineMerchants]
+  );
 
   const performSearch = (
     text: string,
@@ -145,7 +121,7 @@ const CgnMerchantsListScreen: React.FunctionComponent<Props> = (
                   iconPosition={"right"}
                   inputProps={{
                     value: searchValue,
-                    autoFocus: true,
+                    autoFocus: false,
                     onChangeText: setSearchValue,
                     placeholder: I18n.t("global.buttons.search")
                   }}
@@ -153,6 +129,11 @@ const CgnMerchantsListScreen: React.FunctionComponent<Props> = (
               </Item>
             </View>
             <CgnMerchantsListView
+              refreshing={
+                isLoading(props.onlineMerchants) ||
+                isLoading(props.offlineMerchants)
+              }
+              onRefresh={initLoadingLists}
               merchantList={merchantList}
               onItemPress={onItemPress}
             />
@@ -179,8 +160,7 @@ const mapStateToProps = (state: GlobalState) => ({
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   requestOnlineMerchants: () => dispatch(cgnOnlineMerchants.request({})),
-  requestOfflineMerchants: () =>
-    dispatch(cgnOfflineMerchants.request(OFFLINE_FIXED_BOUNDINGBOX)),
+  requestOfflineMerchants: () => dispatch(cgnOfflineMerchants.request({})),
   navigateToMerchantDetail: (id: Merchant["id"]) =>
     navigateToCgnMerchantDetail({ merchantID: id })
 });

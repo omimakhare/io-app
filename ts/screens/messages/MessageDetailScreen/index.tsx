@@ -1,20 +1,23 @@
-import * as React from "react";
-import { NavigationStackScreenProps } from "react-navigation-stack";
-import { connect } from "react-redux";
 import { fromNullable, none } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
+import * as React from "react";
+import { connect } from "react-redux";
+import { CreatedMessageWithoutContent } from "../../../../definitions/backend/CreatedMessageWithoutContent";
+import { TagEnum } from "../../../../definitions/backend/MessageCategoryPayment";
 import { ServicePublic } from "../../../../definitions/backend/ServicePublic";
 import BaseScreenComponent, {
   ContextualHelpPropsMarkdown
 } from "../../../components/screens/BaseScreenComponent";
 import I18n from "../../../i18n";
+import { IOStackNavigationRouteProps } from "../../../navigation/params/AppParamsList";
+import { MessagesParamsList } from "../../../navigation/params/MessagesParamsList";
 import {
+  DEPRECATED_setMessageReadState,
   loadMessageWithRelations,
-  setMessageReadState
+  MessageReadType
 } from "../../../store/actions/messages";
 import { navigateToServiceDetailsScreen } from "../../../store/actions/navigation";
 import { loadServiceDetail } from "../../../store/actions/services";
-import { CreatedMessageWithoutContent } from "../../../../definitions/backend/CreatedMessageWithoutContent";
 import { Dispatch, ReduxProps } from "../../../store/actions/types";
 import { messageStateByIdSelector } from "../../../store/reducers/entities/messages/messagesById";
 import { isMessageRead } from "../../../store/reducers/entities/messages/messagesStatus";
@@ -24,16 +27,19 @@ import {
   serviceMetadataByIdSelector
 } from "../../../store/reducers/entities/services/servicesById";
 import { GlobalState } from "../../../store/reducers/types";
-import { InferNavigationParams } from "../../../types/react";
-import ServiceDetailsScreen from "../../services/ServiceDetailsScreen";
 
+import { hasMessagePaymentData } from "../../../utils/messages";
+import { ServiceDetailsScreenNavigationParams } from "../../services/ServiceDetailsScreen";
 import MessageDetails from "./MessageDetail";
 
-type MessageDetailScreenNavigationParams = {
+export type MessageDetailScreenNavigationParams = {
   messageId: string;
 };
 
-type OwnProps = NavigationStackScreenProps<MessageDetailScreenNavigationParams>;
+type OwnProps = IOStackNavigationRouteProps<
+  MessagesParamsList,
+  "MESSAGE_DETAIL"
+>;
 
 type Props = OwnProps &
   ReturnType<typeof mapStateToProps> &
@@ -58,7 +64,11 @@ export class MessageDetailScreen extends React.PureComponent<Props, never> {
     const { potMessage, isRead } = this.props;
     if (pot.isSome(potMessage) && !isRead) {
       // Set the message read state to TRUE
-      this.props.setMessageReadState(potMessage.value.id, true);
+      this.props.setMessageReadState(
+        potMessage.value.id,
+        true,
+        hasMessagePaymentData(potMessage.value) ? TagEnum.PAYMENT : "unknown"
+      );
     }
   };
 
@@ -119,7 +129,7 @@ export class MessageDetailScreen extends React.PureComponent<Props, never> {
 }
 
 const mapStateToProps = (state: GlobalState, ownProps: OwnProps) => {
-  const messageId = ownProps.navigation.getParam("messageId");
+  const messageId = ownProps.route.params.messageId;
   const isRead = isMessageRead(state, messageId);
   const paymentsByRptId = paymentsByRptIdSelector(state);
   const goBack = () => ownProps.navigation.goBack();
@@ -162,10 +172,13 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     dispatch(loadServiceDetail.request(serviceId)),
   loadMessageWithRelations: (meta: CreatedMessageWithoutContent) =>
     dispatch(loadMessageWithRelations.request(meta)),
-  setMessageReadState: (messageId: string, isRead: boolean) =>
-    dispatch(setMessageReadState(messageId, isRead)),
+  setMessageReadState: (
+    messageId: string,
+    isRead: boolean,
+    messageType: MessageReadType
+  ) => dispatch(DEPRECATED_setMessageReadState(messageId, isRead, messageType)),
   navigateToServiceDetailsScreen: (
-    params: InferNavigationParams<typeof ServiceDetailsScreen>
+    params: ServiceDetailsScreenNavigationParams
   ) => navigateToServiceDetailsScreen(params)
 });
 

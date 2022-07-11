@@ -516,14 +516,7 @@ onboarding:
       title: Achtung
       message: Bitte lesen Sie den vollständigen Inhalt der Nutzungsbedingungen und der Datenschutzrichtlinie, um fortzufahren
   unlockCode:
-    headerTitle: Aktivierung
-    contentTitle: Wählen Sie einen Freischaltcode
-    contentSubtitle: Geben Sie einen 6-stelligen Code ein
-    contentTitleConfirm: Fügen Sie Ihren Code erneut ein
-    contentTitleConfirmSubtitle: Geben Sie erneut den 6-stelligen Code ein
-    pinInfo: Dieser Code wird jedes Mal abgefragt, wenn Sie die IO-App öffnen und wenn Sie sensible Daten anzeigen oder dispositive Transaktionen durchführen müssen. Sie können ihn jederzeit ändern, indem Sie sich authentifizieren.
     reset: Ändern Sie den Code
-    confirmInvalid: Die beiden PINs stimmen nicht überein
     contextualHelpTitle: Wie lautet Ihr Freischaltcode?
   alert:
     title: Wollen Sie sich wirklich abmelden?
@@ -655,7 +648,6 @@ wallet:
     title: Möchten Sie diese Karte speichern?
     infoTitle: Die Karte als bevorzugte Zahlungsmethode festlegen
     info: Diese Zahlungsmethode wird automatisch für die nächste Zahlung vorgeschlagen
-    save: Speichern
     notice: Zur Verifizierung der Karte wird eine Transaktion von wenigen Cent auf Ihrer Karte abgebucht.
     loadingAlert: Ihre Kartendaten werden überprüft...
   saveCardInPayment:
@@ -668,17 +660,8 @@ wallet:
     onUpdateWalletPspFailure: Vorgang ist fehlgeschlagen, bitte erneut versuchen
     contextualHelpTitle: Wählen Sie einen Provider
   ConfirmPayment:
-    header: Transaktion bestätigen
     cancelPayment: Transaktion abbrechen
-    goToPay: Bezahlen
-    askConfirm: Möchten Sie mit der Aktion fortfahren?
-    partialAmount: Zu zahlender Betrag
     fee: Gebühr
-    why: Warum?
-    info: 'Nach diesem Schritt wird es nicht mehr möglich sein, zurückzukehren.'
-    info2: Sie verwenden Ihre bevorzugte Zahlungsmethode.
-    changeMethod: Ändern Sie die Zahlungsmethode
-    change: Methode wechseln
     identificationMessage: Bestätigen Sie die Transaktion mit Ihrem Freischaltcode
     transactionSuccess: die Zahlung wurde abgeschlossen!
     transactionFailure: Es gab einen Fehler mit der Zahlung, bitte versuchen Sie es erneut!
@@ -697,7 +680,6 @@ wallet:
     noPspsAvailable: Diese Zahlungsmethode kann nicht verwendet werden
     contextualHelpTitle: Auswahl der Zahlungsmethode
   firstTransactionSummary:
-    header: Zusammenfassung der Transaktionsmitteilungen
     title: Transaktionshinweis
     amount: Transaktionsbetrag
     total: Insgesamt bezahlt
@@ -715,7 +697,8 @@ wallet:
     fee: Gebühr
     idTransaction: Transaktions-Identifikationscode
     updatedAmount: Aktualisierter Betrag
-    updateInfo: 'pagoPa aktualisiert automatisch den Betrag, um sicherzustellen, dass Sie den richtigen Betrag zahlen und um Verzugs- oder Strafzinsen zu vermeiden '
+    amountInfo:
+      message: pagoPa aktualisiert automatisch den Betrag, um sicherzustellen, dass Sie den richtigen Betrag zahlen und um Verzugs- oder Strafzinsen zu vermeiden
     loadingMessage:
       activation: Benachrichtige die Körperschaft, warten Sie ein paar Sekunden...
       verification: Prüfe den Status und die Höhe Ihrer Zahlungsmitteilung...
@@ -838,7 +821,7 @@ messages:
     message:
       read: "Mitteilung"
       unread: "Ungelesene Mitteilung"
-      description: "{{newMessage}}, erhalten von {{organizationName}}, {{serviceName}}. {{subject}}. {{receivedAt}}"
+      description: "{{newMessage}}, erhalten von {{organizationName}}, {{serviceName}}. {{subject}}. {{receivedAt}}. {{state}}"
       received_on: "erhalten am"
       received_at: "erhalten um"
   contextualHelpTitle: Über diesen Abschnitt
@@ -1004,7 +987,7 @@ services:
   loading:
     title: Laden der Dienstleistungsliste
     subtitle: nur einige Sekunden...
-  enableAll: Schnelleinrichtung verwenden
+  enableAll: Schnell Konfiguration verwenden
   disableAll: Manuelle Konfiguration verwenden
   updatingServiceMode: Bitte warten...
   disableAllTitle: "Wollen Sie wirklich alle Dienste deaktivieren?"
@@ -1086,12 +1069,10 @@ systemsOff:
   closeApp: Schließen Sie die Anwendung und versuchen Sie es erneut
 contextualHelp:
   title: Die IO-App hilft Ihnen
-instabug:
-  contextualHelp:
-    title1: Benötigen Sie Hilfe?
 features:
   euCovidCertificate:
     save:
+      album: "IO"
       noPermission: "Die IO-App hat vermutlich keine Berechtigung zum Speichern der Bilder. Bitte überprüfen Sie Ihre Geräteeinstellungen."
       ok: "Das Bild wurde auf Ihrem Smartphone gespeichert"
       bottomSheet:

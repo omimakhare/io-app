@@ -6,5 +6,8 @@ export default {
   init: jest.fn(),
   setUserIdentity: jest.fn(),
   openTicket: jest.fn(),
-  showTickets: jest.fn()
+  showTickets: jest.fn(),
+  addTicketCustomField: jest.fn(),
+  addTicketTag: jest.fn(),
+  appendLog: jest.fn()
 };

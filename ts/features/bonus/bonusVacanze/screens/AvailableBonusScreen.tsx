@@ -22,10 +22,14 @@ import GenericErrorComponent from "../../../../components/screens/GenericErrorCo
 import FooterWithButtons from "../../../../components/ui/FooterWithButtons";
 import { bpdEnabled } from "../../../../config";
 import I18n from "../../../../i18n";
-import { navigateBack } from "../../../../store/actions/navigation";
+import {
+  navigateBack,
+  navigateToServiceDetailsScreen
+} from "../../../../store/actions/navigation";
 import { Dispatch } from "../../../../store/actions/types";
 import {
   bpdRemoteConfigSelector,
+  isCdcEnabledSelector,
   isCGNEnabledSelector
 } from "../../../../store/reducers/backendStatus";
 import { GlobalState } from "../../../../store/reducers/types";
@@ -33,7 +37,6 @@ import variables from "../../../../theme/variables";
 import { storeUrl } from "../../../../utils/appVersion";
 import { getRemoteLocale } from "../../../../utils/messages";
 import { showToast } from "../../../../utils/showToast";
-import { setStatusBarColorAndBackground } from "../../../../utils/statusBar";
 import { bpdOnboardingStart } from "../../bpd/store/actions/onboarding";
 import { cgnActivationStart } from "../../cgn/store/actions/activation";
 import { actionWithAlert } from "../components/alert/ActionWithAlert";
@@ -48,13 +51,23 @@ import {
   experimentalAndVisibleBonus,
   isAvailableBonusLoadingSelector,
   isAvailableBonusNoneErrorSelector,
+  serviceFromAvailableBonusSelector,
   supportedAvailableBonusSelector
 } from "../store/reducers/availableBonusesTypes";
 import {
   ID_BONUS_VACANZE_TYPE,
   ID_BPD_TYPE,
+  ID_CDC_TYPE,
   ID_CGN_TYPE
 } from "../utils/bonus";
+
+import { ServiceDetailsScreenNavigationParams } from "../../../../screens/services/ServiceDetailsScreen";
+import { ServicePublic } from "../../../../../definitions/backend/ServicePublic";
+import {
+  loadServiceDetail,
+  showServiceDetails
+} from "../../../../store/actions/services";
+import { ServiceId } from "../../../../../definitions/backend/ServiceId";
 
 export type Props = ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps>;
@@ -86,6 +99,18 @@ const contextualHelpMarkdown: ContextualHelpPropsMarkdown = {
  *    - if the bonus is not active at the on press it does nothing
  */
 class AvailableBonusScreen extends React.PureComponent<Props> {
+  public componentDidMount() {
+    const cdcBonus = this.props.availableBonusesList
+      .filter(experimentalAndVisibleBonus)
+      .find(b => b.id_type === ID_CDC_TYPE);
+    const cdcServiceId: string | undefined = cdcBonus?.service_id ?? undefined;
+
+    // If the cdc service is not loaded try to load it
+    if (this.props.isCdcEnabled && cdcServiceId) {
+      this.props.serviceDetailsLoad(cdcServiceId as ServiceId);
+    }
+  }
+
   private openAppStore = () => {
     // storeUrl is not a webUrl, try to open it
     Linking.openURL(storeUrl).catch(() => {
@@ -122,7 +147,22 @@ class AvailableBonusScreen extends React.PureComponent<Props> {
     if (this.props.isCgnEnabled) {
       handlersMap.set(ID_CGN_TYPE, _ => this.props.startCgnActivation());
     }
-
+    if (this.props.isCdcEnabled) {
+      handlersMap.set(ID_CDC_TYPE, _ => {
+        this.props.cdcService().fold(
+          () => {
+            // TODO: add mixpanel tracking and alert: https://pagopa.atlassian.net/browse/AP-14
+            showToast(I18n.t("bonus.cdc.serviceEntryPoint.notAvailable"));
+          },
+          s => () => {
+            this.props.showServiceDetails(s);
+            this.props.navigateToServiceDetailsScreen({
+              service: s
+            });
+          }
+        )();
+      });
+    }
     const handled = handlersMap.has(item.id_type);
     // if bonus is experimental but there is no handler, it won't be shown
     if (item.visibility === "experimental" && !handled) {
@@ -183,12 +223,6 @@ class AvailableBonusScreen extends React.PureComponent<Props> {
     );
   };
 
-  public componentDidMount() {
-    // since this is the first screen of the Bonus Navigation Stack, avoid to put
-    // logic inside this method because this screen will be mounted as soon the stack is created
-    setStatusBarColorAndBackground("dark-content", variables.colorWhite);
-  }
-
   public render() {
     const { availableBonusesList, isError } = this.props;
     const cancelButtonProps = {
@@ -198,6 +232,7 @@ class AvailableBonusScreen extends React.PureComponent<Props> {
       onPress: this.props.navigateBack,
       title: I18n.t("global.buttons.cancel")
     };
+
     return isError ? (
       <GenericErrorComponent
         onRetry={this.props.loadAvailableBonuses}
@@ -245,7 +280,9 @@ const mapStateToProps = (state: GlobalState) => ({
   // show error only when we have an error and no data to show
   isError: isAvailableBonusNoneErrorSelector(state),
   bpdConfig: bpdRemoteConfigSelector(state),
-  isCgnEnabled: isCGNEnabledSelector(state)
+  isCgnEnabled: isCGNEnabledSelector(state),
+  isCdcEnabled: isCdcEnabledSelector(state),
+  cdcService: () => serviceFromAvailableBonusSelector(ID_CDC_TYPE)(state)
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
@@ -256,7 +293,15 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     navigateToBonusRequestInformation({ bonusItem });
   },
   startBpdOnboarding: () => dispatch(bpdOnboardingStart()),
-  startCgnActivation: () => dispatch(cgnActivationStart())
+  startCgnActivation: () => dispatch(cgnActivationStart()),
+  navigateToServiceDetailsScreen: (
+    params: ServiceDetailsScreenNavigationParams
+  ) => navigateToServiceDetailsScreen(params),
+  serviceDetailsLoad: (serviceId: ServiceId) => {
+    dispatch(loadServiceDetail.request(serviceId));
+  },
+  showServiceDetails: (service: ServicePublic) =>
+    dispatch(showServiceDetails(service))
 });
 
 export default connect(

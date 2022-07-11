@@ -5,12 +5,11 @@
  * - it is displayed during the user onboarding
  * - it is displayed after the onboarding (navigation from the profile section)
  */
+import { StackActions } from "@react-navigation/native";
 import * as pot from "italia-ts-commons/lib/pot";
 import { Text, View } from "native-base";
 import * as React from "react";
-import { Alert, Platform, StyleSheet } from "react-native";
-import { StackActions } from "react-navigation";
-import { NavigationStackScreenProps } from "react-navigation-stack";
+import { Alert, Platform, SafeAreaView, StyleSheet } from "react-native";
 import { connect } from "react-redux";
 import { withLoadingSpinner } from "../../components/helpers/withLoadingSpinner";
 import { withValidatedEmail } from "../../components/helpers/withValidatedEmail";
@@ -25,6 +24,8 @@ import {
 import FooterWithButtons from "../../components/ui/FooterWithButtons";
 import IconFont from "../../components/ui/IconFont";
 import I18n from "../../i18n";
+import { IOStackNavigationProp } from "../../navigation/params/AppParamsList";
+import { OnboardingParamsList } from "../../navigation/params/OnboardingParamsList";
 import {
   navigateBack,
   navigateToEmailInsertScreen
@@ -45,10 +46,17 @@ import { isOnboardingCompleted } from "../../utils/navigation";
 
 type Props = ReduxProps &
   ReturnType<typeof mapStateToProps> &
-  ReturnType<typeof mapDispatchToProps> &
-  NavigationStackScreenProps;
+  ReturnType<typeof mapDispatchToProps> & {
+    navigation: IOStackNavigationProp<
+      OnboardingParamsList,
+      "READ_EMAIL_SCREEN"
+    >;
+  };
 
 const styles = StyleSheet.create({
+  flex: {
+    flex: 1
+  },
   emailWithIcon: {
     flexDirection: "row",
     justifyContent: "flex-start",
@@ -142,45 +150,49 @@ export class EmailReadScreen extends React.PureComponent<Props> {
     };
 
     return (
-      <TopScreenComponent
-        goBack={this.handleGoBack}
-        headerTitle={I18n.t("profile.data.list.email")}
-        contextualHelpMarkdown={contextualHelpMarkdown}
-      >
-        <ScreenContent
-          title={I18n.t("email.read.title")}
-          subtitle={
-            isFromProfileSection ? undefined : I18n.t("email.insert.subtitle")
-          }
+      <SafeAreaView style={styles.flex}>
+        <TopScreenComponent
+          goBack={this.handleGoBack}
+          headerTitle={I18n.t("profile.data.list.email")}
+          contextualHelpMarkdown={contextualHelpMarkdown}
         >
-          <View style={styles.content}>
-            <Text>{I18n.t("email.insert.label")}</Text>
-            <View style={styles.spacerSmall} />
-            <View style={styles.emailWithIcon}>
-              <IconFont
-                name="io-envelope"
-                accessible={true}
-                accessibilityLabel={I18n.t("email.read.title")}
-                size={24}
-                style={styles.icon}
-              />
-              <Text style={styles.email}>
-                {this.props.optionEmail.getOrElse("GIGI")}
+          <ScreenContent
+            title={I18n.t("email.read.title")}
+            subtitle={
+              isFromProfileSection ? undefined : I18n.t("email.insert.subtitle")
+            }
+          >
+            <View style={styles.content}>
+              <Text>{I18n.t("email.insert.label")}</Text>
+              <View style={styles.spacerSmall} />
+              <View style={styles.emailWithIcon}>
+                <IconFont
+                  name="io-envelope"
+                  accessible={true}
+                  accessibilityLabel={I18n.t("email.read.title")}
+                  size={24}
+                  style={styles.icon}
+                />
+                {this.props.optionEmail.isSome() && (
+                  <Text style={styles.email}>
+                    {this.props.optionEmail.value}
+                  </Text>
+                )}
+              </View>
+              <View style={styles.spacerLarge} />
+              <Text>
+                {isFromProfileSection
+                  ? `${I18n.t("email.read.details")}`
+                  : I18n.t("email.read.info")}
               </Text>
             </View>
-            <View style={styles.spacerLarge} />
-            <Text>
-              {isFromProfileSection
-                ? `${I18n.t("email.read.details")}`
-                : I18n.t("email.read.info")}
-            </Text>
-          </View>
-        </ScreenContent>
-        <SectionStatusComponent sectionKey={"email_validation"} />
-        <FooterWithButtons
-          {...(isFromProfileSection ? footerProps1 : footerProps2)}
-        />
-      </TopScreenComponent>
+          </ScreenContent>
+          <SectionStatusComponent sectionKey={"email_validation"} />
+          <FooterWithButtons
+            {...(isFromProfileSection ? footerProps1 : footerProps2)}
+          />
+        </TopScreenComponent>
+      </SafeAreaView>
     );
   }
 }

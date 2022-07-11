@@ -48,16 +48,30 @@ Object {
       "kind": "PotNone",
     },
     "allPaginated": Object {
-      "data": Object {
-        "kind": "PotNone",
+      "archive": Object {
+        "data": Object {
+          "kind": "PotNone",
+        },
+        "lastRequest": None {
+          "_tag": "None",
+        },
       },
-      "lastRequest": None {
+      "inbox": Object {
+        "data": Object {
+          "kind": "PotNone",
+        },
+        "lastRequest": None {
+          "_tag": "None",
+        },
+      },
+      "migration": None {
         "_tag": "None",
       },
     },
     "byId": Object {},
     "detailsById": Object {},
     "idsByServiceId": Object {},
+    "paginatedById": Object {},
   },
   "messagesStatus": Object {},
   "organizations": Object {
@@ -83,6 +97,16 @@ Object {
 }
 `;
 
+exports[`Check the addition for new fields to the persisted store. If one of this test fails, check that exists the migration before updating the snapshot! Freeze 'features.mvl' state 1`] = `
+Object {
+  "byId": Object {},
+  "downloads": Object {},
+  "preferences": Object {
+    "showAlertForAttachments": true,
+  },
+}
+`;
+
 exports[`Check the addition for new fields to the persisted store. If one of this test fails, check that exists the migration before updating the snapshot! Freeze 'identification' state 1`] = `
 Object {
   "fail": undefined,
@@ -94,9 +118,12 @@ Object {
 
 exports[`Check the addition for new fields to the persisted store. If one of this test fails, check that exists the migration before updating the snapshot! Freeze 'installation' state 1`] = `
 Object {
+  "appVersionHistory": Array [],
   "isFirstRunAfterInstall": true,
 }
 `;
+
+exports[`Check the addition for new fields to the persisted store. If one of this test fails, check that exists the migration before updating the snapshot! Freeze 'installation.appVersionHistory' state 1`] = `Array []`;
 
 exports[`Check the addition for new fields to the persisted store. If one of this test fails, check that exists the migration before updating the snapshot! Freeze 'notifications' state 1`] = `
 Object {

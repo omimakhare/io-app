@@ -2,7 +2,7 @@ import { captureMessage } from "@sentry/minimal";
 import { Severity } from "@sentry/types/dist/severity";
 import * as pot from "italia-ts-commons/lib/pot";
 import { fromNullable } from "fp-ts/lib/Option";
-import { call, put, select } from "redux-saga/effects";
+import { call, put, select } from "typed-redux-saga/macro";
 import { ActionType } from "typesafe-actions";
 import * as Sentry from "@sentry/react-native";
 import { Certificate } from "../../../../../definitions/eu_covid_cert/Certificate";
@@ -117,7 +117,7 @@ export function* handleGetEuCovidCertificate(
 ) {
   const authCode = action.payload;
 
-  const profile: ReturnType<typeof profileSelector> = yield select(
+  const profile: ReturnType<typeof profileSelector> = yield* select(
     profileSelector
   );
 
@@ -132,7 +132,7 @@ export function* handleGetEuCovidCertificate(
 
   try {
     const getCertificateResult: SagaCallReturnType<typeof getCertificate> =
-      yield call(getCertificate, {
+      yield* call(getCertificate, {
         getCertificateParams: {
           auth_code: authCode,
           preferred_languages: pot.getOrElse(
@@ -148,7 +148,7 @@ export function* handleGetEuCovidCertificate(
       transaction.setStatus("ok");
       if (getCertificateResult.value.status === 200) {
         // handled success
-        yield put(
+        yield* put(
           euCovidCertificateGet.success(
             convertSuccess(getCertificateResult.value.value, authCode)
           )
@@ -156,7 +156,7 @@ export function* handleGetEuCovidCertificate(
         return;
       }
       if (mapKinds[getCertificateResult.value.status] !== undefined) {
-        yield put(
+        yield* put(
           euCovidCertificateGet.success({
             kind: mapKinds[getCertificateResult.value.status],
             authCode
@@ -165,7 +165,7 @@ export function* handleGetEuCovidCertificate(
         return;
       }
       // not handled error codes
-      yield put(
+      yield* put(
         euCovidCertificateGet.failure({
           ...getGenericError(
             new Error(
@@ -179,7 +179,7 @@ export function* handleGetEuCovidCertificate(
       span.setStatus("internal_error");
       transaction.setStatus("internal_error");
       // cannot decode response
-      yield put(
+      yield* put(
         euCovidCertificateGet.failure({
           ...getGenericError(
             new Error(readablePrivacyReport(getCertificateResult.value))

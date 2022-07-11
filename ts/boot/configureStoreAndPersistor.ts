@@ -31,6 +31,7 @@ import {
   createRootReducer
 } from "../store/reducers";
 import { ContentState } from "../store/reducers/content";
+import { entitiesPersistConfig } from "../store/reducers/entities";
 import { NotificationsState } from "../store/reducers/notifications";
 import { getInitialState as getInstallationInitialState } from "../store/reducers/notifications/installation";
 import { GlobalState, PersistedGlobalState } from "../store/reducers/types";
@@ -38,12 +39,17 @@ import { walletsPersistConfig } from "../store/reducers/wallet";
 import { DateISO8601Transform } from "../store/transforms/dateISO8601Tranform";
 import { PotTransform } from "../store/transforms/potTransform";
 import { isDevEnv } from "../utils/environment";
+import {
+  INSTALLATION_INITIAL_STATE,
+  InstallationState
+} from "../store/reducers/installation";
+import { mvlPersistConfig } from "../features/mvl";
 import { configureReactotron } from "./configureRectotron";
 
 /**
  * Redux persist will migrate the store to the current version
  */
-const CURRENT_REDUX_STORE_VERSION = 18;
+const CURRENT_REDUX_STORE_VERSION = 20;
 
 // see redux-persist documentation:
 // https://github.com/rt2zz/redux-persist/blob/master/docs/migrations.md
@@ -271,6 +277,29 @@ const migrations: MigrationManifest = {
         ..._.omit(content, "servicesMetadata")
       }
     };
+  },
+  // Version 19
+  // add features.MVL section with default preferences
+  "19": (state: PersistedState) => ({
+    ...state,
+    features: {
+      mvl: {
+        preferences: { showAlertForAttachments: true }
+      }
+    }
+  }),
+  // Version 20
+  // add installation.appVersionHistory
+  "20": (state: PersistedState) => {
+    const installation: InstallationState = (state as PersistedGlobalState)
+      .installation;
+    return {
+      ...state,
+      installation: {
+        ...installation,
+        appVersionHistory: INSTALLATION_INITIAL_STATE.appVersionHistory
+      }
+    };
   }
 };
 
@@ -281,8 +310,9 @@ const rootPersistConfig: PersistConfig = {
   storage: AsyncStorage,
   version: CURRENT_REDUX_STORE_VERSION,
   migrate: createMigrate(migrations, { debug: isDevEnv }),
-  // entities implement a persist reduce that avoids to persist messages. Other entities section will be persisted
-  blacklist: ["entities"],
+  // Entities and features implement a persisted reduce that avoids persisting messages.
+  // Other entities section will be persisted
+  blacklist: ["entities", "features"],
   // Sections of the store that must be persisted and rehydrated with this storage.
   whitelist: [
     "onboarding",
@@ -309,7 +339,9 @@ const persistedReducer: Reducer<PersistedGlobalState, Action> = persistReducer<
   createRootReducer([
     rootPersistConfig,
     authenticationPersistConfig,
-    walletsPersistConfig
+    walletsPersistConfig,
+    entitiesPersistConfig,
+    mvlPersistConfig
   ])
 );
 

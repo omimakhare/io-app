@@ -22,7 +22,7 @@ import I18n from "../../../../i18n";
 import { mixpanelTrack } from "../../../../mixpanel";
 import { GlobalState } from "../../../../store/reducers/types";
 import themeVariables from "../../../../theme/variables";
-import { useIOBottomSheet } from "../../../../utils/bottomSheet";
+import { useIOBottomSheetModal } from "../../../../utils/hooks/bottomSheet";
 import { withBase64Uri } from "../../../../utils/image";
 import { showToast } from "../../../../utils/showToast";
 import {
@@ -42,7 +42,7 @@ import {
   ValidCertificate,
   WithEUCovidCertificateHeaderData
 } from "../../types/EUCovidCertificate";
-import { captureScreenShoot, screenShotOption } from "../../utils/screenshot";
+import { captureScreenshot, screenshotOptions } from "../../utils/screenshot";
 import { BaseEuCovidCertificateLayout } from "../BaseEuCovidCertificateLayout";
 import { EUCovidContext } from "../EuCovidCertificateRouterScreen";
 import { EuCovidCertHeader } from "../../components/EuCovidCertHeader";
@@ -168,7 +168,11 @@ const addBottomSheetItem = (config: {
 
 type FooterProps = Props & { onSave: () => void };
 const Footer = (props: FooterProps): React.ReactElement => {
-  const { present: presentBottomSheet, dismiss } = useIOBottomSheet(
+  const {
+    present: presentBottomSheet,
+    bottomSheet,
+    dismiss
+  } = useIOBottomSheetModal(
     <View>
       {addBottomSheetItem({
         title: I18n.t(
@@ -202,17 +206,22 @@ const Footer = (props: FooterProps): React.ReactElement => {
   );
   const markdownDetails = props.validCertificate.markdownDetails;
 
-  return markdownDetails ? (
-    <FooterWithButtons
-      type={"TwoButtonsInlineHalf"}
-      leftButton={cancelButtonProps(
-        () => props.navigateToMarkdown(markdownDetails),
-        I18n.t("global.buttons.details")
+  return (
+    <>
+      {bottomSheet}
+      {markdownDetails ? (
+        <FooterWithButtons
+          type={"TwoButtonsInlineHalf"}
+          leftButton={cancelButtonProps(
+            () => props.navigateToMarkdown(markdownDetails),
+            I18n.t("global.buttons.details")
+          )}
+          rightButton={saveButton}
+        />
+      ) : (
+        <FooterWithButtons type={"SingleButton"} leftButton={saveButton} />
       )}
-      rightButton={saveButton}
-    />
-  ) : (
-    <FooterWithButtons type={"SingleButton"} leftButton={saveButton} />
+    </>
   );
 };
 
@@ -236,7 +245,7 @@ const EuCovidCertValidScreen = (props: Props): React.ReactElement => {
       showToastError();
       return;
     }
-    captureScreenShoot(screenShotViewContainer, screenShotOption, {
+    captureScreenshot(screenShotViewContainer, screenshotOptions, {
       onSuccess: () =>
         showToast(I18n.t("features.euCovidCertificate.save.ok"), "success"),
       onNoPermissions: () =>

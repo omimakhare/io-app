@@ -1,4 +1,4 @@
-import { call, put } from "redux-saga/effects";
+import { call, put } from "typed-redux-saga/macro";
 import { ActionType } from "typesafe-actions";
 import { loadServicePreference } from "../../../store/actions/services/servicePreference";
 import { BackendClient } from "../../../api/backend";
@@ -29,11 +29,11 @@ export function* handleGetServicePreference(
 ) {
   try {
     const response: SagaCallReturnType<typeof getServicePreference> =
-      yield call(getServicePreference, { service_id: action.payload });
+      yield* call(getServicePreference, { service_id: action.payload });
 
     if (response.isRight()) {
       if (response.value.status === 200) {
-        yield put(
+        yield* put(
           loadServicePreference.success({
             id: action.payload,
             kind: "success",
@@ -41,7 +41,11 @@ export function* handleGetServicePreference(
               inbox: response.value.value.is_inbox_enabled,
               push: response.value.value.is_webhook_enabled,
               email: response.value.value.is_email_enabled,
-              settings_version: response.value.value.settings_version
+              settings_version: response.value.value.settings_version,
+
+              // This will handle the premium messages flag.
+              can_access_message_read_status:
+                response.value.value.can_access_message_read_status
             }
           })
         );
@@ -49,7 +53,7 @@ export function* handleGetServicePreference(
       }
 
       if (mapKinds[response.value.status] !== undefined) {
-        yield put(
+        yield* put(
           loadServicePreference.success({
             id: action.payload,
             kind: mapKinds[response.value.status]
@@ -58,7 +62,7 @@ export function* handleGetServicePreference(
         return;
       }
       // not handled error codes
-      yield put(
+      yield* put(
         loadServicePreference.failure({
           id: action.payload,
           ...getGenericError(
@@ -69,14 +73,14 @@ export function* handleGetServicePreference(
       return;
     }
     // cannot decode response
-    yield put(
+    yield* put(
       loadServicePreference.failure({
         id: action.payload,
         ...getGenericError(new Error(readablePrivacyReport(response.value)))
       })
     );
   } catch (e) {
-    yield put(
+    yield* put(
       loadServicePreference.failure({
         id: action.payload,
         ...getNetworkError(e)

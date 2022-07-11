@@ -1,7 +1,8 @@
+import { CompatNavigationProp } from "@react-navigation/compat";
+import { fromNullable } from "fp-ts/lib/Option";
+import { View } from "native-base";
 import * as React from "react";
 import { useCallback, useEffect } from "react";
-import { View } from "native-base";
-import { connect } from "react-redux";
 import {
   FlatList,
   Image,
@@ -10,41 +11,44 @@ import {
   ScrollView,
   StyleSheet
 } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
-import { fromNullable } from "fp-ts/lib/Option";
-import { GlobalState } from "../../../../../store/reducers/types";
-import { Dispatch } from "../../../../../store/actions/types";
-import BaseScreenComponent from "../../../../../components/screens/BaseScreenComponent";
-import { IOStyles } from "../../../../../components/core/variables/IOStyles";
-import { emptyContextualHelp } from "../../../../../utils/emptyContextualHelp";
-import FooterWithButtons from "../../../../../components/ui/FooterWithButtons";
-import { confirmButtonProps } from "../../../bonusVacanze/components/buttons/ButtonConfigurations";
-import { openWebUrl } from "../../../../../utils/url";
-import { H1 } from "../../../../../components/core/typography/H1";
-import { H4 } from "../../../../../components/core/typography/H4";
-import { H2 } from "../../../../../components/core/typography/H2";
-import I18n from "../../../../../i18n";
-import CgnMerchantDiscountItem from "../../components/merchants/CgnMerchantsDiscountItem";
-import { cgnSelectedMerchantSelector } from "../../store/reducers/merchants";
+import { connect } from "react-redux";
+import { Address } from "../../../../../../definitions/cgn/merchants/Address";
 import { Discount } from "../../../../../../definitions/cgn/merchants/Discount";
-import { cgnSelectedMerchant } from "../../store/actions/merchants";
+import { Merchant } from "../../../../../../definitions/cgn/merchants/Merchant";
+import { H1 } from "../../../../../components/core/typography/H1";
+import { H2 } from "../../../../../components/core/typography/H2";
+import { H4 } from "../../../../../components/core/typography/H4";
+import { IOColors } from "../../../../../components/core/variables/IOColors";
+import { IOStyles } from "../../../../../components/core/variables/IOStyles";
+import BaseScreenComponent from "../../../../../components/screens/BaseScreenComponent";
+import TouchableDefaultOpacity from "../../../../../components/TouchableDefaultOpacity";
+import IconFont from "../../../../../components/ui/IconFont";
+import I18n from "../../../../../i18n";
+import { IOStackNavigationProp } from "../../../../../navigation/params/AppParamsList";
+import { Dispatch } from "../../../../../store/actions/types";
+import { GlobalState } from "../../../../../store/reducers/types";
+import { clipboardSetStringWithFeedback } from "../../../../../utils/clipboard";
+import { emptyContextualHelp } from "../../../../../utils/emptyContextualHelp";
 import { LoadingErrorComponent } from "../../../bonusVacanze/components/loadingErrorScreen/LoadingErrorComponent";
 import { isLoading, isReady } from "../../../bpd/model/RemoteValue";
-import { Address } from "../../../../../../definitions/cgn/merchants/Address";
-import IconFont from "../../../../../components/ui/IconFont";
-import { IOColors } from "../../../../../components/core/variables/IOColors";
-import TouchableDefaultOpacity from "../../../../../components/TouchableDefaultOpacity";
-import { clipboardSetStringWithFeedback } from "../../../../../utils/clipboard";
-import ItemSeparatorComponent from "../../../../../components/ItemSeparatorComponent";
-import { Merchant } from "../../../../../../definitions/cgn/merchants/Merchant";
+import CgnMerchantDiscountItem from "../../components/merchants/CgnMerchantsDiscountItem";
+import { CgnDetailsParamsList } from "../../navigation/params";
+import { cgnSelectedMerchant } from "../../store/actions/merchants";
+import { cgnSelectedMerchantSelector } from "../../store/reducers/merchants";
+import { openWebUrl } from "../../../../../utils/url";
+import { showToast } from "../../../../../utils/showToast";
+import OpenWeb from "../../../../../../img/icons/openweburl.svg";
 
-type NavigationParams = Readonly<{
+export type CgnMerchantDetailScreenNavigationParams = Readonly<{
   merchantID: Merchant["id"];
 }>;
 
 type Props = ReturnType<typeof mapStateToProps> &
-  ReturnType<typeof mapDispatchToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  ReturnType<typeof mapDispatchToProps> & {
+    navigation: CompatNavigationProp<
+      IOStackNavigationProp<CgnDetailsParamsList, "CGN_MERCHANTS_DETAIL">
+    >;
+  };
 
 const styles = StyleSheet.create({
   merchantImage: {
@@ -68,6 +72,7 @@ const CgnMerchantDetailScreen: React.FunctionComponent<Props> = (
     isReady(merchantDetail) ? (
       <CgnMerchantDiscountItem
         discount={item}
+        operatorName={merchantDetail.value.name}
         merchantType={merchantDetail.value.discountCodeType}
       />
     ) : null;
@@ -126,39 +131,49 @@ const CgnMerchantDetailScreen: React.FunctionComponent<Props> = (
                   renderItem={renderDiscountListItem}
                   keyExtractor={(item: Discount) => item.name}
                 />
+                <View spacer small />
                 <H2>{I18n.t("bonus.cgn.merchantDetail.title.description")}</H2>
                 <H4 weight={"Regular"}>{merchantDetail.value.description}</H4>
-                <View spacer large />
+                <View spacer />
+                <H2>{I18n.t("bonus.cgn.merchantDetail.title.addresses")}</H2>
+                {fromNullable(merchantDetail.value.websiteUrl).fold(
+                  undefined,
+                  url => (
+                    <TouchableDefaultOpacity
+                      style={[
+                        IOStyles.row,
+                        styles.spaced,
+                        { paddingVertical: 10 }
+                      ]}
+                      onPress={() =>
+                        openWebUrl(url, () =>
+                          showToast(I18n.t("bonus.cgn.generic.linkError"))
+                        )
+                      }
+                    >
+                      <H4 weight={"Regular"} style={IOStyles.flex}>
+                        {url}
+                      </H4>
+                      <OpenWeb
+                        height={COPY_ICON_SIZE}
+                        width={COPY_ICON_SIZE}
+                        fill={IOColors.blue}
+                      />
+                    </TouchableDefaultOpacity>
+                  )
+                )}
                 {merchantDetail.value.addresses &&
                   merchantDetail.value.addresses.length > 0 && (
                     <>
-                      <H2>
-                        {I18n.t("bonus.cgn.merchantDetail.title.addresses")}
-                      </H2>
                       <FlatList
                         data={merchantDetail.value.addresses}
                         renderItem={renderAddressesListItem}
                         keyExtractor={(item: Address) => item.full_address}
-                        ItemSeparatorComponent={() => (
-                          <ItemSeparatorComponent noPadded />
-                        )}
                       />
                     </>
                   )}
               </View>
             </ScrollView>
-            {fromNullable(merchantDetail.value.websiteUrl).fold(
-              undefined,
-              url => (
-                <FooterWithButtons
-                  type={"SingleButton"}
-                  leftButton={confirmButtonProps(
-                    () => openWebUrl(url),
-                    I18n.t("bonus.cgn.merchantDetail.cta.label")
-                  )}
-                />
-              )
-            )}
           </>
         ) : (
           <LoadingErrorComponent

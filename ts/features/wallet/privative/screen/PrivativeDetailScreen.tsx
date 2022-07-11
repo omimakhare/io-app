@@ -1,20 +1,26 @@
+import { CompatNavigationProp } from "@react-navigation/compat";
 import * as React from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
+import { IOStackNavigationProp } from "../../../../navigation/params/AppParamsList";
+import { WalletParamsList } from "../../../../navigation/params/WalletParamsList";
 import { GlobalState } from "../../../../store/reducers/types";
 import { PrivativePaymentMethod } from "../../../../types/pagopa";
 import BasePaymentMethodScreen from "../../common/BasePaymentMethodScreen";
 import PaymentMethodFeatures from "../../component/features/PaymentMethodFeatures";
 import BasePrivativeCard from "../component/card/BasePrivativeCard";
 
-type NavigationParams = Readonly<{
+export type PrivativeDetailScreenNavigationParams = Readonly<{
+  // TODO: we should use only the id and retrieve it from the store, otherwise we lose all the updates
   privative: PrivativePaymentMethod;
 }>;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
-  ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  ReturnType<typeof mapStateToProps> & {
+    navigation: CompatNavigationProp<
+      IOStackNavigationProp<WalletParamsList, "WALLET_PRIVATIVE_DETAIL">
+    >;
+  };
 
 /**
  * Detail screen for a privative card
@@ -31,6 +37,7 @@ const PrivativeDetailScreen: React.FunctionComponent<Props> = props => {
           loyaltyLogo={privative.icon}
           caption={privative.caption}
           gdoLogo={privative.gdoLogo}
+          blurredNumber={privative.info.blurredNumber}
         />
       }
       content={<PaymentMethodFeatures paymentMethod={privative} />}

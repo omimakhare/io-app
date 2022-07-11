@@ -1,21 +1,21 @@
 import { View } from "native-base";
-import * as React from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import React from "react";
+import { ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
 import Svg from "react-native-svg";
+import * as pot from "italia-ts-commons/lib/pot";
 import Default from "../../../../../../../img/features/mvl/attachmentsIcon/default.svg";
 import Pdf from "../../../../../../../img/features/mvl/attachmentsIcon/pdf.svg";
 import { H2 } from "../../../../../../components/core/typography/H2";
 import { H3 } from "../../../../../../components/core/typography/H3";
 import { H5 } from "../../../../../../components/core/typography/H5";
 import { IOColors } from "../../../../../../components/core/variables/IOColors";
-import { IOStyles } from "../../../../../../components/core/variables/IOStyles";
 import ItemSeparatorComponent from "../../../../../../components/ItemSeparatorComponent";
 import IconFont from "../../../../../../components/ui/IconFont";
 import I18n from "../../../../../../i18n";
 import { ContentTypeValues } from "../../../../../../types/contentType";
 import { formatByte } from "../../../../../../types/digitalInformationUnit";
 import { MvlAttachment, MvlData } from "../../../../types/mvlData";
-import { useDownloadAttachmentConfirmationBottomSheet } from "./DownloadAttachmentConfirmationBottomSheet";
+import { useMvlAttachmentDownload } from "./MvlAttachmentDownload";
 
 type Props = {
   attachments: MvlData["attachments"];
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     paddingRight: 0,
     paddingLeft: 0,
     marginVertical: 20,
-    height: 60,
+    height: 80,
     backgroundColor: IOColors.white
   },
   row: {
@@ -40,11 +40,8 @@ const styles = StyleSheet.create({
   },
   middleSection: {
     flex: 1,
-    paddingLeft: 8
-  },
-  middleLayout: {
-    flex: 1,
-    justifyContent: "center"
+    paddingLeft: 8,
+    alignSelf: "center"
   }
 });
 
@@ -78,40 +75,52 @@ const AttachmentIcon = (props: {
  * @constructor
  */
 const MvlAttachmentItem = (props: { attachment: MvlAttachment }) => {
-  const { present } = useDownloadAttachmentConfirmationBottomSheet(
-    props.attachment
-  );
+  const { downloadPot, onAttachmentSelect, bottomSheet } =
+    useMvlAttachmentDownload(props.attachment);
 
   return (
-    // TODO: should present only if the user doesn't choose "don't ask again" https://pagopa.atlassian.net/browse/IAMVL-26
-    <TouchableOpacity style={styles.container} onPress={present}>
-      <View style={styles.row}>
-        <AttachmentIcon contentType={props.attachment.contentType} />
-        <View style={styles.middleSection}>
-          <View style={styles.middleLayout}>
+    <>
+      <TouchableOpacity
+        style={styles.container}
+        onPress={onAttachmentSelect}
+        disabled={pot.isLoading(downloadPot)}
+      >
+        <View style={styles.row}>
+          <AttachmentIcon contentType={props.attachment.contentType} />
+          <View style={styles.middleSection}>
             <H3
               color={"bluegrey"}
               weight={"SemiBold"}
               ellipsizeMode={"middle"}
-              numberOfLines={1}
+              numberOfLines={2}
             >
               {props.attachment.displayName}
             </H3>
-            {props.attachment.size && (
-              <H5 color={"bluegrey"} weight={"Regular"} style={IOStyles.flex}>
+            {typeof props.attachment.size !== "undefined" && (
+              <H5 color={"bluegrey"} weight={"Regular"}>
                 {formatByte(props.attachment.size)}
               </H5>
             )}
           </View>
+          {pot.isLoading(downloadPot) ? (
+            <ActivityIndicator
+              accessibilityLabel={I18n.t("global.remoteStates.loading")}
+              color={IOColors.blue}
+              style={{ ...styles.icon, width: 24 }}
+              testID={"attachmentActivityIndicator"}
+            />
+          ) : (
+            <IconFont
+              name={"io-right"}
+              color={IOColors.blue}
+              size={24}
+              style={styles.icon}
+            />
+          )}
         </View>
-        <IconFont
-          name={"io-right"}
-          color={IOColors.blue}
-          size={24}
-          style={styles.icon}
-        />
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+      {bottomSheet}
+    </>
   );
 };
 

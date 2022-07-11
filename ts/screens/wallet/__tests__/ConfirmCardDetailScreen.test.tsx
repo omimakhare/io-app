@@ -10,14 +10,13 @@ import { CreditCard, NullableWallet } from "../../../types/pagopa";
 import { CreditCardPan } from "../../../utils/input";
 import { renderScreenFakeNavRedux } from "../../../utils/testWrapper";
 import ConfirmCardDetailsScreen, {
-  NavigationParams
+  ConfirmCardDetailsScreenNavigationParams
 } from "../ConfirmCardDetailsScreen";
 import {
   addWalletCreditCardWithBackoffRetryRequest,
   fetchWalletsRequest
 } from "../../../store/actions/wallet/wallets";
 
-jest.unmock("react-navigation");
 jest.mock("react-native-share", () => ({
   open: jest.fn()
 }));
@@ -59,13 +58,13 @@ describe("ConfirmCardDetailScreen", () => {
 });
 
 const getComponent = () => {
-  const params: NavigationParams = {
+  const params: ConfirmCardDetailsScreenNavigationParams = {
     creditCard: {
       pan: "123456789" as CreditCardPan,
       holder: "tester"
     } as CreditCard,
     inPayment: none
-  } as NavigationParams;
+  } as ConfirmCardDetailsScreenNavigationParams;
   const ToBeTested: React.FunctionComponent<
     React.ComponentProps<typeof ConfirmCardDetailsScreen>
   > = (props: React.ComponentProps<typeof ConfirmCardDetailsScreen>) => (
@@ -74,7 +73,7 @@ const getComponent = () => {
 
   const globalState = appReducer(undefined, applicationChangeState("active"));
   const store = createStore(appReducer, globalState as any);
-  const component = renderScreenFakeNavRedux<GlobalState, NavigationParams>(
+  const component = renderScreenFakeNavRedux<GlobalState>(
     ToBeTested,
     ROUTES.WALLET_ADD_CARD,
     params,

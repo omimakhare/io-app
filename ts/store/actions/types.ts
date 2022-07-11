@@ -7,6 +7,7 @@ import {
   Store as ReduxStore,
   StoreEnhancer as ReduxStoreEnhancer
 } from "redux";
+import { VersionInfoActions } from "../../common/versionInfo/store/actions/versionInfo";
 
 import { BonusActions } from "../../features/bonus/bonusVacanze/store/actions/bonusVacanze";
 import { BpdActions } from "../../features/bonus/bpd/store/actions";
@@ -20,23 +21,20 @@ import { CoBadgeActions } from "../../features/wallet/onboarding/cobadge/store/a
 import { PayPalOnboardingActions } from "../../features/wallet/onboarding/paypal/store/actions";
 import { PrivativeActions } from "../../features/wallet/onboarding/privative/store/actions";
 import { SatispayActions } from "../../features/wallet/onboarding/satispay/store/actions";
-import { GlobalState } from "../reducers/types";
 import { ZendeskSupportActions } from "../../features/zendesk/store/actions";
+import { GlobalState } from "../reducers/types";
+import { CdcActions } from "../../features/bonus/cdc/store/actions";
 import { AnalyticsActions } from "./analytics";
 import { ApplicationActions } from "./application";
 import { AuthenticationActions } from "./authentication";
-import { BackendInfoActions } from "./backendInfo";
 import { BackendStatusActions } from "./backendStatus";
 import { CalendarEventsActions } from "./calendarEvents";
 import { CieAuthenticationActions } from "./cie";
 import { ContentActions } from "./content";
 import { CrossSessionsActions } from "./crossSessions";
 import { DebugActions } from "./debug";
-import { DeepLinkActions } from "./deepLink";
 import { IdentificationActions } from "./identification";
-import { InstabugInfoActions } from "./instabug";
 import { InstallationActions } from "./installation";
-import { InternalRouteNavigationActions } from "./internalRouteNavigation";
 import { MessagesActions } from "./messages";
 import { MixpanelActions } from "./mixpanel";
 import { NotificationsActions } from "./notifications";
@@ -61,8 +59,7 @@ export type Action =
   | AuthenticationActions
   | BackendStatusActions
   | CieAuthenticationActions
-  | BackendInfoActions
-  | DeepLinkActions
+  | VersionInfoActions
   | MessagesActions
   | MixpanelActions
   | NotificationsActions
@@ -82,8 +79,6 @@ export type Action =
   | SearchActions
   | PaymentsActions
   | OrganizationsActions
-  | InstabugInfoActions
-  | InternalRouteNavigationActions
   | UserDataProcessingActions
   | ProfileEmailValidationAction
   | BonusActions
@@ -100,7 +95,8 @@ export type Action =
   | OutcomeCodeActions
   | SvActions
   | MvlActions
-  | ZendeskSupportActions;
+  | ZendeskSupportActions
+  | CdcActions;
 
 export type Dispatch = DispatchAPI<Action>;
 

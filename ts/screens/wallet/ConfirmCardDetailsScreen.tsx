@@ -2,35 +2,55 @@
  * This screen presents a summary on the credit card after the user
  * inserted the data required to save a new card
  */
-import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import { AmountInEuroCents, RptId } from "@pagopa/io-pagopa-commons/lib/pagopa";
+import { CompatNavigationProp } from "@react-navigation/compat";
+import { constNull } from "fp-ts/lib/function";
+import { fromNullable, none, Option, some } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
-import { Content, Text, View } from "native-base";
+import { Content, View } from "native-base";
 import * as React from "react";
 import { Alert, SafeAreaView, StyleSheet } from "react-native";
-import { Col, Grid } from "react-native-easy-grid";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
-import { constNull } from "fp-ts/lib/function";
 
 import { PaymentRequestsGetResponse } from "../../../definitions/backend/PaymentRequestsGetResponse";
 import { TypeEnum } from "../../../definitions/pagopa/Wallet";
+import image from "../../../img/wallet/errors/payment-unavailable-icon.png";
+import { InfoBox } from "../../components/box/InfoBox";
+import { H1 } from "../../components/core/typography/H1";
+import { H4 } from "../../components/core/typography/H4";
+import { H5 } from "../../components/core/typography/H5";
+import { IOColors } from "../../components/core/variables/IOColors";
+import { IOStyles } from "../../components/core/variables/IOStyles";
 import { withLoadingSpinner } from "../../components/helpers/withLoadingSpinner";
-import NoticeBox from "../../components/NoticeBox";
+import { renderInfoRasterImage } from "../../components/infoScreen/imageRendering";
+import { InfoScreenComponent } from "../../components/infoScreen/InfoScreenComponent";
 import BaseScreenComponent, {
   ContextualHelpPropsMarkdown
 } from "../../components/screens/BaseScreenComponent";
 import FooterWithButtons from "../../components/ui/FooterWithButtons";
 import Switch from "../../components/ui/Switch";
 import CardComponent from "../../components/wallet/card/CardComponent";
+import { PayWebViewModal } from "../../components/wallet/PayWebViewModal";
+import { pagoPaApiUrlPrefix, pagoPaApiUrlPrefixTest } from "../../config";
+import { confirmButtonProps } from "../../features/bonus/bonusVacanze/components/buttons/ButtonConfigurations";
+import { FooterStackButton } from "../../features/bonus/bonusVacanze/components/buttons/FooterStackButtons";
+
+import { LoadingErrorComponent } from "../../features/bonus/bonusVacanze/components/loadingErrorScreen/LoadingErrorComponent";
+import {
+  isError,
+  isLoading as isRemoteLoading,
+  isReady
+} from "../../features/bonus/bpd/model/RemoteValue";
 import I18n from "../../i18n";
+import { IOStackNavigationProp } from "../../navigation/params/AppParamsList";
+import { WalletParamsList } from "../../navigation/params/WalletParamsList";
 import {
   navigateToAddCreditCardOutcomeCode,
   navigateToPaymentPickPaymentMethodScreen,
   navigateToWalletHome
 } from "../../store/actions/navigation";
 import { Dispatch } from "../../store/actions/types";
-import { getLocalePrimaryWithFallback } from "../../utils/locale";
+import { addCreditCardOutcomeCode } from "../../store/actions/wallet/outcomeCode";
 import {
   addCreditCardWebViewEnd,
   AddCreditCardWebViewEndReason,
@@ -39,32 +59,18 @@ import {
   fetchWalletsRequestWithExpBackoff,
   runStartOrResumeAddCreditCardSaga
 } from "../../store/actions/wallet/wallets";
+import { isPagoPATestEnabledSelector } from "../../store/reducers/persistedPreferences";
 import { GlobalState } from "../../store/reducers/types";
+import { pmSessionTokenSelector } from "../../store/reducers/wallet/payment";
+import { getAllWallets } from "../../store/reducers/wallet/wallets";
 import customVariables from "../../theme/variables";
 import { CreditCard, Wallet } from "../../types/pagopa";
-import { showToast } from "../../utils/showToast";
-
-import { LoadingErrorComponent } from "../../features/bonus/bonusVacanze/components/loadingErrorScreen/LoadingErrorComponent";
-import { InfoScreenComponent } from "../../components/infoScreen/InfoScreenComponent";
-import { renderInfoRasterImage } from "../../components/infoScreen/imageRendering";
-import image from "../../../img/wallet/errors/payment-unavailable-icon.png";
-import { FooterStackButton } from "../../features/bonus/bonusVacanze/components/buttons/FooterStackButtons";
-import { confirmButtonProps } from "../../features/bonus/bonusVacanze/components/buttons/ButtonConfigurations";
-import { IOStyles } from "../../components/core/variables/IOStyles";
-import { PayWebViewModal } from "../../components/wallet/PayWebViewModal";
-import { pagoPaApiUrlPrefix, pagoPaApiUrlPrefixTest } from "../../config";
-import { isPagoPATestEnabledSelector } from "../../store/reducers/persistedPreferences";
-import { addCreditCardOutcomeCode } from "../../store/actions/wallet/outcomeCode";
-import { getAllWallets } from "../../store/reducers/wallet/wallets";
-import { pmSessionTokenSelector } from "../../store/reducers/wallet/payment";
-import {
-  isLoading as isRemoteLoading,
-  isReady
-} from "../../features/bonus/bpd/model/RemoteValue";
+import { getLocalePrimaryWithFallback } from "../../utils/locale";
 import { getLookUpIdPO } from "../../utils/pmLookUpId";
+import { showToast } from "../../utils/showToast";
 import { dispatchPickPspOrConfirm } from "./payment/common";
 
-export type NavigationParams = Readonly<{
+export type ConfirmCardDetailsScreenNavigationParams = Readonly<{
   creditCard: CreditCard;
   inPayment: Option<{
     rptId: RptId;
@@ -79,7 +85,11 @@ type ReduxMergedProps = Readonly<{
   onRetry?: () => void;
 }>;
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = {
+  navigation: CompatNavigationProp<
+    IOStackNavigationProp<WalletParamsList, "WALLET_CONFIRM_CARD_DETAILS">
+  >;
+};
 
 type Props = ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps> &
@@ -94,6 +104,10 @@ const styles = StyleSheet.create({
   paddedLR: {
     paddingLeft: customVariables.contentPadding,
     paddingRight: customVariables.contentPadding
+  },
+  preferredMethodContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between"
   }
 });
 
@@ -188,7 +202,8 @@ class ConfirmCardDetailsScreen extends React.Component<Props, State> {
         ),
       title: isInPayment
         ? I18n.t("wallet.saveCardInPayment.save")
-        : I18n.t("wallet.saveCard.save")
+        : I18n.t("global.buttons.continue"),
+      testID: "saveOrContinueButton"
     };
 
     const secondaryButtonProps = {
@@ -242,8 +257,11 @@ class ConfirmCardDetailsScreen extends React.Component<Props, State> {
       .getOrElse({});
 
     const noErrorContent = (
-      <>
+      <SafeAreaView style={IOStyles.flex}>
         <Content noPadded={true} style={styles.paddedLR}>
+          <H1>{I18n.t("wallet.saveCard.title")}</H1>
+          <H4 weight={"Regular"}>{I18n.t("wallet.saveCard.subtitle")}</H4>
+          <View spacer />
           <CardComponent
             wallet={wallet}
             type={"Full"}
@@ -252,43 +270,38 @@ class ConfirmCardDetailsScreen extends React.Component<Props, State> {
             hideFavoriteIcon={true}
           />
           <View spacer={true} />
-          <NoticeBox
-            backgroundColor={customVariables.toastColor}
-            iconProps={{
-              name: "io-notice",
-              color: customVariables.brandDarkGray,
-              size: 24
-            }}
+          <InfoBox
+            alignedCentral={true}
+            iconSize={24}
+            iconColor={IOColors.bluegreyDark}
           >
-            <Text>{I18n.t("wallet.saveCard.notice")}</Text>
-          </NoticeBox>
-          <View spacer={true} />
-          <Grid>
-            <Col size={5}>
-              <Text bold={true}>{I18n.t("wallet.saveCard.infoTitle")}</Text>
-              <Text>{I18n.t("wallet.saveCard.info")}</Text>
-            </Col>
-            <Col size={1}>
+            <H5 weight={"Regular"}>{I18n.t("wallet.saveCard.notice")}</H5>
+          </InfoBox>
+          <View spacer large />
+          <View style={styles.preferredMethodContainer}>
+            <View style={IOStyles.flex}>
+              <H4 weight={"SemiBold"} color={"bluegreyDark"}>
+                {I18n.t("wallet.saveCard.infoTitle")}
+              </H4>
+              <H5 weight={"Regular"} color={"bluegrey"}>
+                {I18n.t("wallet.saveCard.info")}
+              </H5>
+            </View>
+            <View hspacer={true} />
+            <View style={{ paddingTop: 7 }}>
               <Switch
                 value={this.state.setAsFavourite}
                 onValueChange={this.onSetFavouriteValueChange}
               />
-            </Col>
-          </Grid>
+            </View>
+          </View>
         </Content>
-        {isInPayment ? (
-          <FooterWithButtons
-            type={"TwoButtonsInlineThird"}
-            leftButton={secondaryButtonProps}
-            rightButton={primaryButtonProps}
-          />
-        ) : (
-          <FooterWithButtons
-            type={"TwoButtonsInlineHalf"}
-            leftButton={secondaryButtonProps}
-            rightButton={primaryButtonProps}
-          />
-        )}
+
+        <FooterWithButtons
+          type={"TwoButtonsInlineThird"}
+          leftButton={secondaryButtonProps}
+          rightButton={primaryButtonProps}
+        />
 
         {/*
          * When the first step is finished (creditCardAddWallet === some) show the webview
@@ -314,7 +327,7 @@ class ConfirmCardDetailsScreen extends React.Component<Props, State> {
             modalHeaderTitle={I18n.t("wallet.challenge3ds.header")}
           />
         )}
-      </>
+      </SafeAreaView>
     );
     const error = this.props.error.isSome() || this.props.areWalletsInError;
     return (
@@ -340,13 +353,13 @@ class ConfirmCardDetailsScreen extends React.Component<Props, State> {
 const mapStateToProps = (state: GlobalState) => {
   const { creditCardAddWallet, walletById } = state.wallet.wallets;
 
-  const { psps } = state.wallet.payment;
+  const { pspsV2 } = state.wallet.payment;
   const pmSessionToken = pmSessionTokenSelector(state);
   const isLoading =
     isRemoteLoading(pmSessionToken) ||
     pot.isLoading(creditCardAddWallet) ||
     pot.isLoading(walletById) ||
-    pot.isLoading(psps);
+    isRemoteLoading(pspsV2.psps);
 
   // considering wallet error only when the first step is completed and not in error
   const areWalletsInError =
@@ -355,7 +368,7 @@ const mapStateToProps = (state: GlobalState) => {
   const error =
     (pot.isError(creditCardAddWallet) &&
       creditCardAddWallet.error.kind !== "ALREADY_EXISTS") ||
-    pot.isError(psps)
+    isError(pspsV2.psps)
       ? some(I18n.t("wallet.saveCard.temporaryError"))
       : none;
 
@@ -377,10 +390,7 @@ const mapStateToProps = (state: GlobalState) => {
   };
 };
 
-const mapDispatchToProps = (
-  dispatch: Dispatch,
-  props: NavigationInjectedProps<NavigationParams>
-) => {
+const mapDispatchToProps = (dispatch: Dispatch, props: OwnProps) => {
   const navigateToNextScreen = (maybeWallet: Option<Wallet>) => {
     const inPayment = props.navigation.getParam("inPayment");
     if (inPayment.isSome()) {
@@ -433,7 +443,6 @@ const mapDispatchToProps = (
           creditCard,
           setAsFavorite,
           onSuccess: addedWallet => {
-            showToast(I18n.t("wallet.newPaymentMethod.successful"), "success");
             navigateToNextScreen(some(addedWallet));
           },
           onFailure: error => {

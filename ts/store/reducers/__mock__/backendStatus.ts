@@ -192,12 +192,40 @@ export const baseRawBackendStatus: BackendStatus = {
         "it-IT": "aggiornamento richiesto",
         "en-EN": "update required"
       }
+    },
+    cgn: {
+      is_visible: true,
+      level: LevelEnum.normal,
+      web_url: {
+        "it-IT": "",
+        "en-EN": ""
+      },
+      message: {
+        "it-IT": "aggiornamento richiesto",
+        "en-EN": "update required"
+      }
+    },
+    fims: {
+      is_visible: true,
+      level: LevelEnum.normal,
+      web_url: {
+        "it-IT": "",
+        "en-EN": ""
+      },
+      message: {
+        "it-IT": "aggiornamento richiesto",
+        "en-EN": "update required"
+      }
     }
   },
   config: {
+    premiumMessages: {
+      opt_in_out_enabled: false
+    },
     bpd: {
       enroll_bpd_after_add_payment_method: false,
-      program_active: true
+      program_active: true,
+      opt_in_payment_methods: false
     },
     bpd_ranking: true,
     bpd_ranking_v2: true,
@@ -208,9 +236,35 @@ export const baseRawBackendStatus: BackendStatus = {
     paypal: {
       enabled: false
     },
+    bancomatPay: {
+      display: true,
+      onboarding: true,
+      payment: false
+    },
     cgn: {
       enabled: true,
       merchants_v2: false
+    },
+    uaDonations: {
+      enabled: false,
+      banner: {
+        visible: false,
+        description: {
+          "it-IT": "descrizione mock banner",
+          "en-EN": "mock banner description"
+        },
+        url: "mockbannerurl"
+      }
+    },
+    fims: {
+      enabled: false,
+      domain: "mockFimsDomain"
+    },
+    cdc: {
+      enabled: false
+    },
+    barcodesScanner: {
+      dataMatrixPosteEnabled: false
     }
   }
 };
@@ -222,9 +276,13 @@ export const baseBackendState: BackendStatusState = {
 };
 
 export const baseBackendConfig: Config = {
+  premiumMessages: {
+    opt_in_out_enabled: false
+  },
   bpd: {
     enroll_bpd_after_add_payment_method: false,
-    program_active: true
+    program_active: true,
+    opt_in_payment_methods: false
   },
   bpd_ranking: true,
   bpd_ranking_v2: true,
@@ -235,9 +293,35 @@ export const baseBackendConfig: Config = {
   paypal: {
     enabled: false
   },
+  bancomatPay: {
+    display: true,
+    onboarding: true,
+    payment: false
+  },
   cgn: {
     enabled: true,
     merchants_v2: false
+  },
+  uaDonations: {
+    enabled: false,
+    banner: {
+      visible: false,
+      description: {
+        "it-IT": "descrizione mock banner",
+        "en-EN": "mock banner description"
+      },
+      url: "mockbannerurl"
+    }
+  },
+  fims: {
+    enabled: false,
+    domain: "mockFimsDomain"
+  },
+  cdc: {
+    enabled: false
+  },
+  barcodesScanner: {
+    dataMatrixPosteEnabled: false
   }
 };
 

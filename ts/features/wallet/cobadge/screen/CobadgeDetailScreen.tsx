@@ -1,20 +1,26 @@
+import { CompatNavigationProp } from "@react-navigation/compat";
 import * as React from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
+import { IOStackNavigationProp } from "../../../../navigation/params/AppParamsList";
+import { WalletParamsList } from "../../../../navigation/params/WalletParamsList";
 import { GlobalState } from "../../../../store/reducers/types";
 import { CreditCardPaymentMethod } from "../../../../types/pagopa";
 import BasePaymentMethodScreen from "../../common/BasePaymentMethodScreen";
 import PaymentMethodFeatures from "../../component/features/PaymentMethodFeatures";
 import CobadgeCard from "../component/CoBadgeCard";
 
-type NavigationParams = Readonly<{
+export type CobadgeDetailScreenNavigationParams = Readonly<{
+  // TODO: we should use only the id and retrieve it from the store, otherwise we lose all the updates
   cobadge: CreditCardPaymentMethod;
 }>;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
-  ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  ReturnType<typeof mapStateToProps> & {
+    navigation: CompatNavigationProp<
+      IOStackNavigationProp<WalletParamsList, "WALLET_COBADGE_DETAIL">
+    >;
+  };
 
 /**
  * Detail screen for a cobadge card

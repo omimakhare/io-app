@@ -1,13 +1,13 @@
-import { call, Effect, put, takeLatest } from "redux-saga/effects";
+import { call, put, takeLatest } from "typed-redux-saga/macro";
 import { ActionType, getType } from "typesafe-actions";
 
 import { BackendClient } from "../../api/backend";
 import { loadPreviousPageMessages as loadPreviousPageMessagesAction } from "../../store/actions/messages";
-import { SagaCallReturnType } from "../../types/utils";
+import { ReduxSagaEffect, SagaCallReturnType } from "../../types/utils";
 import { toUIMessage } from "../../store/reducers/entities/messages/transformers";
 import { PaginatedPublicMessagesCollection } from "../../../definitions/backend/PaginatedPublicMessagesCollection";
 import { isTestEnv } from "../../utils/environment";
-import { getError } from "../../utils/errors";
+import { convertUnknownToError, getError } from "../../utils/errors";
 
 import { handleResponse } from "./utils";
 
@@ -18,8 +18,8 @@ type LocalBeClient = ReturnType<typeof BackendClient>["getMessages"];
 
 export default function* watcher(
   getMessages: LocalBeClient
-): Generator<Effect, void, SagaCallReturnType<typeof getMessages>> {
-  yield takeLatest(
+): Generator<ReduxSagaEffect, void, SagaCallReturnType<typeof getMessages>> {
+  yield* takeLatest(
     getType(loadPreviousPageMessagesAction.request),
     tryLoadPreviousPageMessages(getMessages)
   );
@@ -28,14 +28,16 @@ export default function* watcher(
 function tryLoadPreviousPageMessages(getMessages: LocalBeClient) {
   return function* gen(
     action: LocalActionType
-  ): Generator<Effect, void, SagaCallReturnType<typeof getMessages>> {
+  ): Generator<ReduxSagaEffect, void, SagaCallReturnType<typeof getMessages>> {
+    const { filter, cursor, pageSize } = action.payload;
     try {
-      const response: SagaCallReturnType<typeof getMessages> = yield call(
+      const response: SagaCallReturnType<typeof getMessages> = yield* call(
         getMessages,
         {
           enrich_result_data: true,
-          page_size: action.payload.pageSize,
-          minimum_id: action.payload.cursor
+          page_size: pageSize,
+          minimum_id: cursor,
+          archived: filter.getArchived
         }
       );
 
@@ -44,14 +46,24 @@ function tryLoadPreviousPageMessages(getMessages: LocalBeClient) {
         ({ items, prev }: PaginatedPublicMessagesCollection) =>
           loadPreviousPageMessagesAction.success({
             messages: items.map(toUIMessage),
-            pagination: { previous: prev }
+            pagination: { previous: prev },
+            filter
           }),
-        error => loadPreviousPageMessagesAction.failure(getError(error))
+        error =>
+          loadPreviousPageMessagesAction.failure({
+            error: getError(error),
+            filter
+          })
       );
 
-      yield put(nextAction);
-    } catch (error) {
-      yield put(loadPreviousPageMessagesAction.failure(error));
+      yield* put(nextAction);
+    } catch (e) {
+      yield* put(
+        loadPreviousPageMessagesAction.failure({
+          error: convertUnknownToError(e),
+          filter
+        })
+      );
     }
   };
 }

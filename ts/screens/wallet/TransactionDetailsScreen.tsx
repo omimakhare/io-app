@@ -1,9 +1,17 @@
+import {
+  CompatNavigationProp,
+  NavigationEvents
+} from "@react-navigation/compat";
 import { fromNullable } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import { Text, View } from "native-base";
 import * as React from "react";
-import { BackHandler, Image, StyleSheet } from "react-native";
-import { NavigationEvents, NavigationInjectedProps } from "react-navigation";
+import {
+  BackHandler,
+  Image,
+  NativeEventSubscription,
+  StyleSheet
+} from "react-native";
 import { connect } from "react-redux";
 import ButtonDefaultOpacity from "../../components/ButtonDefaultOpacity";
 import CopyButtonComponent from "../../components/CopyButtonComponent";
@@ -14,10 +22,13 @@ import ItemSeparatorComponent from "../../components/ItemSeparatorComponent";
 import BaseScreenComponent, {
   ContextualHelpPropsMarkdown
 } from "../../components/screens/BaseScreenComponent";
+import FocusAwareStatusBar from "../../components/ui/FocusAwareStatusBar";
 import { LightModalContextInterface } from "../../components/ui/LightModal";
 import { PaymentSummaryComponent } from "../../components/wallet/PaymentSummaryComponent";
 import { SlidedContentComponent } from "../../components/wallet/SlidedContentComponent";
 import I18n from "../../i18n";
+import { IOStackNavigationProp } from "../../navigation/params/AppParamsList";
+import { WalletParamsList } from "../../navigation/params/WalletParamsList";
 import { Dispatch } from "../../store/actions/types";
 import { backToEntrypointPayment } from "../../store/actions/wallet/payment";
 import { fetchPsp } from "../../store/actions/wallet/transactions";
@@ -35,12 +46,16 @@ import {
 } from "../../utils/payment";
 import { formatNumberCentsToAmount } from "../../utils/stringBuilder";
 
-type NavigationParams = Readonly<{
+export type TransactionDetailsScreenNavigationParams = Readonly<{
   isPaymentCompletedTransaction: boolean;
   transaction: Transaction;
 }>;
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = {
+  navigation: CompatNavigationProp<
+    IOStackNavigationProp<WalletParamsList, "WALLET_TRANSACTION_DETAILS">
+  >;
+};
 
 type Props = ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps> &
@@ -99,20 +114,28 @@ type State = {
  * specific transaction.
  */
 class TransactionDetailsScreen extends React.Component<Props, State> {
+  private subscription: NativeEventSubscription | undefined;
   constructor(props: Props) {
     super(props);
     this.state = { showFullReason: false };
   }
 
   public componentDidMount() {
-    BackHandler.addEventListener("hardwareBackPress", this.handleBackPress);
+    // eslint-disable-next-line functional/immutable-data
+    this.subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      this.handleBackPress
+    );
   }
 
   public componentWillUnmount() {
-    BackHandler.removeEventListener("hardwareBackPress", this.handleBackPress);
+    this.subscription?.remove();
   }
 
-  private handleBackPress = () => this.props.navigation.goBack();
+  private handleBackPress = () => {
+    this.props.navigation.goBack();
+    return true;
+  };
 
   private handleWillFocus = () => {
     const transaction = this.props.navigation.getParam("transaction");
@@ -196,6 +219,10 @@ class TransactionDetailsScreen extends React.Component<Props, State> {
         headerTitle={I18n.t("wallet.transactionDetails")}
         faqCategories={["wallet_transaction"]}
       >
+        <FocusAwareStatusBar
+          backgroundColor={customVariables.brandDarkGray}
+          barStyle={"light-content"}
+        />
         <NavigationEvents onWillFocus={this.handleWillFocus} />
         <SlidedContentComponent hasFlatBottom={true}>
           <PaymentSummaryComponent

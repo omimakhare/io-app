@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useCallback } from "react";
 import { View } from "native-base";
 import { Millisecond } from "italia-ts-commons/lib/units";
 import { TouchableWithoutFeedback } from "@gorhom/bottom-sheet";
@@ -6,7 +7,6 @@ import { StyleSheet } from "react-native";
 import { clipboardSetStringWithFeedback } from "../../../../../../utils/clipboard";
 import I18n from "../../../../../../i18n";
 import { BaseTypography } from "../../../../../../components/core/typography/BaseTypography";
-import { addEvery } from "../../../../../../utils/strings";
 import IconFont from "../../../../../../components/ui/IconFont";
 import { IOColors } from "../../../../../../components/core/variables/IOColors";
 import Eye from "../../../../../../../img/icons/Eye.svg";
@@ -15,6 +15,7 @@ import { H3 } from "../../../../../../components/core/typography/H3";
 
 type Props = {
   staticCode: Discount["staticCode"];
+  onCodePress: (eventName: string) => void;
 };
 
 const styles = StyleSheet.create({
@@ -32,7 +33,8 @@ const FEEDBACK_TIMEOUT = 3000 as Millisecond;
 const COPY_ICON_SIZE = 24;
 
 const CgnStaticCodeComponent: React.FunctionComponent<Props> = ({
-  staticCode
+  staticCode,
+  onCodePress
 }: Props) => {
   const [isTap, setIsTap] = React.useState(false);
   const [isCodeVisible, setIsCodeVisible] = React.useState(false);
@@ -45,14 +47,19 @@ const CgnStaticCodeComponent: React.FunctionComponent<Props> = ({
     []
   );
 
-  const handleCopyPress = () => {
+  const handleCopyPress = useCallback(() => {
     if (staticCode) {
       setIsTap(true);
       clipboardSetStringWithFeedback(staticCode);
       // eslint-disable-next-line functional/immutable-data
       timerRetry.current = setTimeout(() => setIsTap(false), FEEDBACK_TIMEOUT);
     }
-  };
+  }, [staticCode]);
+
+  const requestStaticCode = useCallback(() => {
+    onCodePress("CGN_STATIC_CODE_REQUEST");
+    setIsCodeVisible(true);
+  }, [onCodePress]);
 
   return (
     <>
@@ -60,7 +67,7 @@ const CgnStaticCodeComponent: React.FunctionComponent<Props> = ({
         {I18n.t("bonus.cgn.merchantDetail.title.discountCode")}
       </H3>
       <TouchableWithoutFeedback
-        onPress={isCodeVisible ? handleCopyPress : () => setIsCodeVisible(true)}
+        onPress={isCodeVisible ? handleCopyPress : requestStaticCode}
         accessible={true}
         accessibilityRole={"button"}
         accessibilityHint={I18n.t("bonus.cgn.accessibility.code")}
@@ -73,9 +80,7 @@ const CgnStaticCodeComponent: React.FunctionComponent<Props> = ({
             font={"RobotoMono"}
             style={styles.codeText}
           >
-            {isCodeVisible && staticCode
-              ? addEvery(staticCode, " ", 3)
-              : "••••••••••"}
+            {isCodeVisible && staticCode ? staticCode : "••••••••••"}
           </BaseTypography>
 
           {isCodeVisible ? (

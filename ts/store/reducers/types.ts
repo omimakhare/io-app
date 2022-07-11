@@ -1,23 +1,21 @@
 import { PersistPartial } from "redux-persist";
+import { VersionInfoState } from "../../common/versionInfo/store/reducers/versionInfo";
 
 import { BonusState } from "../../features/bonus/bonusVacanze/store/reducers";
-import { FeaturesState } from "../../features/common/store/reducers";
+import { PersistedFeaturesState } from "../../features/common/store/reducers";
 import { AppState } from "./appState";
+import { AssistanceToolsState } from "./assistanceTools";
 import { PersistedAuthenticationState } from "./authentication";
-import { BackendInfoState } from "./backendInfo";
 import { BackendStatusState } from "./backendStatus";
 import { BackoffErrorState } from "./backoffError";
 import { CieState } from "./cie";
 import { ContentState } from "./content";
 import { CrossSessionsState } from "./crossSessions";
 import { DebugState } from "./debug";
-import { DeepLinkState } from "./deepLink";
 import { EmailValidationState } from "./emailValidation";
 import { PersistedEntitiesState } from "./entities";
 import { PersistedIdentificationState } from "./identification";
-import { InstabugUnreadMessagesState } from "./instabug/instabugUnreadMessages";
 import { InstallationState } from "./installation";
-import { InternalRouteNavigationState } from "./internalRouteNavigation";
 import { NavigationState } from "./navigation";
 import { NotificationsState } from "./notifications";
 import { OnboardingState } from "./onboarding";
@@ -29,17 +27,14 @@ import { SearchState } from "./search";
 import { UserDataProcessingState } from "./userDataProcessing";
 import { UserMetadataState } from "./userMetadata";
 import { WalletState } from "./wallet";
-import { AssistanceToolsState } from "./assistanceTools";
 
 export type GlobalState = Readonly<{
   appState: AppState;
   navigation: NavigationState;
   authentication: PersistedAuthenticationState;
   backendStatus: BackendStatusState;
-  backendInfo: BackendInfoState;
-  deepLink: DeepLinkState;
+  versionInfo: VersionInfoState;
   entities: PersistedEntitiesState;
-  instabug: InstabugUnreadMessagesState;
   backoffError: BackoffErrorState;
   notifications: NotificationsState;
   onboarding: OnboardingState;
@@ -58,8 +53,7 @@ export type GlobalState = Readonly<{
   emailValidation: EmailValidationState;
   cie: CieState;
   bonus: BonusState;
-  features: FeaturesState;
-  internalRouteNavigation: InternalRouteNavigationState;
+  features: PersistedFeaturesState;
   crossSessions: CrossSessionsState;
   assistanceTools: AssistanceToolsState;
 }>;

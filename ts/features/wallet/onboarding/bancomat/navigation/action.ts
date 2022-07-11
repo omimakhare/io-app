@@ -1,7 +1,7 @@
-import { NavigationActions } from "react-navigation";
+import { CommonActions } from "@react-navigation/native";
 import NavigationService from "../../../../../navigation/NavigationService";
-import { InferNavigationParams } from "../../../../../types/react";
-import { ActivateBpdOnNewCreditCardScreen } from "../../common/screens/bpd/ActivateBpdOnNewCreditCardScreen";
+import ROUTES from "../../../../../navigation/routes";
+import { ActivateBpdOnNewCreditCardScreenNavigationParams } from "../../common/screens/bpd/ActivateBpdOnNewCreditCardScreen";
 import WALLET_ONBOARDING_BANCOMAT_ROUTES from "./routes";
 
 /**
@@ -9,8 +9,11 @@ import WALLET_ONBOARDING_BANCOMAT_ROUTES from "./routes";
  */
 export const navigateToOnboardingBancomatSearchStartScreen = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BANCOMAT_ROUTES.BANCOMAT_START
+    CommonActions.navigate(ROUTES.WALLET_NAVIGATOR, {
+      screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.MAIN,
+      params: {
+        screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.BANCOMAT_START
+      }
     })
   );
 
@@ -19,8 +22,11 @@ export const navigateToOnboardingBancomatSearchStartScreen = () =>
  */
 export const navigateToOnboardingBancomatChooseBank = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BANCOMAT_ROUTES.CHOOSE_BANK
+    CommonActions.navigate(ROUTES.WALLET_NAVIGATOR, {
+      screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.MAIN,
+      params: {
+        screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.CHOOSE_BANK
+      }
     })
   );
 
@@ -29,19 +35,11 @@ export const navigateToOnboardingBancomatChooseBank = () =>
  */
 export const navigateToOnboardingBancomatSearchAvailableUserBancomat = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName:
-        WALLET_ONBOARDING_BANCOMAT_ROUTES.SEARCH_AVAILABLE_USER_BANCOMAT
-    })
-  );
-
-/**
- * @deprecated
- */
-export const navigateToOnboardingBancomatAdd = () =>
-  NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BANCOMAT_ROUTES.ADD_BANCOMAT
+    CommonActions.navigate(ROUTES.WALLET_NAVIGATOR, {
+      screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.MAIN,
+      params: {
+        screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.SEARCH_AVAILABLE_USER_BANCOMAT
+      }
     })
   );
 
@@ -50,8 +48,11 @@ export const navigateToOnboardingBancomatAdd = () =>
  */
 export const navigateToSuggestBpdActivation = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BANCOMAT_ROUTES.SUGGEST_BPD_ACTIVATION
+    CommonActions.navigate(ROUTES.WALLET_NAVIGATOR, {
+      screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.MAIN,
+      params: {
+        screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.SUGGEST_BPD_ACTIVATION
+      }
     })
   );
 
@@ -60,8 +61,11 @@ export const navigateToSuggestBpdActivation = () =>
  */
 export const navigateToActivateBpdOnNewBancomat = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BANCOMAT_ROUTES.ACTIVATE_BPD_NEW_BANCOMAT
+    CommonActions.navigate(ROUTES.WALLET_NAVIGATOR, {
+      screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.MAIN,
+      params: {
+        screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.ACTIVATE_BPD_NEW_BANCOMAT
+      }
     })
   );
 
@@ -69,11 +73,14 @@ export const navigateToActivateBpdOnNewBancomat = () =>
  * @deprecated
  */
 export const navigateToActivateBpdOnNewCreditCard = (
-  params: InferNavigationParams<typeof ActivateBpdOnNewCreditCardScreen>
+  params: ActivateBpdOnNewCreditCardScreenNavigationParams
 ) =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BANCOMAT_ROUTES.ACTIVATE_BPD_NEW_CREDIT_CARD,
-      params
+    CommonActions.navigate(ROUTES.WALLET_NAVIGATOR, {
+      screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.MAIN,
+      params: {
+        screen: WALLET_ONBOARDING_BANCOMAT_ROUTES.ACTIVATE_BPD_NEW_CREDIT_CARD,
+        params
+      }
     })
   );

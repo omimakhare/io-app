@@ -2,9 +2,9 @@ import { PublicMessage } from "../../../../../definitions/backend/PublicMessage"
 import { EnrichedMessage } from "../../../../../definitions/backend/EnrichedMessage";
 import { CreatedMessageWithContentAndAttachments } from "../../../../../definitions/backend/CreatedMessageWithContentAndAttachments";
 import { MessageCategory } from "../../../../../definitions/backend/MessageCategory";
+import { MessageStatusAttributes } from "../../../../../definitions/backend/MessageStatusAttributes";
 import { TagEnum } from "../../../../../definitions/backend/MessageCategoryBase";
 
-import { CreatedMessageWithContent } from "../../../../../definitions/backend/CreatedMessageWithContent";
 import {
   Attachment,
   EUCovidCertificate,
@@ -21,16 +21,21 @@ import {
  *
  * @param messageFromApi
  */
-export const toUIMessage = (messageFromApi: PublicMessage): UIMessage => {
+export const toUIMessage = (
+  messageFromApi: PublicMessage | CreatedMessageWithContentAndAttachments
+): UIMessage => {
   const enriched = messageFromApi as EnrichedMessage;
   const category: MessageCategory = enriched.category || {
     tag: TagEnum.GENERIC
   };
+  const { is_read, is_archived } = messageFromApi as MessageStatusAttributes;
   return {
     id: messageFromApi.id as UIMessageId,
     fiscalCode: messageFromApi.fiscal_code,
     category,
     createdAt: new Date(messageFromApi.created_at),
+    isRead: Boolean(is_read),
+    isArchived: Boolean(is_archived),
     serviceId: messageFromApi.sender_service_id,
     serviceName: enriched.service_name,
     organizationName: enriched.organization_name,
@@ -102,16 +107,18 @@ const getEUCovidCertificate = ({
  * @param messageFromApi
  */
 export const toUIMessageDetails = (
-  messageFromApi: CreatedMessageWithContent
+  messageFromApi: CreatedMessageWithContentAndAttachments
 ): UIMessageDetails => {
   const { id, content } = messageFromApi;
   const dueDate = content.due_date ? new Date(content.due_date) : undefined;
+
   return {
     id: id as UIMessageId,
     prescriptionData: getPrescriptionData(content),
     attachments: getAttachments(content),
     markdown: content.markdown,
     dueDate,
+
     paymentData: getPaymentData(content),
     euCovidCertificate: getEUCovidCertificate(content),
     subject: content.subject,

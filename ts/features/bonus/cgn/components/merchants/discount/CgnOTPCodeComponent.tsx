@@ -9,13 +9,13 @@ import { useIODispatch, useIOSelector } from "../../../../../../store/hooks";
 import { cgnOtpDataSelector } from "../../../store/reducers/otp";
 import { isError, isLoading, isReady } from "../../../../bpd/model/RemoteValue";
 import { cgnGenerateOtp, resetOtpState } from "../../../store/actions/otp";
-import { OtpCodeComponent } from "../../otp/OtpCodeComponent";
 import Eye from "../../../../../../../img/icons/Eye.svg";
 import ActivityIndicator from "../../../../../../components/ui/ActivityIndicator";
 import { Link } from "../../../../../../components/core/typography/Link";
 import { IOStyles } from "../../../../../../components/core/variables/IOStyles";
 import { H3 } from "../../../../../../components/core/typography/H3";
 import { H4 } from "../../../../../../components/core/typography/H4";
+import { OtpCodeComponent } from "./OtpCodeComponent";
 
 const styles = StyleSheet.create({
   row: {
@@ -30,12 +30,17 @@ const styles = StyleSheet.create({
 
 const COPY_ICON_SIZE = 24;
 
-const CgnOTPCodeContent = () => {
+type Props = {
+  onCodePress: (eventName: string) => void;
+};
+
+const CgnOTPCodeContent = ({ onCodePress }: Props) => {
   const [isCodeVisible, setIsCodeVisible] = React.useState(false);
   const dispatch = useIODispatch();
   const otp = useIOSelector(cgnOtpDataSelector);
 
   const requestOtp = () => {
+    onCodePress("CGN_OTP_START_REQUEST");
     dispatch(cgnGenerateOtp.request());
     setIsCodeVisible(true);
   };
@@ -109,12 +114,12 @@ const CgnOTPCodeContent = () => {
   );
 };
 
-const CgnOTPCodeComponent = () => (
+const CgnOTPCodeComponent = (props: Props) => (
   <View testID={"otp-code-component"}>
     <H3 accessible={true} accessibilityRole={"header"}>
       {I18n.t("bonus.cgn.merchantDetail.title.discountCode")}
     </H3>
-    <CgnOTPCodeContent />
+    <CgnOTPCodeContent {...props} />
   </View>
 );
 

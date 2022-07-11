@@ -1,5 +1,5 @@
-import { createStackNavigator } from "react-navigation-stack";
-
+import { createCompatNavigatorFactory } from "@react-navigation/compat";
+import { createStackNavigator } from "@react-navigation/stack";
 import EmailInsertScreen from "../screens/onboarding/EmailInsertScreen";
 import EmailReadScreen from "../screens/onboarding/EmailReadScreen";
 import FingerprintScreen from "../screens/onboarding/FingerprintScreen";
@@ -8,12 +8,13 @@ import PinScreen from "../screens/onboarding/PinScreen";
 import TosScreen from "../screens/onboarding/TosScreen";
 import OnboardingServicesPreferenceScreen from "../screens/onboarding/OnboardingServicesPreferenceScreen";
 import ServicePreferenceCompleteScreen from "../screens/onboarding/ServicePreferenceCompleteScreen";
+import OnboardingCompletedScreen from "../screens/onboarding/OnboardingCompletedScreen";
 import ROUTES from "./routes";
 
 /**
  * The onboarding related stack of screens of the application.
  */
-const navigator = createStackNavigator(
+const navigator = createCompatNavigatorFactory(createStackNavigator)(
   {
     [ROUTES.ONBOARDING_SHARE_DATA]: {
       screen: OnboardingShareDataScreen
@@ -38,13 +39,16 @@ const navigator = createStackNavigator(
     },
     [ROUTES.READ_EMAIL_SCREEN]: {
       screen: EmailReadScreen
+    },
+    [ROUTES.ONBOARDING_COMPLETED]: {
+      screen: OnboardingCompletedScreen
     }
   },
   {
     // Let each screen handle the header and navigation
     headerMode: "none",
     defaultNavigationOptions: {
-      gesturesEnabled: false
+      gestureEnabled: false
     }
   }
 );

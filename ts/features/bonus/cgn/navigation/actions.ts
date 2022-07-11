@@ -1,20 +1,8 @@
-import { NavigationActions } from "react-navigation";
+import { CommonActions } from "@react-navigation/native";
 import NavigationService from "../../../../navigation/NavigationService";
-import { InferNavigationParams } from "../../../../types/react";
-import CgnMerchantDetailScreen from "../screens/merchants/CgnMerchantDetailScreen";
-import CgnMerchantLandingWebview from "../screens/merchants/CgnMerchantLandingWebview";
+import { CgnMerchantDetailScreenNavigationParams } from "../screens/merchants/CgnMerchantDetailScreen";
+import { CgnMerchantLandingWebviewNavigationParams } from "../screens/merchants/CgnMerchantLandingWebview";
 import CGN_ROUTES from "./routes";
-
-/**
- * @deprecated Do not use this method when you have access to a navigation prop or useNavigation since it will behave differently,
- * and many helper methods specific to screens won't be available.
- */
-export const navigateToCgnActivationLoadActivationStatus = () =>
-  NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.ACTIVATION.LOAD_CHECK_ACTIVATION_STATUS
-    })
-  );
 
 /**
  * @deprecated Do not use this method when you have access to a navigation prop or useNavigation since it will behave differently,
@@ -22,8 +10,8 @@ export const navigateToCgnActivationLoadActivationStatus = () =>
  */
 export const navigateToCgnActivationInformationTos = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.ACTIVATION.INFORMATION_TOS
+    CommonActions.navigate(CGN_ROUTES.ACTIVATION.MAIN, {
+      screen: CGN_ROUTES.ACTIVATION.INFORMATION_TOS
     })
   );
 
@@ -33,8 +21,8 @@ export const navigateToCgnActivationInformationTos = () =>
  */
 export const navigateToCgnActivationLoading = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.ACTIVATION.LOADING
+    CommonActions.navigate(CGN_ROUTES.ACTIVATION.MAIN, {
+      screen: CGN_ROUTES.ACTIVATION.LOADING
     })
   );
 
@@ -44,8 +32,8 @@ export const navigateToCgnActivationLoading = () =>
  */
 export const navigateToEycaActivationLoading = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.EYCA.ACTIVATION.LOADING
+    CommonActions.navigate(CGN_ROUTES.EYCA.ACTIVATION.MAIN, {
+      screen: CGN_ROUTES.EYCA.ACTIVATION.LOADING
     })
   );
 
@@ -55,8 +43,8 @@ export const navigateToEycaActivationLoading = () =>
  */
 export const navigateToCgnAlreadyActive = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.ACTIVATION.EXISTS
+    CommonActions.navigate(CGN_ROUTES.ACTIVATION.MAIN, {
+      screen: CGN_ROUTES.ACTIVATION.EXISTS
     })
   );
 
@@ -66,8 +54,8 @@ export const navigateToCgnAlreadyActive = () =>
  */
 export const navigateToCgnActivationPending = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.ACTIVATION.PENDING
+    CommonActions.navigate(CGN_ROUTES.ACTIVATION.MAIN, {
+      screen: CGN_ROUTES.ACTIVATION.PENDING
     })
   );
 
@@ -77,8 +65,8 @@ export const navigateToCgnActivationPending = () =>
  */
 export const navigateToCgnActivationTimeout = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.ACTIVATION.TIMEOUT
+    CommonActions.navigate(CGN_ROUTES.ACTIVATION.MAIN, {
+      screen: CGN_ROUTES.ACTIVATION.TIMEOUT
     })
   );
 
@@ -88,8 +76,8 @@ export const navigateToCgnActivationTimeout = () =>
  */
 export const navigateToCgnActivationIneligible = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.ACTIVATION.INELIGIBLE
+    CommonActions.navigate(CGN_ROUTES.ACTIVATION.MAIN, {
+      screen: CGN_ROUTES.ACTIVATION.INELIGIBLE
     })
   );
 
@@ -99,8 +87,8 @@ export const navigateToCgnActivationIneligible = () =>
  */
 export const navigateToCgnActivationCompleted = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.ACTIVATION.COMPLETED
+    CommonActions.navigate(CGN_ROUTES.ACTIVATION.MAIN, {
+      screen: CGN_ROUTES.ACTIVATION.COMPLETED
     })
   );
 
@@ -112,19 +100,8 @@ export const navigateToCgnActivationCompleted = () =>
  */
 export const navigateToCgnDetails = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.DETAILS.DETAILS
-    })
-  );
-
-/**
- * @deprecated Do not use this method when you have access to a navigation prop or useNavigation since it will behave differently,
- * and many helper methods specific to screens won't be available.
- */
-export const navigateToCgnDetailsOtp = () =>
-  NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.DETAILS.DETAILS_OTP
+    CommonActions.navigate(CGN_ROUTES.DETAILS.MAIN, {
+      screen: CGN_ROUTES.DETAILS.DETAILS
     })
   );
 
@@ -135,8 +112,8 @@ export const navigateToCgnDetailsOtp = () =>
  */
 export const navigateToCgnMerchantsList = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.DETAILS.MERCHANTS.LIST
+    CommonActions.navigate(CGN_ROUTES.DETAILS.MAIN, {
+      screen: CGN_ROUTES.DETAILS.MERCHANTS.LIST
     })
   );
 
@@ -146,8 +123,8 @@ export const navigateToCgnMerchantsList = () =>
  */
 export const navigateToCgnMerchantsTabs = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.DETAILS.MERCHANTS.TABS
+    CommonActions.navigate(CGN_ROUTES.DETAILS.MAIN, {
+      screen: CGN_ROUTES.DETAILS.MERCHANTS.TABS
     })
   );
 
@@ -156,11 +133,11 @@ export const navigateToCgnMerchantsTabs = () =>
  * and many helper methods specific to screens won't be available.
  */
 export const navigateToCgnMerchantDetail = (
-  params: InferNavigationParams<typeof CgnMerchantDetailScreen>
+  params: CgnMerchantDetailScreenNavigationParams
 ) =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.DETAILS.MERCHANTS.DETAIL,
+    CommonActions.navigate(CGN_ROUTES.DETAILS.MAIN, {
+      screen: CGN_ROUTES.DETAILS.MERCHANTS.DETAIL,
       params
     })
   );
@@ -170,11 +147,11 @@ export const navigateToCgnMerchantDetail = (
  * and many helper methods specific to screens won't be available.
  */
 export const navigateToCgnMerchantLandingWebview = (
-  params: InferNavigationParams<typeof CgnMerchantLandingWebview>
+  params: CgnMerchantLandingWebviewNavigationParams
 ) =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: CGN_ROUTES.DETAILS.MERCHANTS.LANDING_WEBVIEW,
+    CommonActions.navigate(CGN_ROUTES.DETAILS.MAIN, {
+      screen: CGN_ROUTES.DETAILS.MERCHANTS.LANDING_WEBVIEW,
       params
     })
   );

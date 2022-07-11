@@ -1,6 +1,6 @@
 import * as React from "react";
 import { View } from "native-base";
-import { FlatList, ListRenderItemInfo } from "react-native";
+import { FlatList, ListRenderItemInfo, Platform } from "react-native";
 import { IOStyles } from "../../../../../components/core/variables/IOStyles";
 import ItemSeparatorComponent from "../../../../../components/ItemSeparatorComponent";
 import { EdgeBorderComponent } from "../../../../../components/screens/EdgeBorderComponent";
@@ -12,6 +12,8 @@ import CgnMerchantListItem from "./CgnMerchantListItem";
 type Props = {
   merchantList: ReadonlyArray<OfflineMerchant | OnlineMerchant>;
   onItemPress: (id: Merchant["id"]) => void;
+  onRefresh: () => void;
+  refreshing: boolean;
 };
 
 // Component that renders the list of merchants as a FlatList
@@ -23,17 +25,21 @@ const CgnMerchantsListView: React.FunctionComponent<Props> = (props: Props) => {
       categories={listItem.item.productCategories}
       name={listItem.item.name}
       onPress={() => props.onItemPress(listItem.item.id)}
+      isNew={listItem.item.newDiscounts}
     />
   );
 
   return (
-    <View style={[IOStyles.horizontalContentPadding, IOStyles.flex]}>
+    <View style={[IOStyles.flex, IOStyles.horizontalContentPadding]}>
       <FlatList
+        showsVerticalScrollIndicator={Platform.OS !== "ios"}
         scrollEnabled={true}
         data={props.merchantList}
         ItemSeparatorComponent={() => (
           <ItemSeparatorComponent noPadded={true} />
         )}
+        refreshing={props.refreshing}
+        onRefresh={props.onRefresh}
         renderItem={renderListItem}
         keyExtractor={c => c.id}
         keyboardShouldPersistTaps={"handled"}

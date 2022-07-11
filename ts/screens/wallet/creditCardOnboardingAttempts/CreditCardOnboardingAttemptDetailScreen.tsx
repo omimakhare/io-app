@@ -1,48 +1,56 @@
+import { CompatNavigationProp } from "@react-navigation/compat";
 import { Text, View } from "native-base";
 import * as React from "react";
 import { StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { useDispatch } from "react-redux";
-import {
-  instabugLog,
-  openInstabugQuestionReport,
-  TypeLogs
-} from "../../../boot/configureInstabug";
+import { ToolEnum } from "../../../../definitions/content/AssistanceToolConfig";
 import ButtonDefaultOpacity from "../../../components/ButtonDefaultOpacity";
+import { Body } from "../../../components/core/typography/Body";
+import { H3 } from "../../../components/core/typography/H3";
+import { Label } from "../../../components/core/typography/Label";
+import { IOStyles } from "../../../components/core/variables/IOStyles";
 import ItemSeparatorComponent from "../../../components/ItemSeparatorComponent";
+import { BadgeComponent } from "../../../components/screens/BadgeComponent";
 import BaseScreenComponent from "../../../components/screens/BaseScreenComponent";
 import IconFont from "../../../components/ui/IconFont";
-import { SlidedContentComponent } from "../../../components/wallet/SlidedContentComponent";
-import I18n from "../../../i18n";
-import customVariables from "../../../theme/variables";
-import { CreditCardInsertion } from "../../../store/reducers/wallet/creditCard";
-import { IOStyles } from "../../../components/core/variables/IOStyles";
-import { Label } from "../../../components/core/typography/Label";
-import { Body } from "../../../components/core/typography/Body";
-import { formatDateAsLocal } from "../../../utils/dates";
-import { H3 } from "../../../components/core/typography/H3";
-import { BadgeComponent } from "../../../components/screens/BadgeComponent";
 import { getPanDescription } from "../../../components/wallet/creditCardOnboardingAttempts/CreditCardAttemptsList";
-import { outcomeCodesSelector } from "../../../store/reducers/wallet/outcomeCode";
-import { getPaymentOutcomeCodeDescription } from "../../../utils/payment";
+import { SlidedContentComponent } from "../../../components/wallet/SlidedContentComponent";
+import {
+  zendeskSelectedCategory,
+  zendeskSupportStart
+} from "../../../features/zendesk/store/actions";
+import I18n from "../../../i18n";
+import { IOStackNavigationProp } from "../../../navigation/params/AppParamsList";
+import { WalletParamsList } from "../../../navigation/params/WalletParamsList";
 import { useIOSelector } from "../../../store/hooks";
+import { canShowHelpSelector } from "../../../store/reducers/assistanceTools";
 import { assistanceToolConfigSelector } from "../../../store/reducers/backendStatus";
+import { CreditCardInsertion } from "../../../store/reducers/wallet/creditCard";
+import { outcomeCodesSelector } from "../../../store/reducers/wallet/outcomeCode";
+import customVariables from "../../../theme/variables";
+import { formatDateAsLocal } from "../../../utils/dates";
+import { getPaymentOutcomeCodeDescription } from "../../../utils/payment";
 import {
   addTicketCustomField,
   appendLog,
   assistanceToolRemoteConfig,
+  resetCustomFields,
   zendeskCategoryId,
-  zendeskPaymentMethodCategoryValue
+  zendeskPaymentMethodCategory
 } from "../../../utils/supportAssistance";
-import { zendeskSupportStart } from "../../../features/zendesk/store/actions";
-import { ToolEnum } from "../../../../definitions/content/AssistanceToolConfig";
-import { canShowHelpSelector } from "../../../store/reducers/assistanceTools";
 
-type NavigationParams = Readonly<{
+export type CreditCardOnboardingAttemptDetailScreenNavigationParams = Readonly<{
   attempt: CreditCardInsertion;
 }>;
 
-type Props = NavigationInjectedProps<NavigationParams>;
+type Props = {
+  navigation: CompatNavigationProp<
+    IOStackNavigationProp<
+      WalletParamsList,
+      "CREDIT_CARD_ONBOARDING_ATTEMPT_DETAIL"
+    >
+  >;
+};
 
 const styles = StyleSheet.create({
   row: {
@@ -70,7 +78,6 @@ const renderRow = (label: string, value: string) => (
     <Body>{value}</Body>
   </View>
 );
-const instabugTag = "credit-card-support";
 /**
  * This screen shows credit card onboarding attempt details and allows the user
  * to ask assistance about this attempts
@@ -83,25 +90,20 @@ const CreditCardOnboardingAttemptDetailScreen = (props: Props) => {
   const choosenTool = assistanceToolRemoteConfig(assistanceToolConfig);
   const canShowHelp = useIOSelector(canShowHelpSelector);
 
-  const instabugLogAndOpenReport = () => {
-    instabugLog(JSON.stringify(attempt), TypeLogs.INFO, instabugTag);
-    openInstabugQuestionReport();
-  };
   const zendeskAssistanceLogAndStart = () => {
+    resetCustomFields();
     // Set metodo_di_pagamento as category
-    addTicketCustomField(zendeskCategoryId, zendeskPaymentMethodCategoryValue);
+    addTicketCustomField(zendeskCategoryId, zendeskPaymentMethodCategory.value);
     // Append the attempt in the log
     appendLog(JSON.stringify(attempt));
     dispatch(
       zendeskSupportStart({ startingRoute: "n/a", assistanceForPayment: true })
     );
+    dispatch(zendeskSelectedCategory(zendeskPaymentMethodCategory));
   };
 
   const handleAskAssistance = () => {
     switch (choosenTool) {
-      case ToolEnum.instabug:
-        instabugLogAndOpenReport();
-        break;
       case ToolEnum.zendesk:
         zendeskAssistanceLogAndStart();
         break;
@@ -155,7 +157,7 @@ const CreditCardOnboardingAttemptDetailScreen = (props: Props) => {
   return (
     <BaseScreenComponent
       goBack={() => props.navigation.goBack()}
-      showInstabugChat={false}
+      showChat={false}
       dark={true}
       headerTitle={I18n.t("wallet.creditCard.onboardingAttempts.title")}
     >

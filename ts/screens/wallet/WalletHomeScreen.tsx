@@ -1,14 +1,15 @@
 import * as Sentry from "@sentry/react-native";
-import { fromNullable, none } from "fp-ts/lib/Option";
+import { NavigationEvents } from "@react-navigation/compat";
+import { none } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import { Content, Text, View } from "native-base";
 import * as React from "react";
-import { BackHandler, Image, StyleSheet } from "react-native";
 import {
-  NavigationEvents,
-  NavigationEventSubscription,
-  NavigationInjectedProps
-} from "react-navigation";
+  BackHandler,
+  Image,
+  NativeEventSubscription,
+  StyleSheet
+} from "react-native";
 import { connect } from "react-redux";
 import { BonusActivationWithQrCode } from "../../../definitions/bonus_vacanze/BonusActivationWithQrCode";
 import { TypeEnum } from "../../../definitions/pagopa/Wallet";
@@ -29,7 +30,11 @@ import SectionCardComponent, {
 import TransactionsList from "../../components/wallet/TransactionsList";
 import WalletHomeHeader from "../../components/wallet/WalletHomeHeader";
 import WalletLayout from "../../components/wallet/WalletLayout";
-import { bonusVacanzeEnabled, bpdEnabled } from "../../config";
+import {
+  bonusVacanzeEnabled,
+  bpdEnabled,
+  bpdOptInPaymentMethodsEnabled
+} from "../../config";
 import RequestBonus from "../../features/bonus/bonusVacanze/components/RequestBonus";
 import {
   navigateToAvailableBonusScreen,
@@ -55,6 +60,8 @@ import FeaturedCardCarousel from "../../features/wallet/component/card/FeaturedC
 import WalletV2PreviewCards from "../../features/wallet/component/card/WalletV2PreviewCards";
 import NewPaymentMethodAddedNotifier from "../../features/wallet/component/NewMethodAddedNotifier";
 import I18n from "../../i18n";
+import { IOStackNavigationRouteProps } from "../../navigation/params/AppParamsList";
+import { MainTabParamsList } from "../../navigation/params/MainTabParamsList";
 import {
   navigateBack,
   navigateToTransactionDetailsScreen,
@@ -70,6 +77,10 @@ import {
   fetchWalletsRequestWithExpBackoff,
   runSendAddCobadgeTrackSaga
 } from "../../store/actions/wallet/wallets";
+import {
+  bpdRemoteConfigSelector,
+  isCGNEnabledSelector
+} from "../../store/reducers/backendStatus";
 import { isCGNEnabledSelector } from "../../store/reducers/backendStatus";
 import { transactionsReadSelector } from "../../store/reducers/entities";
 import { paymentsHistorySelector } from "../../store/reducers/payments/history";
@@ -88,12 +99,12 @@ import {
 } from "../../store/reducers/wallet/wallets";
 import customVariables from "../../theme/variables";
 import { Transaction, Wallet } from "../../types/pagopa";
-import { isUpdateNeeded } from "../../utils/appVersion";
 import { isStrictSome } from "../../utils/pot";
 import { showToast } from "../../utils/showToast";
+import BpdOptInPaymentMethodsContainer from "../../features/bonus/bpd/components/optInPaymentMethods/BpdOptInPaymentMethodsContainer";
 import { setStatusBarColorAndBackground } from "../../utils/statusBar";
 
-type NavigationParams = Readonly<{
+export type WalletHomeNavigationParams = Readonly<{
   newMethodAdded: boolean;
   keyFrom?: string;
 }>;
@@ -104,7 +115,7 @@ type State = {
 
 type Props = ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps> &
-  NavigationInjectedProps<NavigationParams> &
+  IOStackNavigationRouteProps<MainTabParamsList, "WALLET_HOME"> &
   LightModalContextInterface;
 
 const styles = StyleSheet.create({
@@ -180,27 +191,19 @@ const contextualHelpMarkdown: ContextualHelpPropsMarkdown = {
  * a "pay notice" button and payment methods info/button to add new ones
  */
 class WalletHomeScreen extends React.PureComponent<Props, State> {
+  private subscription: NativeEventSubscription | undefined;
   constructor(props: Props) {
     super(props);
     this.state = { hasFocus: false };
   }
 
-  get newMethodAdded() {
-    return this.props.navigation.getParam("newMethodAdded");
-  }
-
-  get navigationKeyFrom() {
-    return this.props.navigation.getParam("keyFrom");
-  }
-
-  private navListener?: NavigationEventSubscription;
-
   private handleBackPress = () => {
+    const keyFrom = this.props.route.params?.keyFrom;
     const shouldPop =
-      this.newMethodAdded && this.navigationKeyFrom !== undefined;
+      this.props.route.params?.newMethodAdded && keyFrom !== undefined;
 
     if (shouldPop) {
-      this.props.navigateBack(this.navigationKeyFrom);
+      this.props.navigateBack();
       return true;
     }
     return false;
@@ -239,20 +242,23 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
     // (transactions should be persisted & fetched periodically)
     // https://www.pivotaltracker.com/story/show/168836972
 
-    if (pot.isNone(this.props.potWallets)) {
-      this.props.loadWallets();
-    }
+    this.props.loadWallets();
 
+    // To maintain retro compatibility, if the opt-in payment methods feature flag is turned off,
+    // load the bonus information on Wallet mount
+    if (
+      !this.props.bpdConfig?.opt_in_payment_methods ||
+      !bpdOptInPaymentMethodsEnabled
+    ) {
+      this.loadBonusBpd();
+    }
     // FIXME restore loadTransactions see https://www.pivotaltracker.com/story/show/176051000
 
     // eslint-disable-next-line functional/immutable-data
-    this.navListener = this.props.navigation.addListener("didFocus", () => {
-      setStatusBarColorAndBackground(
-        "light-content",
-        customVariables.brandDarkGray
-      );
-    }); // eslint-disable-line
-    BackHandler.addEventListener("hardwareBackPress", this.handleBackPress);
+    this.subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      this.handleBackPress
+    );
 
     // Dispatch the action associated to the saga responsible to remind a user
     // to add the co-badge card.
@@ -261,10 +267,7 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
   }
 
   public componentWillUnmount() {
-    if (this.navListener) {
-      this.navListener.remove();
-    }
-    BackHandler.removeEventListener("hardwareBackPress", this.handleBackPress);
+    this.subscription?.remove();
   }
 
   public componentDidUpdate(prevProps: Readonly<Props>) {
@@ -394,7 +397,11 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
             onBonusPress={this.props.navigateToBonusDetail}
           />
         )}
-        {bpdEnabled && <BpdCardsInWalletContainer />}
+
+        {/* When the opt_in_payment_methods FF is active hide the BpdCardsInWalletContainer component */}
+        {!this.props.bpdConfig?.opt_in_payment_methods && bpdEnabled && (
+          <BpdCardsInWalletContainer />
+        )}
         <CgnCardInWalletContainer />
       </View>
     );
@@ -488,28 +495,6 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
     );
   }
 
-  private newMethodAddedContent = (
-    <Content>
-      <IconFont
-        name={"io-close"}
-        style={styles.end}
-        onPress={this.handleBackPress}
-      />
-      <IconFont
-        name={"io-complete"}
-        size={120}
-        color={customVariables.brandHighlight}
-        style={styles.center}
-      />
-      <View spacer={true} />
-
-      <Text alignCenter={true}>{`${I18n.t("global.genericThanks")},`}</Text>
-      <Text alignCenter={true} bold={true}>
-        {I18n.t("wallet.newPaymentMethod.successful")}
-      </Text>
-    </Content>
-  );
-
   private footerButton(potWallets: pot.Pot<ReadonlyArray<Wallet>, Error>) {
     return (
       <ButtonDefaultOpacity
@@ -552,10 +537,9 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
             anyHistoryPayments || anyCreditCardAttempts
           );
 
-    const footerContent =
-      pot.isSome(potWallets) && !this.newMethodAdded
-        ? this.footerButton(potWallets)
-        : undefined;
+    const footerContent = pot.isSome(potWallets)
+      ? this.footerButton(potWallets)
+      : undefined;
 
     return (
       <WalletLayout
@@ -574,23 +558,18 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
         headerPaddingMin={true}
         footerFullWidth={<SectionStatusComponent sectionKey={"wallets"} />}
       >
-        {this.newMethodAdded ? (
-          this.newMethodAddedContent
-        ) : (
-          <>
-            {(bpdEnabled || this.props.isCgnEnabled) && (
-              <FeaturedCardCarousel />
-            )}
-            {transactionContent}
-          </>
-        )}
+        <BpdOptInPaymentMethodsContainer />
+        <>
+          {(bpdEnabled || this.props.isCgnEnabled) && <FeaturedCardCarousel />}
+          {transactionContent}
+        </>
         {bonusVacanzeEnabled && (
           <NavigationEvents
             onWillFocus={this.onFocus}
             onWillBlur={this.onLostFocus}
           />
         )}
-        {bpdEnabled && <NewPaymentMethodAddedNotifier />}
+        <NewPaymentMethodAddedNotifier />
       </WalletLayout>
     );
   }
@@ -608,35 +587,29 @@ class WalletHomeScreen extends React.PureComponent<Props, State> {
   }
 }
 
-const mapStateToProps = (state: GlobalState) => {
-  const isPagoPaVersionSupported = fromNullable(state.backendInfo.serverInfo)
-    .map(si => !isUpdateNeeded(si, "min_app_version_pagopa"))
-    .getOrElse(true);
-
-  return {
-    periodsWithAmount: bpdPeriodsAmountWalletVisibleSelector(state),
-    allActiveBonus: allBonusActiveSelector(state),
-    availableBonusesList: supportedAvailableBonusSelector(state),
-    // TODO: This selector (pagoPaCreditCardWalletV1Selector) should return the credit cards
-    //  available for display in the wallet, so the cards added with the APP or with the WISP.
-    //  But it leverage on the assumption that the meaning of pagoPA === true is the same of onboardingChannel !== "EXT"
-    potWallets: pagoPaCreditCardWalletV1Selector(state),
-    anyHistoryPayments: paymentsHistorySelector(state).length > 0,
-    anyCreditCardAttempts: creditCardAttemptsSelector(state).length > 0,
-    potTransactions: latestTransactionsSelector(state),
-    transactionsLoadedLength: getTransactionsLoadedLength(state),
-    areMoreTransactionsAvailable: areMoreTransactionsAvailable(state),
-    isPagoPATestEnabled: isPagoPATestEnabledSelector(state),
-    readTransactions: transactionsReadSelector(state),
-    isPagoPaVersionSupported,
-    bpdLoadState: bpdLastUpdateSelector(state),
-    cgnDetails: cgnDetailSelector(state),
-    isCgnInfoAvailable: isCgnInformationAvailableSelector(state),
-    isCgnEnabled: isCGNEnabledSelector(state),
-    bancomatListVisibleInWallet: bancomatListVisibleInWalletSelector(state),
-    coBadgeListVisibleInWallet: cobadgeListVisibleInWalletSelector(state)
-  };
-};
+const mapStateToProps = (state: GlobalState) => ({
+  periodsWithAmount: bpdPeriodsAmountWalletVisibleSelector(state),
+  allActiveBonus: allBonusActiveSelector(state),
+  availableBonusesList: supportedAvailableBonusSelector(state),
+  // TODO: This selector (pagoPaCreditCardWalletV1Selector) should return the credit cards
+  //  available for display in the wallet, so the cards added with the APP or with the WISP.
+  //  But it leverage on the assumption that the meaning of pagoPA === true is the same of onboardingChannel !== "EXT"
+  potWallets: pagoPaCreditCardWalletV1Selector(state),
+  anyHistoryPayments: paymentsHistorySelector(state).length > 0,
+  anyCreditCardAttempts: creditCardAttemptsSelector(state).length > 0,
+  potTransactions: latestTransactionsSelector(state),
+  transactionsLoadedLength: getTransactionsLoadedLength(state),
+  areMoreTransactionsAvailable: areMoreTransactionsAvailable(state),
+  isPagoPATestEnabled: isPagoPATestEnabledSelector(state),
+  readTransactions: transactionsReadSelector(state),
+  bpdLoadState: bpdLastUpdateSelector(state),
+  cgnDetails: cgnDetailSelector(state),
+  isCgnInfoAvailable: isCgnInformationAvailableSelector(state),
+  isCgnEnabled: isCGNEnabledSelector(state),
+  bancomatListVisibleInWallet: bancomatListVisibleInWalletSelector(state),
+  coBadgeListVisibleInWallet: cobadgeListVisibleInWalletSelector(state),
+  bpdConfig: bpdRemoteConfigSelector(state)
+});
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   loadBpdData: () => dispatch(bpdAllData.request()),
@@ -663,7 +636,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     validTo?: Date
   ) => navigateToBonusActiveDetailScreen({ bonus, validFrom, validTo }),
   navigateToBonusList: () => navigateToAvailableBonusScreen(),
-  navigateBack: (keyFrom?: string) => navigateBack({ key: keyFrom }),
+  navigateBack: () => navigateBack(),
   loadTransactions: (start: number) =>
     dispatch(fetchTransactionsRequestWithExpBackoff({ start })),
   loadWallets: () => dispatch(fetchWalletsRequestWithExpBackoff()),

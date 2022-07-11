@@ -5,8 +5,9 @@ import AsyncStorage from "@react-native-community/async-storage";
 import { combineReducers, Reducer } from "redux";
 import { PersistConfig, persistReducer, purgeStoredState } from "redux-persist";
 import { isActionOf } from "typesafe-actions";
+import { versionInfoReducer } from "../../common/versionInfo/store/reducers/versionInfo";
 import bonusReducer from "../../features/bonus/bonusVacanze/store/reducers";
-import { featuresReducer } from "../../features/common/store/reducers";
+import { featuresPersistor } from "../../features/common/store/reducers";
 import {
   logoutFailure,
   logoutSuccess,
@@ -16,11 +17,11 @@ import { Action } from "../actions/types";
 import createSecureStorage from "../storages/keychain";
 import { DateISO8601Transform } from "../transforms/dateISO8601Tranform";
 import appStateReducer from "./appState";
+import assistanceToolsReducer from "./assistanceTools";
 import authenticationReducer, {
   AuthenticationState,
   INITIAL_STATE as autenticationInitialState
 } from "./authentication";
-import backendInfoReducer from "./backendInfo";
 import backendStatusReducer from "./backendStatus";
 import backoffErrorReducer from "./backoffError";
 import cieReducer from "./cie";
@@ -29,16 +30,13 @@ import contentReducer, {
 } from "./content";
 import crossSessionsReducer from "./crossSessions";
 import { debugReducer } from "./debug";
-import deepLinkReducer from "./deepLink";
 import emailValidationReducer from "./emailValidation";
 import entitiesReducer, {
   entitiesPersistConfig,
   EntitiesState
 } from "./entities";
 import identificationReducer, { IdentificationState } from "./identification";
-import instabugUnreadMessagesReducer from "./instabug/instabugUnreadMessages";
 import installationReducer from "./installation";
-import internalRouteNavigationReducer from "./internalRouteNavigation";
 import { navigationReducer } from "./navigation";
 import notificationsReducer from "./notifications";
 import onboardingReducer from "./onboarding";
@@ -53,7 +51,6 @@ import { GlobalState } from "./types";
 import userDataProcessingReducer from "./userDataProcessing";
 import userMetadataReducer from "./userMetadata";
 import walletReducer from "./wallet";
-import assistanceToolsReducer from "./assistanceTools";
 
 // A custom configuration to store the authentication into the Keychain
 export const authenticationPersistConfig: PersistConfig = {
@@ -90,17 +87,13 @@ export const appReducer: Reducer<GlobalState, Action> = combineReducers<
   appState: appStateReducer,
   navigation: navigationReducer,
   backoffError: backoffErrorReducer,
-  deepLink: deepLinkReducer,
   wallet: walletReducer,
-  backendInfo: backendInfoReducer,
+  versionInfo: versionInfoReducer,
   backendStatus: backendStatusReducer,
   preferences: preferencesReducer,
-  instabug: instabugUnreadMessagesReducer,
   search: searchReducer,
   cie: cieReducer,
   bonus: bonusReducer,
-  features: featuresReducer,
-  internalRouteNavigation: internalRouteNavigationReducer,
   assistanceTools: assistanceToolsReducer,
   //
   // persisted state
@@ -118,6 +111,7 @@ export const appReducer: Reducer<GlobalState, Action> = combineReducers<
     identificationPersistConfig,
     identificationReducer
   ),
+  features: featuresPersistor,
   onboarding: onboardingReducer,
   notifications: notificationsReducer,
   profile: profileReducer,
@@ -194,6 +188,10 @@ export function createRootReducer(
               // notifications must be kept
               notifications: {
                 ...state.notifications
+              },
+              // payments must be kept
+              payments: {
+                ...state.payments
               }
             } as GlobalState)
           : state;

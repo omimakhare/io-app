@@ -2,27 +2,23 @@ import * as pot from "italia-ts-commons/lib/pot";
 import { Text, View } from "native-base";
 import React from "react";
 import { ActivityIndicator, StyleSheet } from "react-native";
-import { NavigationStackScreenProps } from "react-navigation-stack";
 import { connect } from "react-redux";
+import { ServiceId } from "../../../../definitions/backend/ServiceId";
+import WorkunitGenericFailure from "../../../components/error/WorkunitGenericFailure";
 import MessageDetailComponent from "../../../components/messages/paginated/MessageDetail";
 
 import BaseScreenComponent, {
   ContextualHelpPropsMarkdown
 } from "../../../components/screens/BaseScreenComponent";
 import I18n from "../../../i18n";
-import {
-  loadMessageDetails,
-  setMessageReadState
-} from "../../../store/actions/messages";
+import { IOStackNavigationRouteProps } from "../../../navigation/params/AppParamsList";
+import { MessagesParamsList } from "../../../navigation/params/MessagesParamsList";
+import { loadMessageDetails } from "../../../store/actions/messages";
 import { navigateToServiceDetailsScreen } from "../../../store/actions/navigation";
 import { loadServiceDetail } from "../../../store/actions/services";
 import { Dispatch, ReduxProps } from "../../../store/actions/types";
 import { getDetailsByMessageId } from "../../../store/reducers/entities/messages/detailsById";
-import { isMessageRead } from "../../../store/reducers/entities/messages/messagesStatus";
-import {
-  UIMessage,
-  UIMessageId
-} from "../../../store/reducers/entities/messages/types";
+import { UIMessageId } from "../../../store/reducers/entities/messages/types";
 import { isNoticePaid } from "../../../store/reducers/entities/payments";
 import {
   serviceByIdSelector,
@@ -30,10 +26,9 @@ import {
 } from "../../../store/reducers/entities/services/servicesById";
 import { toUIService } from "../../../store/reducers/entities/services/transformers";
 import { GlobalState } from "../../../store/reducers/types";
-import { InferNavigationParams } from "../../../types/react";
 import { useOnFirstRender } from "../../../utils/hooks/useOnFirstRender";
-import ServiceDetailsScreen from "../../services/ServiceDetailsScreen";
 import ErrorState from "../MessageDetailScreen/ErrorState";
+import { getMessageById } from "../../../store/reducers/entities/messages/paginatedById";
 
 const styles = StyleSheet.create({
   notFullStateContainer: {
@@ -47,11 +42,15 @@ const styles = StyleSheet.create({
   }
 });
 
-type MessageDetailScreenNavigationParams = {
-  message: UIMessage;
+export type MessageDetailScreenPaginatedNavigationParams = {
+  messageId: UIMessageId;
+  serviceId: ServiceId;
 };
 
-type OwnProps = NavigationStackScreenProps<MessageDetailScreenNavigationParams>;
+type OwnProps = IOStackNavigationRouteProps<
+  MessagesParamsList,
+  "MESSAGE_DETAIL_PAGINATED"
+>;
 
 type Props = OwnProps &
   ReturnType<typeof mapStateToProps> &
@@ -75,24 +74,21 @@ const renderLoadingState = () => (
 const MessageDetailScreen = ({
   goBack,
   hasPaidBadge,
-  isRead,
   loadMessageDetails,
   maybeServiceMetadata,
+  messageId,
+  serviceId,
   message,
   messageDetails,
   refreshService,
-  service,
-  setMessageReadState
+  service
 }: Props) => {
   useOnFirstRender(() => {
-    if (!isRead) {
-      setMessageReadState(message.id, true);
-    }
     if (
       pot.isError(messageDetails) ||
       (pot.isNone(messageDetails) && !pot.isLoading(messageDetails))
     ) {
-      loadMessageDetails(message.id);
+      loadMessageDetails(messageId);
     }
   });
 
@@ -106,68 +102,74 @@ const MessageDetailScreen = ({
 
   const onRetry = () => {
     // we try to reload both the message content and the service
-    const { id, serviceId } = message;
     refreshService(serviceId);
-    loadMessageDetails(id);
+    loadMessageDetails(messageId);
   };
 
   const renderErrorState = () => (
-    <ErrorState messageId={message.id} onRetry={onRetry} goBack={goBack} />
+    <ErrorState messageId={messageId} onRetry={onRetry} goBack={goBack} />
   );
 
-  return pot.fold(
-    messageDetails,
-    () => (
-      <View style={styles.notFullStateContainer}>
-        <Text style={styles.notFullStateMessageText}>
-          {I18n.t("messageDetails.emptyMessage")}
-        </Text>
-      </View>
-    ),
-    () => renderLoadingState(),
-    () => renderLoadingState(),
-    () => renderErrorState(),
-    details => (
-      <BaseScreenComponent
-        headerTitle={I18n.t("messageDetails.headerTitle")}
-        goBack={goBack}
-        contextualHelpMarkdown={contextualHelpMarkdown}
-        faqCategories={["messages_detail"]}
-      >
-        <MessageDetailComponent
-          hasPaidBadge={hasPaidBadge}
-          message={message}
-          messageDetails={details}
-          service={service}
-          serviceMetadata={maybeServiceMetadata}
-          onServiceLinkPress={onServiceLinkPressHandler}
-        />
-      </BaseScreenComponent>
-    ),
-    () => renderLoadingState(),
-    () => renderLoadingState(),
-    () => renderErrorState()
+  return message ? (
+    pot.fold(
+      messageDetails,
+      () => (
+        <View style={styles.notFullStateContainer}>
+          <Text style={styles.notFullStateMessageText}>
+            {I18n.t("messageDetails.emptyMessage")}
+          </Text>
+        </View>
+      ),
+      () => renderLoadingState(),
+      () => renderLoadingState(),
+      () => renderErrorState(),
+      details => (
+        <BaseScreenComponent
+          headerTitle={I18n.t("messageDetails.headerTitle")}
+          goBack={goBack}
+          backButtonTestID={"back-button"}
+          contextualHelpMarkdown={contextualHelpMarkdown}
+          faqCategories={["messages_detail"]}
+        >
+          <MessageDetailComponent
+            hasPaidBadge={hasPaidBadge}
+            message={message}
+            messageDetails={details}
+            service={service}
+            serviceMetadata={maybeServiceMetadata}
+            onServiceLinkPress={onServiceLinkPressHandler}
+          />
+        </BaseScreenComponent>
+      ),
+      () => renderLoadingState(),
+      () => renderLoadingState(),
+      () => renderErrorState()
+    )
+  ) : (
+    <WorkunitGenericFailure />
   );
 };
 
 const mapStateToProps = (state: GlobalState, ownProps: OwnProps) => {
-  const message: UIMessage = ownProps.navigation.getParam("message");
-  const messageDetails = getDetailsByMessageId(state, message.id);
-  const isRead = isMessageRead(state, message.id);
+  const messageId = ownProps.route.params.messageId;
+  const serviceId = ownProps.route.params.serviceId;
+  const message = pot.toUndefined(getMessageById(state, messageId));
+  const messageDetails = getDetailsByMessageId(state, messageId);
   const goBack = () => ownProps.navigation.goBack();
   const service = pot
-    .toOption(serviceByIdSelector(message.serviceId)(state) || pot.none)
+    .toOption(serviceByIdSelector(serviceId)(state) || pot.none)
     .map(toUIService)
     .toUndefined();
   // Map the potential message to the potential service
-  const maybeServiceMetadata = serviceMetadataByIdSelector(message.serviceId)(
-    state
-  );
-  const hasPaidBadge = isNoticePaid(state, message.category);
+  const maybeServiceMetadata = serviceMetadataByIdSelector(serviceId)(state);
+  const hasPaidBadge: boolean = message
+    ? isNoticePaid(state, message.category)
+    : false;
 
   return {
+    messageId,
+    serviceId,
     goBack,
-    isRead,
     hasPaidBadge,
     message,
     messageDetails,
@@ -180,12 +182,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   refreshService: (serviceId: string) =>
     dispatch(loadServiceDetail.request(serviceId)),
   loadMessageDetails: (id: UIMessageId) =>
-    dispatch(loadMessageDetails.request({ id })),
-  setMessageReadState: (messageId: string, isRead: boolean) =>
-    dispatch(setMessageReadState(messageId, isRead)),
-  navigateToServiceDetailsScreen: (
-    params: InferNavigationParams<typeof ServiceDetailsScreen>
-  ) => navigateToServiceDetailsScreen(params)
+    dispatch(loadMessageDetails.request({ id }))
 });
 
 export default connect(

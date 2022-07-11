@@ -1,5 +1,5 @@
-import { createStackNavigator } from "react-navigation-stack";
-import AddPrivativeCardScreen from "../screens/add/AddPrivativeCardScreen";
+import { createCompatNavigatorFactory } from "@react-navigation/compat";
+import { createStackNavigator } from "@react-navigation/stack";
 import AddPrivativeCardNumberScreen from "../screens/AddPrivativeCardNumberScreen";
 import ChoosePrivativeIssuerScreen from "../screens/choosePrivativeIssuer/ChoosePrivativeIssuerScreen";
 import PrivativeIssuerKoDisabled from "../screens/choosePrivativeIssuer/ko/PrivativeIssuerKoDisabled";
@@ -7,7 +7,9 @@ import PrivativeIssuerKoUnavailable from "../screens/choosePrivativeIssuer/ko/Pr
 import SearchPrivativeCardScreen from "../screens/search/SearchPrivativeCardScreen";
 import WALLET_ONBOARDING_PRIVATIVE_ROUTES from "./routes";
 
-const PaymentMethodOnboardingPrivativeNavigator = createStackNavigator(
+const PaymentMethodOnboardingPrivativeNavigator = createCompatNavigatorFactory(
+  createStackNavigator
+)(
   {
     [WALLET_ONBOARDING_PRIVATIVE_ROUTES.CHOOSE_ISSUER]: {
       screen: ChoosePrivativeIssuerScreen
@@ -23,16 +25,13 @@ const PaymentMethodOnboardingPrivativeNavigator = createStackNavigator(
     },
     [WALLET_ONBOARDING_PRIVATIVE_ROUTES.SEARCH_AVAILABLE]: {
       screen: SearchPrivativeCardScreen
-    },
-    [WALLET_ONBOARDING_PRIVATIVE_ROUTES.ADD_PRIVATIVE]: {
-      screen: AddPrivativeCardScreen
     }
   },
   {
     // Let each screen handle the header and navigation
     headerMode: "none",
     defaultNavigationOptions: {
-      gesturesEnabled: false
+      gestureEnabled: false
     }
   }
 );

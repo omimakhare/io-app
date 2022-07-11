@@ -1,4 +1,4 @@
-import { fromNullable } from "fp-ts/lib/Option";
+import { fromNullable, Option } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import { createSelector } from "reselect";
 import { getType } from "typesafe-actions";
@@ -9,23 +9,17 @@ import { Action } from "../../../../../store/actions/types";
 import { GlobalState } from "../../../../../store/reducers/types";
 import {
   ID_BONUS_VACANZE_TYPE,
-  ID_BPD_TYPE,
-  ID_CGN_TYPE
+  mapBonusIdFeatureFlag
 } from "../../utils/bonus";
 import { loadAvailableBonuses } from "../actions/bonusVacanze";
-import { bonusVacanzeEnabled, bpdEnabled } from "../../../../../config";
+
 import { BonusVisibilityEnum } from "../../../../../../definitions/content/BonusVisibility";
+import { servicesByIdSelector } from "../../../../../store/reducers/entities/services/servicesById";
+import { ServicePublic } from "../../../../../../definitions/backend/ServicePublic";
 
 export type AvailableBonusTypesState = pot.Pot<BonusesAvailable, Error>;
 
 const INITIAL_STATE: AvailableBonusTypesState = pot.none;
-
-export const mapBonusIdFeatureFlag = () =>
-  new Map<number, boolean>([
-    [ID_BONUS_VACANZE_TYPE, bonusVacanzeEnabled],
-    [ID_BPD_TYPE, bpdEnabled],
-    [ID_CGN_TYPE, true]
-  ]);
 
 const reducer = (
   state: AvailableBonusTypesState = INITIAL_STATE,
@@ -48,7 +42,7 @@ const reducer = (
 /**
  * return all available bonus: visibile, hidden or experimental
  */
-const allAvailableBonusTypesSelector = (
+export const allAvailableBonusTypesSelector = (
   state: GlobalState
 ): AvailableBonusTypesState => state.bonus.availableBonusTypes;
 
@@ -111,6 +105,19 @@ export const availableBonusTypesSelectorFromId = (idBonusType: number) =>
       undefined
     )
   );
+
+export const serviceFromAvailableBonusSelector = (idBonusType: number) =>
+  createSelector(
+    supportedAvailableBonusSelector,
+    servicesByIdSelector,
+    (supportedBonus, servicesById): Option<ServicePublic> =>
+      fromNullable(supportedBonus.find(sp => sp.id_type === idBonusType))
+        .mapNullable(bonus =>
+          bonus.service_id ? servicesById[bonus.service_id] : undefined
+        )
+        .mapNullable(pot.toUndefined)
+  );
+
 /**
  * Return the uri of the bonus vacanze image logo
  */

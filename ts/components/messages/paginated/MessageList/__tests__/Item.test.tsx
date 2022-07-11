@@ -4,8 +4,13 @@ import { fireEvent, render } from "@testing-library/react-native";
 import { MessageCategory } from "../../../../../../definitions/backend/MessageCategory";
 import { successReloadMessagesPayload } from "../../../../../__mocks__/messages";
 import Item from "../Item";
-import { TagEnum } from "../../../../../../definitions/backend/MessageCategoryBase";
+import { TagEnum as TagEnum } from "../../../../../../definitions/backend/MessageCategoryBase";
+import { TagEnum as TagEnumPN } from "../../../../../../definitions/backend/MessageCategoryPN";
 
+jest.mock("../../../../../config", () => ({
+  mvlEnabled: true,
+  pnEnabled: true
+}));
 jest.useFakeTimers();
 
 const messages = successReloadMessagesPayload.messages;
@@ -14,7 +19,6 @@ const defaultProps: React.ComponentProps<typeof Item> = {
   category: { tag: "GENERIC" } as MessageCategory,
   hasPaidBadge: false,
   isRead: false,
-  isArchived: false,
   isSelected: false,
   isSelectionModeEnabled: false,
   message: messages[0],
@@ -48,6 +52,19 @@ describe("MessageList Item component", () => {
     });
   });
 
+  describe(`when category is ${TagEnumPN.PN}`, () => {
+    it("should match the snapshot", () => {
+      expect(
+        render(
+          <Item
+            {...defaultProps}
+            category={{ tag: TagEnumPN.PN } as MessageCategory}
+          />
+        ).toJSON()
+      ).toMatchSnapshot();
+    });
+  });
+
   describe("when `isSelectionModeEnabled` is true", () => {
     describe("and `isSelected` is false", () => {
       it("should match the snapshot", () => {
@@ -75,17 +92,13 @@ describe("MessageList Item component", () => {
 
   const euCovidCertCategory = { tag: "EU_COVID_CERT" } as MessageCategory;
   [
-    { isArchived: false, hasPaidBadge: false, category: defaultProps.category },
-    { isArchived: true, hasPaidBadge: false, category: defaultProps.category },
-    { isArchived: true, hasPaidBadge: true, category: defaultProps.category },
-    { isArchived: false, hasPaidBadge: true, category: defaultProps.category },
+    { hasPaidBadge: false, category: defaultProps.category },
+    { hasPaidBadge: true, category: defaultProps.category },
     // with Green Pass
-    { isArchived: false, hasPaidBadge: false, category: euCovidCertCategory },
-    { isArchived: true, hasPaidBadge: false, category: euCovidCertCategory },
-    { isArchived: true, hasPaidBadge: true, category: euCovidCertCategory },
-    { isArchived: false, hasPaidBadge: true, category: euCovidCertCategory }
+    { hasPaidBadge: false, category: euCovidCertCategory },
+    { hasPaidBadge: true, category: euCovidCertCategory }
   ].forEach(testProps => {
-    describe(`when isArchived=${testProps.isArchived} hasPaidBadge=${testProps.hasPaidBadge} category=${testProps.category.tag}`, () => {
+    describe(`when hasPaidBadge=${testProps.hasPaidBadge} category=${testProps.category.tag}`, () => {
       it("should match the snapshot", () => {
         expect(
           render(<Item {...defaultProps} {...testProps} />).toJSON()

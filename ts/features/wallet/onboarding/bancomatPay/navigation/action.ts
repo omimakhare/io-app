@@ -1,5 +1,6 @@
-import { NavigationActions } from "react-navigation";
+import { CommonActions } from "@react-navigation/native";
 import NavigationService from "../../../../../navigation/NavigationService";
+import ROUTES from "../../../../../navigation/routes";
 import WALLET_ONBOARDING_BPAY_ROUTES from "./routes";
 
 /**
@@ -8,8 +9,11 @@ import WALLET_ONBOARDING_BPAY_ROUTES from "./routes";
  */
 export const navigateToOnboardingBPaySearchStartScreen = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BPAY_ROUTES.START
+    CommonActions.navigate(ROUTES.WALLET_NAVIGATOR, {
+      screen: WALLET_ONBOARDING_BPAY_ROUTES.MAIN,
+      params: {
+        screen: WALLET_ONBOARDING_BPAY_ROUTES.START
+      }
     })
   );
 
@@ -19,8 +23,11 @@ export const navigateToOnboardingBPaySearchStartScreen = () =>
  */
 export const navigateToOnboardingBPayChooseBank = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BPAY_ROUTES.CHOOSE_BANK
+    CommonActions.navigate(ROUTES.WALLET_NAVIGATOR, {
+      screen: WALLET_ONBOARDING_BPAY_ROUTES.MAIN,
+      params: {
+        screen: WALLET_ONBOARDING_BPAY_ROUTES.CHOOSE_BANK
+      }
     })
   );
 
@@ -30,19 +37,11 @@ export const navigateToOnboardingBPayChooseBank = () =>
  */
 export const navigateToOnboardingBPaySearchAvailableUserAccount = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BPAY_ROUTES.SEARCH_AVAILABLE_USER_ACCOUNT
-    })
-  );
-
-/**
- * @deprecated Do not use this method when you have access to a navigation prop or useNavigation since it will behave differently,
- * and many helper methods specific to screens won't be available.
- */
-export const navigateToOnboardingBPayAdd = () =>
-  NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BPAY_ROUTES.ADD_BPAY
+    CommonActions.navigate(ROUTES.WALLET_NAVIGATOR, {
+      screen: WALLET_ONBOARDING_BPAY_ROUTES.MAIN,
+      params: {
+        screen: WALLET_ONBOARDING_BPAY_ROUTES.SEARCH_AVAILABLE_USER_ACCOUNT
+      }
     })
   );
 
@@ -52,7 +51,10 @@ export const navigateToOnboardingBPayAdd = () =>
  */
 export const navigateToActivateBpdOnNewBPay = () =>
   NavigationService.dispatchNavigationAction(
-    NavigationActions.navigate({
-      routeName: WALLET_ONBOARDING_BPAY_ROUTES.ACTIVATE_BPD_NEW
+    CommonActions.navigate(ROUTES.WALLET_NAVIGATOR, {
+      screen: WALLET_ONBOARDING_BPAY_ROUTES.MAIN,
+      params: {
+        screen: WALLET_ONBOARDING_BPAY_ROUTES.ACTIVATE_BPD_NEW
+      }
     })
   );

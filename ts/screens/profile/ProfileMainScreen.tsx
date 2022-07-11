@@ -1,13 +1,8 @@
+import AsyncStorage from "@react-native-community/async-storage";
 import { Millisecond } from "italia-ts-commons/lib/units";
 import { List, ListItem, Text, Toast, View } from "native-base";
 import * as React from "react";
 import { Alert, ScrollView, StyleSheet } from "react-native";
-import {
-  NavigationEvents,
-  NavigationEventSubscription,
-  NavigationScreenProp,
-  NavigationState
-} from "react-navigation";
 import { connect } from "react-redux";
 import { TranslationKeys } from "../../../locales/locales";
 import ButtonDefaultOpacity from "../../components/ButtonDefaultOpacity";
@@ -26,9 +21,12 @@ import Markdown from "../../components/ui/Markdown";
 import Switch from "../../components/ui/Switch";
 import { isPlaygroundsEnabled } from "../../config";
 import I18n from "../../i18n";
+import { IOStackNavigationRouteProps } from "../../navigation/params/AppParamsList";
+import { MainTabParamsList } from "../../navigation/params/MainTabParamsList";
 import ROUTES from "../../navigation/routes";
 import { sessionExpired } from "../../store/actions/authentication";
 import { setDebugModeEnabled } from "../../store/actions/debug";
+import { navigateToLogout } from "../../store/actions/navigation";
 import { preferencesPagoPaTestEnvironmentSetEnabled } from "../../store/actions/persistedPreferences";
 import { clearCache } from "../../store/actions/profile";
 import { Dispatch } from "../../store/actions/types";
@@ -43,16 +41,10 @@ import { GlobalState } from "../../store/reducers/types";
 import customVariables from "../../theme/variables";
 import { getAppVersion } from "../../utils/appVersion";
 import { clipboardSetStringWithFeedback } from "../../utils/clipboard";
-import { isDevEnv } from "../../utils/environment";
-import { setStatusBarColorAndBackground } from "../../utils/statusBar";
-import { navigateToLogout } from "../../store/actions/navigation";
 import { getDeviceId } from "../../utils/device";
+import { isDevEnv } from "../../utils/environment";
 
-type OwnProps = Readonly<{
-  navigation: NavigationScreenProp<NavigationState>;
-}>;
-
-type Props = OwnProps &
+type Props = IOStackNavigationRouteProps<MainTabParamsList, "PROFILE_MAIN"> &
   LightModalContextInterface &
   ReturnType<typeof mapDispatchToProps> &
   ReturnType<typeof mapStateToProps>;
@@ -105,8 +97,6 @@ const RESET_COUNTER_TIMEOUT = 2000 as Millisecond;
  * A screen to show all the options related to the user profile
  */
 class ProfileMainScreen extends React.PureComponent<Props, State> {
-  private navListener?: NavigationEventSubscription;
-
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -115,20 +105,7 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
     this.handleClearCachePress = this.handleClearCachePress.bind(this);
   }
 
-  public componentDidMount() {
-    // eslint-disable-next-line functional/immutable-data
-    this.navListener = this.props.navigation.addListener("didFocus", () => {
-      setStatusBarColorAndBackground(
-        "light-content",
-        customVariables.brandDarkGray
-      );
-    });
-  }
-
   public componentWillUnmount() {
-    if (this.navListener) {
-      this.navListener.remove();
-    }
     // This ensures modals will be closed (if there are some opened)
     this.props.hideModal();
     if (this.idResetTap) {
@@ -291,16 +268,8 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
     clearInterval(this.idResetTap);
   };
 
-  private ServiceListRef = React.createRef<ScrollView>();
-  private scrollToTop = () => {
-    if (this.ServiceListRef.current) {
-      this.ServiceListRef.current.scrollTo({ x: 0, y: 0, animated: false });
-    }
-  };
-
   private renderDeveloperSection() {
     const {
-      backendInfo,
       dispatchSessionExpired,
       isDebugModeEnabled,
       isPagoPATestEnabled,
@@ -322,11 +291,27 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
           <>
             <ListItemComponent
               title={"MyPortal Web Playground"}
-              onPress={() => navigation.navigate(ROUTES.WEB_PLAYGROUND)}
+              onPress={() =>
+                navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
+                  screen: ROUTES.WEB_PLAYGROUND
+                })
+              }
             />
             <ListItemComponent
               title={"Markdown Playground"}
-              onPress={() => navigation.navigate(ROUTES.MARKDOWN_PLAYGROUND)}
+              onPress={() =>
+                navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
+                  screen: ROUTES.MARKDOWN_PLAYGROUND
+                })
+              }
+            />
+            <ListItemComponent
+              title={"CGN LandingPage Playground"}
+              onPress={() =>
+                navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
+                  screen: ROUTES.CGN_LANDING_PLAYGROUND
+                })
+              }
             />
           </>
         )}
@@ -334,7 +319,11 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
         {/* Showroom */}
         <ListItemComponent
           title={I18n.t("profile.main.showroom")}
-          onPress={() => navigation.navigate(ROUTES.SHOWROOM)}
+          onPress={() =>
+            navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
+              screen: ROUTES.SHOWROOM
+            })
+          }
           isFirstItem={true}
         />
 
@@ -351,15 +340,6 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
         )}
         {isDebugModeEnabled && (
           <React.Fragment>
-            {backendInfo &&
-              this.debugListItem(
-                `${I18n.t("profile.main.backendVersion")} ${
-                  backendInfo.version
-                }`,
-                () => clipboardSetStringWithFeedback(backendInfo.version),
-                false
-              )}
-
             {isDevEnv &&
               sessionToken &&
               this.debugListItem(
@@ -409,6 +389,37 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
                 dispatchSessionExpired,
                 true
               )}
+            {isDevEnv &&
+              this.debugListItem(
+                I18n.t("profile.main.clearAsyncStorage"),
+                () => {
+                  void AsyncStorage.clear();
+                },
+                true
+              )}
+            {isDevEnv &&
+              this.debugListItem(
+                I18n.t("profile.main.dumpAsyncStorage"),
+                () => {
+                  /* eslint-disable no-console */
+                  console.log("[DUMP START]");
+                  AsyncStorage.getAllKeys()
+                    .then(keys => {
+                      console.log(`\tAvailable keys: ${keys.join(", ")}`);
+                      return Promise.all(
+                        keys.map(key =>
+                          AsyncStorage.getItem(key).then(value => {
+                            console.log(`\tValue for ${key}\n\t\t`, value);
+                          })
+                        )
+                      );
+                    })
+                    .then(() => console.log("[DUMP END]"))
+                    .catch(e => console.error(e));
+                  /* eslint-enable no-console */
+                },
+                false
+              )}
           </React.Fragment>
         )}
       </React.Fragment>
@@ -431,15 +442,18 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
     };
 
     const screenContent = () => (
-      <ScrollView ref={this.ServiceListRef} style={styles.whiteBg}>
-        <NavigationEvents onWillFocus={this.scrollToTop} />
+      <ScrollView style={styles.whiteBg}>
         <View spacer={true} />
         <List withContentLateralPadding={true}>
           {/* Data */}
           <ListItemComponent
             title={I18n.t("profile.main.data.title")}
             subTitle={I18n.t("profile.main.data.description")}
-            onPress={() => navigation.navigate(ROUTES.PROFILE_DATA)}
+            onPress={() =>
+              navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
+                screen: ROUTES.PROFILE_DATA
+              })
+            }
             isFirstItem
           />
 
@@ -447,21 +461,33 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
           <ListItemComponent
             title={I18n.t("profile.main.preferences.title")}
             subTitle={I18n.t("profile.main.preferences.description")}
-            onPress={() => navigation.navigate(ROUTES.PROFILE_PREFERENCES_HOME)}
+            onPress={() =>
+              navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
+                screen: ROUTES.PROFILE_PREFERENCES_HOME
+              })
+            }
           />
 
           {/* Security */}
           <ListItemComponent
             title={I18n.t("profile.main.security.title")}
             subTitle={I18n.t("profile.main.security.description")}
-            onPress={() => navigation.navigate(ROUTES.PROFILE_SECURITY)}
+            onPress={() =>
+              navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
+                screen: ROUTES.PROFILE_SECURITY
+              })
+            }
           />
 
           {/* Privacy */}
           <ListItemComponent
             title={I18n.t("profile.main.privacy.title")}
             subTitle={I18n.t("profile.main.privacy.description")}
-            onPress={() => navigation.navigate(ROUTES.PROFILE_PRIVACY_MAIN)}
+            onPress={() =>
+              navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
+                screen: ROUTES.PROFILE_PRIVACY_MAIN
+              })
+            }
           />
 
           {/* APP IO */}
@@ -511,7 +537,9 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
           <TouchableDefaultOpacity
             accessibilityRole={"button"}
             onPress={() =>
-              this.props.navigation.navigate(ROUTES.PROFILE_FISCAL_CODE)
+              this.props.navigation.navigate(ROUTES.PROFILE_NAVIGATOR, {
+                screen: ROUTES.PROFILE_FISCAL_CODE
+              })
             }
           >
             <FiscalCodeComponent type={"Preview"} />
@@ -527,7 +555,6 @@ class ProfileMainScreen extends React.PureComponent<Props, State> {
 }
 
 const mapStateToProps = (state: GlobalState) => ({
-  backendInfo: state.backendInfo.serverInfo,
   sessionToken: isLoggedIn(state.authentication)
     ? state.authentication.sessionToken
     : undefined,

@@ -1,17 +1,13 @@
+import { CompatNavigationProp } from "@react-navigation/compat";
 import { fromNullable } from "fp-ts/lib/Option";
-import Instabug from "instabug-reactnative";
 import { Text, View } from "native-base";
 import * as React from "react";
 import { StyleSheet } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
+import { RptIdFromString } from "@pagopa/io-pagopa-commons/lib/pagopa";
 import { EnteBeneficiario } from "../../../definitions/backend/EnteBeneficiario";
 import { PaymentRequestsGetResponse } from "../../../definitions/backend/PaymentRequestsGetResponse";
-import {
-  instabugLog,
-  openInstabugQuestionReport,
-  TypeLogs
-} from "../../boot/configureInstabug";
+import { ToolEnum } from "../../../definitions/content/AssistanceToolConfig";
 import ButtonDefaultOpacity from "../../components/ButtonDefaultOpacity";
 import CopyButtonComponent from "../../components/CopyButtonComponent";
 import ItemSeparatorComponent from "../../components/ItemSeparatorComponent";
@@ -23,9 +19,20 @@ import {
   PaymentSummaryComponent
 } from "../../components/wallet/PaymentSummaryComponent";
 import { SlidedContentComponent } from "../../components/wallet/SlidedContentComponent";
+import {
+  zendeskSelectedCategory,
+  zendeskSupportStart
+} from "../../features/zendesk/store/actions";
 import I18n from "../../i18n";
+import { IOStackNavigationProp } from "../../navigation/params/AppParamsList";
+import { WalletParamsList } from "../../navigation/params/WalletParamsList";
+import { Dispatch } from "../../store/actions/types";
+import { canShowHelpSelector } from "../../store/reducers/assistanceTools";
+import { assistanceToolConfigSelector } from "../../store/reducers/backendStatus";
 import { PaymentHistory } from "../../store/reducers/payments/history";
+import { isPaymentDoneSuccessfully } from "../../store/reducers/payments/utils";
 import { GlobalState } from "../../store/reducers/types";
+import { outcomeCodesSelector } from "../../store/reducers/wallet/outcomeCode";
 import customVariables from "../../theme/variables";
 import { Transaction } from "../../types/pagopa";
 import { formatDateAsLocal } from "../../utils/dates";
@@ -35,32 +42,30 @@ import {
   getErrorDescriptionV2,
   getPaymentHistoryDetails,
   getPaymentOutcomeCodeDescription,
-  getTransactionFee,
-  paymentInstabugTag
+  getTransactionFee
 } from "../../utils/payment";
 import { formatNumberCentsToAmount } from "../../utils/stringBuilder";
 import { isStringNullyOrEmpty } from "../../utils/strings";
-import { outcomeCodesSelector } from "../../store/reducers/wallet/outcomeCode";
-import { isPaymentDoneSuccessfully } from "../../store/reducers/payments/utils";
-import { assistanceToolConfigSelector } from "../../store/reducers/backendStatus";
-import { Dispatch } from "../../store/actions/types";
-import { zendeskSupportStart } from "../../features/zendesk/store/actions";
 import {
   addTicketCustomField,
   appendLog,
   assistanceToolRemoteConfig,
+  resetCustomFields,
+  zendeskBlockedPaymentRptIdId,
   zendeskCategoryId,
-  zendeskPaymentCategoryValue
+  zendeskPaymentCategory
 } from "../../utils/supportAssistance";
-import { ToolEnum } from "../../../definitions/content/AssistanceToolConfig";
-import { canShowHelpSelector } from "../../store/reducers/assistanceTools";
+import { ZendeskCategory } from "../../../definitions/content/ZendeskCategory";
 
-type NavigationParams = Readonly<{
+export type PaymentHistoryDetailsScreenNavigationParams = Readonly<{
   payment: PaymentHistory;
 }>;
 
-type Props = NavigationInjectedProps<NavigationParams> &
-  ReturnType<typeof mapStateToProps> &
+type Props = {
+  navigation: CompatNavigationProp<
+    IOStackNavigationProp<WalletParamsList, "PAYMENT_HISTORY_DETAIL_INFO">
+  >;
+} & ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps>;
 
 const styles = StyleSheet.create({
@@ -102,25 +107,23 @@ const renderItem = (label: string, value?: string) => {
  * Payment Details
  */
 class PaymentHistoryDetailsScreen extends React.Component<Props> {
-  private instabugLogAndOpenReport = () => {
-    Instabug.appendTags([paymentInstabugTag]);
-    instabugLog(
-      getPaymentHistoryDetails(this.props.navigation.getParam("payment")),
-      TypeLogs.INFO,
-      paymentInstabugTag
-    );
-    openInstabugQuestionReport();
-  };
-
   private zendeskAssistanceLogAndStart = () => {
+    resetCustomFields();
     // Set pagamenti_pagopa as category
-    addTicketCustomField(zendeskCategoryId, zendeskPaymentCategoryValue);
+    addTicketCustomField(zendeskCategoryId, zendeskPaymentCategory.value);
+
+    // Add rptId custom field
+    addTicketCustomField(
+      zendeskBlockedPaymentRptIdId,
+      RptIdFromString.encode(this.props.navigation.getParam("payment").data)
+    );
     // Append the payment history details in the log
     appendLog(
       getPaymentHistoryDetails(this.props.navigation.getParam("payment"))
     );
 
     this.props.zendeskSupportWorkunitStart();
+    this.props.zendeskSelectedCategory(zendeskPaymentCategory);
   };
   private choosenTool = assistanceToolRemoteConfig(
     this.props.assistanceToolConfig
@@ -128,9 +131,6 @@ class PaymentHistoryDetailsScreen extends React.Component<Props> {
 
   private handleAskAssistance = () => {
     switch (this.choosenTool) {
-      case ToolEnum.instabug:
-        this.instabugLogAndOpenReport();
-        break;
       case ToolEnum.zendesk:
         this.zendeskAssistanceLogAndStart();
         break;
@@ -268,7 +268,7 @@ class PaymentHistoryDetailsScreen extends React.Component<Props> {
     return (
       <BaseScreenComponent
         goBack={() => this.props.navigation.goBack()}
-        showInstabugChat={false}
+        showChat={false}
         dark={true}
         headerTitle={I18n.t("payment.details.info.title")}
       >
@@ -384,7 +384,9 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   zendeskSupportWorkunitStart: () =>
     dispatch(
       zendeskSupportStart({ startingRoute: "n/a", assistanceForPayment: true })
-    )
+    ),
+  zendeskSelectedCategory: (category: ZendeskCategory) =>
+    dispatch(zendeskSelectedCategory(category))
 });
 
 export default connect(

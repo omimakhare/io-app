@@ -1,12 +1,18 @@
-import { Option } from "fp-ts/lib/Option";
 import { AmountInEuroCents, RptId } from "@pagopa/io-pagopa-commons/lib/pagopa";
-import { Content, View } from "native-base";
+import { CompatNavigationProp } from "@react-navigation/compat";
+import { Option } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
+import { Content, View } from "native-base";
 import * as React from "react";
 import { SafeAreaView } from "react-native";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { PaymentRequestsGetResponse } from "../../../definitions/backend/PaymentRequestsGetResponse";
+import BpayLogo from "../../../img/wallet/payment-methods/bancomat_pay.svg";
+import CreditCard from "../../../img/wallet/payment-methods/creditcard.svg";
+import PaypalLogo from "../../../img/wallet/payment-methods/paypal/paypal_logo.svg";
+import SatispayLogo from "../../../img/wallet/payment-methods/satispay-logo.svg";
+import GDOLogo from "../../../img/wallet/unknown-gdo-primary.svg";
+import { H1 } from "../../components/core/typography/H1";
 import { IOStyles } from "../../components/core/variables/IOStyles";
 import BaseScreenComponent, {
   ContextualHelpPropsMarkdown
@@ -18,59 +24,64 @@ import PaymentMethodsList, {
 } from "../../components/wallet/PaymentMethodsList";
 import { bpdEnabled } from "../../config";
 import { walletAddBancomatStart } from "../../features/wallet/onboarding/bancomat/store/actions";
+import { walletAddBPayStart } from "../../features/wallet/onboarding/bancomatPay/store/actions";
+import {
+  OnOnboardingCompleted,
+  walletAddPaypalStart
+} from "../../features/wallet/onboarding/paypal/store/actions";
 import { walletAddPrivativeStart } from "../../features/wallet/onboarding/privative/store/actions";
+import { walletAddSatispayStart } from "../../features/wallet/onboarding/satispay/store/actions";
 import I18n from "../../i18n";
+import { IOStackNavigationProp } from "../../navigation/params/AppParamsList";
+import { WalletParamsList } from "../../navigation/params/WalletParamsList";
 import {
   navigateBack,
   navigateToWalletAddCreditCard
 } from "../../store/actions/navigation";
 import { Dispatch } from "../../store/actions/types";
-import { H1 } from "../../components/core/typography/H1";
-import PaypalLogo from "../../../img/wallet/payment-methods/paypal/paypal_logo.svg";
-import BpayLogo from "../../../img/wallet/payment-methods/bancomat_pay.svg";
-import SatispayLogo from "../../../img/wallet/payment-methods/satispay-logo.svg";
-import CreditCard from "../../../img/wallet/payment-methods/creditcard.svg";
-import GDOLogo from "../../../img/wallet/unknown-gdo-primary.svg";
-import { walletAddBPayStart } from "../../features/wallet/onboarding/bancomatPay/store/actions";
-import { walletAddSatispayStart } from "../../features/wallet/onboarding/satispay/store/actions";
 import {
-  OnOnboardingCompleted,
-  walletAddPaypalStart
-} from "../../features/wallet/onboarding/paypal/store/actions";
+  bancomatPayConfigSelector,
+  isPaypalEnabledSelector
+} from "../../store/reducers/backendStatus";
 import { GlobalState } from "../../store/reducers/types";
 import { paypalSelector } from "../../store/reducers/wallet/wallets";
 import { AsyncAlert } from "../../utils/asyncAlert";
-import { isPaypalEnabledSelector } from "../../store/reducers/backendStatus";
+import { isTestEnv } from "../../utils/environment";
 
-type NavigationParams = Readonly<{
+export type AddPaymentMethodScreenNavigationParams = Readonly<{
   inPayment: Option<{
     rptId: RptId;
     initialAmount: AmountInEuroCents;
     verifica: PaymentRequestsGetResponse;
     idPayment: string;
   }>;
-  // if set it will shown only those method can pay with pagoPA
+  // if set, only those methods that can pay with pagoPA will be shown
   showOnlyPayablePaymentMethods?: true;
   keyFrom?: string;
 }>;
 
-type OwnProps = NavigationInjectedProps<NavigationParams>;
+type OwnProps = {
+  navigation: CompatNavigationProp<
+    IOStackNavigationProp<WalletParamsList, "WALLET_ADD_PAYMENT_METHOD">
+  >;
+};
 
-type Props = ReturnType<typeof mapDispatchToProps> &
-  ReturnType<typeof mapStateToProps> &
-  OwnProps;
+type Props = OwnProps &
+  ReturnType<typeof mapDispatchToProps> &
+  ReturnType<typeof mapStateToProps>;
 
 const contextualHelpMarkdown: ContextualHelpPropsMarkdown = {
   title: "wallet.newPaymentMethod.contextualHelpTitle",
   body: "wallet.newPaymentMethod.contextualHelpContent"
 };
 
-const getpaymentMethods = (
+const getPaymentMethods = (
   props: Props,
   options: {
     onlyPaymentMethodCanPay: boolean;
     isPaymentOnGoing: boolean;
     isPaypalEnabled: boolean;
+    canOnboardBPay: boolean;
   }
 ): ReadonlyArray<IPaymentMethod> => [
   {
@@ -121,7 +132,7 @@ const getpaymentMethods = (
     name: I18n.t("wallet.methods.bancomatPay.name"),
     description: I18n.t("wallet.methods.bancomatPay.description"),
     icon: BpayLogo,
-    status: !options.onlyPaymentMethodCanPay ? "implemented" : "notImplemented",
+    status: options.canOnboardBPay ? "implemented" : "notImplemented",
     onPress: props.startBPayOnboarding,
     section: "digital_payments"
   },
@@ -209,10 +220,12 @@ const AddPaymentMethodScreen: React.FunctionComponent<Props> = (
               <View spacer={true} />
               {/* since we're paying show only those method can pay with pagoPA */}
               <PaymentMethodsList
-                paymentMethods={getpaymentMethods(props, {
+                paymentMethods={getPaymentMethods(props, {
                   onlyPaymentMethodCanPay: true,
                   isPaymentOnGoing: inPayment.isSome(),
-                  isPaypalEnabled: props.isPaypalEnabled
+                  isPaypalEnabled: props.isPaypalEnabled,
+                  // can onboard bpay only when both FF are enabled
+                  canOnboardBPay: props.canOnboardBPay && props.canPayWithBPay
                 })}
               />
             </View>
@@ -220,11 +233,12 @@ const AddPaymentMethodScreen: React.FunctionComponent<Props> = (
         ) : (
           <Content noPadded={true} style={IOStyles.horizontalContentPadding}>
             <PaymentMethodsList
-              paymentMethods={getpaymentMethods(props, {
+              paymentMethods={getPaymentMethods(props, {
                 onlyPaymentMethodCanPay:
                   canAddOnlyPayablePaymentMethod === true,
                 isPaymentOnGoing: inPayment.isSome(),
-                isPaypalEnabled: props.isPaypalEnabled
+                isPaypalEnabled: props.isPaypalEnabled,
+                canOnboardBPay: props.canOnboardBPay
               })}
             />
           </Content>
@@ -253,12 +267,22 @@ const mapDispatchToProps = (dispatch: Dispatch, props: OwnProps) => ({
     })
 });
 
-const mapStateToProps = (state: GlobalState) => ({
-  isPaypalAlreadyAdded: pot.isSome(paypalSelector(state)),
-  isPaypalEnabled: isPaypalEnabledSelector(state)
-});
+const mapStateToProps = (state: GlobalState) => {
+  const bpayConfig = bancomatPayConfigSelector(state);
+  return {
+    isPaypalAlreadyAdded: pot.isSome(paypalSelector(state)),
+    isPaypalEnabled: isPaypalEnabledSelector(state),
+    canOnboardBPay: bpayConfig.onboarding,
+    canPayWithBPay: bpayConfig.payment
+  };
+};
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(AddPaymentMethodScreen);
+
+// to keep solid code encapsulation
+export const testableFunctions = {
+  getPaymentMethods: isTestEnv ? getPaymentMethods : undefined
+};

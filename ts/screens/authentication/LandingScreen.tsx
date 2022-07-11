@@ -2,6 +2,7 @@
  * A screen where the user can choose to login with SPID or get more informations.
  * It includes a carousel with highlights on the app functionalities
  */
+import { CompatNavigationProp } from "@react-navigation/compat";
 import { none, Option, some } from "fp-ts/lib/Option";
 import * as pot from "italia-ts-commons/lib/pot";
 import JailMonkey from "jail-monkey";
@@ -9,23 +10,31 @@ import { Content, Text, View } from "native-base";
 import * as React from "react";
 import { Alert, StyleSheet } from "react-native";
 import DeviceInfo from "react-native-device-info";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
+import sessionExpiredImg from "../../../img/landing/session_expired.png";
 import ButtonDefaultOpacity from "../../components/ButtonDefaultOpacity";
 import CieNotSupported from "../../components/cie/CieNotSupported";
 import ContextualInfo from "../../components/ContextualInfo";
+import { Link } from "../../components/core/typography/Link";
 import { DevScreenButton } from "../../components/DevScreenButton";
 import { withLightModalContext } from "../../components/helpers/withLightModalContext";
 import { HorizontalScroll } from "../../components/HorizontalScroll";
+import { renderInfoRasterImage } from "../../components/infoScreen/imageRendering";
+import { InfoScreenComponent } from "../../components/infoScreen/InfoScreenComponent";
 import { LandingCardComponent } from "../../components/LandingCardComponent";
 import LoadingSpinnerOverlay from "../../components/LoadingSpinnerOverlay";
 import BaseScreenComponent, {
   ContextualHelpPropsMarkdown
 } from "../../components/screens/BaseScreenComponent";
+import SectionStatusComponent from "../../components/SectionStatus";
 import IconFont from "../../components/ui/IconFont";
 import { LightModalContextInterface } from "../../components/ui/LightModal";
 import I18n from "../../i18n";
 import { IdentityProvider } from "../../models/IdentityProvider";
+import {
+  AppParamsList,
+  IOStackNavigationProp
+} from "../../navigation/params/AppParamsList";
 import ROUTES from "../../navigation/routes";
 import {
   idpSelected,
@@ -45,14 +54,12 @@ import variables from "../../theme/variables";
 import { ComponentProps } from "../../types/react";
 import { isDevEnv } from "../../utils/environment";
 import RootedDeviceModal from "../modal/RootedDeviceModal";
-import { InfoScreenComponent } from "../../components/infoScreen/InfoScreenComponent";
-import { renderInfoRasterImage } from "../../components/infoScreen/imageRendering";
-import sessionExpiredImg from "../../../img/landing/session_expired.png";
-import SectionStatusComponent from "../../components/SectionStatus";
-import { Link } from "../../components/core/typography/Link";
 
-type Props = NavigationInjectedProps &
-  LightModalContextInterface &
+type Props = {
+  navigation: CompatNavigationProp<
+    IOStackNavigationProp<AppParamsList, "INGRESS">
+  >;
+} & LightModalContextInterface &
   ReturnType<typeof mapStateToProps> &
   ReturnType<typeof mapDispatchToProps>;
 
@@ -185,26 +192,32 @@ class LandingScreen extends React.PureComponent<Props, State> {
   };
 
   private navigateToMarkdown = () =>
-    this.props.navigation.navigate(ROUTES.MARKDOWN);
+    this.props.navigation.navigate({
+      routeName: ROUTES.MARKDOWN
+    });
 
   private navigateToIdpSelection = () =>
-    this.props.navigation.navigate(ROUTES.AUTHENTICATION_IDP_SELECTION);
+    this.props.navigation.navigate({
+      routeName: ROUTES.AUTHENTICATION_IDP_SELECTION
+    });
 
   private navigateToCiePinScreen = () => {
     if (this.isCieSupported()) {
       this.props.dispatchIdpCieSelected();
-      this.props.navigation.navigate(ROUTES.CIE_PIN_SCREEN);
+      this.props.navigation.navigate({
+        routeName: ROUTES.CIE_PIN_SCREEN
+      });
     } else {
       this.openUnsupportedCIEModal();
     }
   };
 
   private navigateToSpidCieInformationRequest = () =>
-    this.props.navigation.navigate(
-      this.isCieSupported()
+    this.props.navigation.navigate({
+      routeName: this.isCieSupported()
         ? ROUTES.AUTHENTICATION_SPID_CIE_INFORMATION
         : ROUTES.AUTHENTICATION_SPID_INFORMATION
-    );
+    });
 
   private renderCardComponents = () => {
     const cardProps = getCards(this.isCieSupported());

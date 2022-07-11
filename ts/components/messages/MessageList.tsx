@@ -17,6 +17,7 @@ import {
 import Placeholder from "rn-placeholder";
 import { CreatedMessageWithContentAndAttachments } from "../../../definitions/backend/CreatedMessageWithContentAndAttachments";
 import { ServicePublic } from "../../../definitions/backend/ServicePublic";
+import { UaDonationsBanner } from "../../features/uaDonations/components/UaDonationsBanner";
 import I18n from "../../i18n";
 import { MessagesStateAndStatus } from "../../store/reducers/entities/messages";
 import { MessageState } from "../../store/reducers/entities/messages/messagesById";
@@ -44,7 +45,7 @@ type AnimatedProps = {
 };
 
 type OwnProps = {
-  messageStates: ReadonlyArray<MessageState>;
+  messageStates: ReadonlyArray<MessagesStateAndStatus>;
   servicesById: ServicesByIdState;
   paymentsByRptId: PaymentByRptIdState;
   refreshing: boolean;
@@ -177,8 +178,6 @@ const MessageListItemPlaceholder = (
 
 const ItemSeparator = () => <ItemSeparatorComponent noPadded={true} />;
 
-const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
-
 class MessageList extends React.Component<Props, State> {
   private flatListRef = React.createRef<FlatList>();
 
@@ -271,7 +270,7 @@ class MessageList extends React.Component<Props, State> {
   };
 
   private getItemLayout = (
-    _: ReadonlyArray<MessageState> | null,
+    _: ReadonlyArray<MessagesStateAndStatus> | null | undefined,
     index: number
   ) => this.state.itemLayouts[index];
 
@@ -332,7 +331,8 @@ class MessageList extends React.Component<Props, State> {
             style={styles.activityIndicator}
           />
         )}
-        <AnimatedFlatList
+        <Animated.FlatList
+          ListHeaderComponent={<UaDonationsBanner />}
           ref={this.flatListRef}
           style={styles.padded}
           scrollEnabled={true}

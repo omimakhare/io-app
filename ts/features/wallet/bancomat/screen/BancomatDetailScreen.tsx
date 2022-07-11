@@ -1,11 +1,13 @@
+import { CompatNavigationProp } from "@react-navigation/compat";
 import { View } from "native-base";
 import * as React from "react";
-import { NavigationInjectedProps } from "react-navigation";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
 import ItemSeparatorComponent from "../../../../components/ItemSeparatorComponent";
 import I18n from "../../../../i18n";
 import { mixpanelTrack } from "../../../../mixpanel";
+import { IOStackNavigationProp } from "../../../../navigation/params/AppParamsList";
+import { WalletParamsList } from "../../../../navigation/params/WalletParamsList";
 import { GlobalState } from "../../../../store/reducers/types";
 import { BancomatPaymentMethod } from "../../../../types/pagopa";
 import { showToast } from "../../../../utils/showToast";
@@ -15,13 +17,17 @@ import { navigateToOnboardingCoBadgeChooseTypeStartScreen } from "../../onboardi
 import BancomatCard from "../component/bancomatCard/BancomatCard";
 import BancomatInformation from "./BancomatInformation";
 
-type NavigationParams = Readonly<{
+export type BancomatDetailScreenNavigationParams = Readonly<{
+  // TODO: we should use only the id and retrieve it from the store, otherwise we lose all the updates
   bancomat: BancomatPaymentMethod;
 }>;
 
 type Props = ReturnType<typeof mapDispatchToProps> &
-  ReturnType<typeof mapStateToProps> &
-  NavigationInjectedProps<NavigationParams>;
+  ReturnType<typeof mapStateToProps> & {
+    navigation: CompatNavigationProp<
+      IOStackNavigationProp<WalletParamsList, "WALLET_BANCOMAT_DETAIL">
+    >;
+  };
 
 /**
  * Start the cobadge onboarding, if the abi is defined

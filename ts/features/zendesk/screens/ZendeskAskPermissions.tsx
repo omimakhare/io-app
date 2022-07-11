@@ -1,56 +1,73 @@
-import React, { ReactNode } from "react";
-import { SafeAreaView, ScrollView } from "react-native";
+import { CompatNavigationProp } from "@react-navigation/compat";
 import { constNull } from "fp-ts/lib/function";
 import { ListItem, View } from "native-base";
+import React, { ReactNode } from "react";
+import { SafeAreaView, ScrollView } from "react-native";
 import { useDispatch } from "react-redux";
-import { NavigationInjectedProps } from "react-navigation";
-import I18n from "../../../i18n";
-import BaseScreenComponent from "../../../components/screens/BaseScreenComponent";
-import { IOStyles } from "../../../components/core/variables/IOStyles";
-import { H1 } from "../../../components/core/typography/H1";
-import FooterWithButtons from "../../../components/ui/FooterWithButtons";
-import { useNavigationContext } from "../../../utils/hooks/useOnFocus";
-import { navigateToZendeskChooseCategory } from "../store/actions/navigation";
-import { H4 } from "../../../components/core/typography/H4";
-import { H3 } from "../../../components/core/typography/H3";
-import FiscalCodeIcon from "../../../../img/assistance/fiscalCode.svg";
-import NameSurnameIcon from "../../../../img/assistance/nameSurname.svg";
-import WebSiteIcon from "../../../../img/assistance/website.svg";
-import InfoIcon from "../../../../img/assistance/info.svg";
-import DeviceIcon from "../../../../img/assistance/telefonia.svg";
-import LoginIcon from "../../../../img/assistance/login.svg";
-import HistoryIcon from "../../../../img/assistance/history.svg";
-import EmailIcon from "../../../../img/assistance/email.svg";
-import StockIcon from "../../../../img/assistance/giacenza.svg";
 import BatteryIcon from "../../../../img/assistance/battery.svg";
+import EmailIcon from "../../../../img/assistance/email.svg";
+import FiscalCodeIcon from "../../../../img/assistance/fiscalCode.svg";
 import GalleryIcon from "../../../../img/assistance/gallery.svg";
+import StockIcon from "../../../../img/assistance/giacenza.svg";
+import HistoryIcon from "../../../../img/assistance/history.svg";
+import InfoIcon from "../../../../img/assistance/info.svg";
+import LoginIcon from "../../../../img/assistance/login.svg";
+import NameSurnameIcon from "../../../../img/assistance/nameSurname.svg";
+import DeviceIcon from "../../../../img/assistance/telefonia.svg";
+import WebSiteIcon from "../../../../img/assistance/website.svg";
+import { H1 } from "../../../components/core/typography/H1";
+import { H3 } from "../../../components/core/typography/H3";
+import { H4 } from "../../../components/core/typography/H4";
 import { H5 } from "../../../components/core/typography/H5";
+import { IOStyles } from "../../../components/core/variables/IOStyles";
+import BaseScreenComponent from "../../../components/screens/BaseScreenComponent";
+import FooterWithButtons from "../../../components/ui/FooterWithButtons";
+import I18n from "../../../i18n";
+import { mixpanelTrack } from "../../../mixpanel";
+import { IOStackNavigationProp } from "../../../navigation/params/AppParamsList";
 import { useIOSelector } from "../../../store/hooks";
 import {
   idpSelector,
   isLoggedIn
 } from "../../../store/reducers/authentication";
+import { appVersionHistorySelector } from "../../../store/reducers/installation";
 import {
   profileEmailSelector,
   profileFiscalCodeSelector,
   profileNameSurnameSelector
 } from "../../../store/reducers/profile";
-import { getModel, getSystemVersion } from "../../../utils/device";
-import { isIos } from "../../../utils/platform";
 import { getAppVersion } from "../../../utils/appVersion";
-import { zendeskSupportCompleted } from "../store/actions";
-import { openWebUrl } from "../../../utils/url";
-import { zendeskConfigSelector } from "../store/reducers";
-import { isReady } from "../../bonus/bpd/model/RemoteValue";
+import { getModel, getSystemVersion } from "../../../utils/device";
+import { getFullLocale } from "../../../utils/locale";
+import { isIos } from "../../../utils/platform";
+import { showToast } from "../../../utils/showToast";
 import {
   addTicketCustomField,
   addTicketTag,
+  anonymousAssistanceAddress,
+  anonymousAssistanceAddressWithSubject,
   openSupportTicket,
   zendeskCurrentAppVersionId,
   zendeskDeviceAndOSId,
-  zendeskidentityProviderId
+  zendeskidentityProviderId,
+  zendeskVersionsHistoryId
 } from "../../../utils/supportAssistance";
-import { mixpanelTrack } from "../../../mixpanel";
+import { handleItemOnPress } from "../../../utils/url";
+import { ZendeskParamsList } from "../navigation/params";
+import {
+  zendeskSupportCompleted,
+  zendeskSupportFailure
+} from "../store/actions";
+import {
+  zendeskSelectedCategorySelector,
+  zendeskSelectedSubcategorySelector
+} from "../store/reducers";
+
+/**
+ * Transform an array of string into a Zendesk
+ * value to display.
+ */
+const arrayToZendeskValue = (arr: Array<string>) => arr.join(", ");
 
 /**
  * id is optional since some items should recognized since they can be removed from the whole list
@@ -62,6 +79,7 @@ type Item = {
   title: string;
   value?: string;
   zendeskId?: string;
+  testId: string;
 };
 
 type ItemProps = {
@@ -69,7 +87,6 @@ type ItemProps = {
   nameSurname: string;
   email: string;
   deviceDescription: string;
-  currentVersion: string;
   identityProvider: string;
 };
 
@@ -80,68 +97,78 @@ const getItems = (props: ItemProps): ReadonlyArray<Item> => [
     id: "profileNameSurname",
     icon: <NameSurnameIcon {...iconProps} />,
     title: I18n.t("support.askPermissions.nameSurname"),
-    value: props.nameSurname
+    value: props.nameSurname,
+    testId: "profileNameSurname"
   },
   {
     id: "profileFiscalCode",
     icon: <FiscalCodeIcon {...iconProps} />,
     title: I18n.t("support.askPermissions.fiscalCode"),
-    value: props.fiscalCode
+    value: props.fiscalCode,
+    testId: "profileFiscalCode"
   },
   {
     id: "profileEmail",
     icon: <EmailIcon {...iconProps} />,
     title: I18n.t("support.askPermissions.emailAddress"),
-    value: props.email
+    value: props.email,
+    testId: "profileEmail"
   },
   {
     id: "galleryProminentDisclosure",
     icon: <GalleryIcon {...iconProps} />,
     title: I18n.t("support.askPermissions.prominentDisclosure"),
-    value: I18n.t("support.askPermissions.prominentDisclosureData")
+    value: I18n.t("support.askPermissions.prominentDisclosureData"),
+    testId: "galleryProminentDisclosure"
   },
   {
     id: "paymentIssues",
     icon: <StockIcon {...iconProps} />,
     title: I18n.t("support.askPermissions.stock"),
-    value: I18n.t("support.askPermissions.stockValue")
+    value: I18n.t("support.askPermissions.stockValue"),
+    testId: "paymentIssues"
   },
   {
     icon: <DeviceIcon {...iconProps} />,
     title: I18n.t("support.askPermissions.deviceAndOS"),
     value: props.deviceDescription,
-    zendeskId: zendeskDeviceAndOSId
+    zendeskId: zendeskDeviceAndOSId,
+    testId: "deviceAndOS"
   },
   {
     icon: <BatteryIcon {...iconProps} />,
     title: I18n.t("support.askPermissions.devicePerformance"),
-    value: I18n.t("support.askPermissions.devicePerformanceData")
+    value: I18n.t("support.askPermissions.devicePerformanceData"),
+    testId: "devicePerformance"
   },
   {
     icon: <WebSiteIcon {...iconProps} />,
-    title: I18n.t("support.askPermissions.ipAddress")
+    title: I18n.t("support.askPermissions.ipAddress"),
+    testId: "ipAddress"
   },
   {
     icon: <InfoIcon {...iconProps} />,
-    title: I18n.t("support.askPermissions.currentAppVersion"),
-    value: props.currentVersion,
-    zendeskId: zendeskCurrentAppVersionId
+    title: I18n.t("support.askPermissions.appVersionsHistory"),
+    value: I18n.t("support.askPermissions.appVersionsHistoryValue"),
+    testId: "appVersionsHistory"
   },
   {
     icon: <LoginIcon {...iconProps} />,
     title: I18n.t("support.askPermissions.identityProvider"),
     value: props.identityProvider,
-    zendeskId: zendeskidentityProviderId
+    zendeskId: zendeskidentityProviderId,
+    testId: "identityProvider"
   },
   {
     icon: <HistoryIcon {...iconProps} />,
     title: I18n.t("support.askPermissions.navigationData"),
-    value: I18n.t("support.askPermissions.navigationDataValue")
+    value: I18n.t("support.askPermissions.navigationDataValue"),
+    testId: "navigationData"
   }
 ];
 
 const ItemComponent = (props: Item) => (
-  <ListItem>
+  <ListItem testID={props.testId}>
     <View
       style={{
         flex: 1,
@@ -159,7 +186,15 @@ const ItemComponent = (props: Item) => (
   </ListItem>
 );
 
-type Props = NavigationInjectedProps<{ assistanceForPayment: boolean }>;
+export type ZendeskAskPermissionsNavigationParams = {
+  assistanceForPayment: boolean;
+};
+
+type Props = {
+  navigation: CompatNavigationProp<
+    IOStackNavigationProp<ZendeskParamsList, "ZENDESK_ASK_PERMISSIONS">
+  >;
+};
 /**
  * this screen shows the kinds of data the app could collect when a user is asking for assistance
  * @constructor
@@ -169,11 +204,8 @@ const ZendeskAskPermissions = (props: Props) => {
     "assistanceForPayment"
   );
 
-  const navigation = useNavigationContext();
   const dispatch = useDispatch();
   const workUnitCompleted = () => dispatch(zendeskSupportCompleted());
-  const zendeskConfig = useIOSelector(zendeskConfigSelector);
-
   const notAvailable = I18n.t("global.remoteStates.notAvailable");
   const isUserLoggedIn = useIOSelector(s => isLoggedIn(s.authentication));
   const identityProvider = useIOSelector(idpSelector)
@@ -182,6 +214,15 @@ const ZendeskAskPermissions = (props: Props) => {
   const fiscalCode = useIOSelector(profileFiscalCodeSelector) ?? notAvailable;
   const nameSurname = useIOSelector(profileNameSurnameSelector) ?? notAvailable;
   const email = useIOSelector(profileEmailSelector).getOrElse(notAvailable);
+  const versionsHistory = useIOSelector(appVersionHistorySelector);
+  const zendeskSelectedCategory = useIOSelector(
+    zendeskSelectedCategorySelector
+  );
+  const zendeskSelectedSubcategory = useIOSelector(
+    zendeskSelectedSubcategorySelector
+  );
+  const currentVersion = getAppVersion();
+
   const itemsProps: ItemProps = {
     fiscalCode,
     nameSurname,
@@ -189,12 +230,14 @@ const ZendeskAskPermissions = (props: Props) => {
     deviceDescription: `${getModel()} · ${
       isIos ? "iOS" : "Android"
     } · ${getSystemVersion()}`,
-    currentVersion: getAppVersion(),
     identityProvider
   };
 
-  const assistanceWebFormLink =
-    "https://io.assistenza.pagopa.it/hc/it-it/requests/new";
+  // It should never happens since it is selected in the previous screen
+  if (zendeskSelectedCategory === undefined) {
+    dispatch(zendeskSupportFailure("The category has not been selected"));
+    return null;
+  }
 
   const itemsToRemove: ReadonlyArray<string> = [
     // if user is not asking assistance for a payment, remove the related items from those ones shown
@@ -212,8 +255,24 @@ const ZendeskAskPermissions = (props: Props) => {
     // remove these item whose have no value associated
     .filter(it => it.value !== notAvailable);
 
+  const locale = getFullLocale();
   const handleOnCancel = () => {
-    openWebUrl(assistanceWebFormLink);
+    handleItemOnPress(
+      anonymousAssistanceAddressWithSubject(
+        zendeskSelectedCategory.description[locale],
+        zendeskSelectedSubcategory?.description[locale]
+      ),
+      undefined,
+      constNull,
+      () => {
+        showToast(
+          I18n.t("support.askPermissions.toast.emailClientNotFound", {
+            emailAddress: anonymousAssistanceAddress
+          }),
+          "warning"
+        );
+      }
+    )();
     void mixpanelTrack("ZENDESK_DENY_PERMISSIONS");
     workUnitCompleted();
   };
@@ -226,23 +285,24 @@ const ZendeskAskPermissions = (props: Props) => {
       }
     });
 
+    // Send the versions history
+    addTicketCustomField(
+      zendeskVersionsHistoryId,
+      arrayToZendeskValue(versionsHistory)
+    );
+
+    // Even though the current app version field
+    // has been replaced by the versions history,
+    // we still send the old app version field for
+    // backward compatibility.
+    addTicketCustomField(zendeskCurrentAppVersionId, currentVersion);
+
     // Tag the ticket with the current app version
-    addTicketTag(itemsProps.currentVersion);
+    addTicketTag(currentVersion);
 
-    const canSkipCategoryChoice = (): boolean =>
-      !isReady(zendeskConfig) ||
-      Object.keys(zendeskConfig.value.zendeskCategories?.categories ?? {})
-        .length === 0 ||
-      assistanceForPayment;
-
-    // if is not possible to get the config, if the config has any category or if is an assistanceForPayment request open directly a ticket.
-    if (canSkipCategoryChoice()) {
-      openSupportTicket();
-      void mixpanelTrack("ZENDESK_OPEN_TICKET");
-      workUnitCompleted();
-    } else {
-      navigation.navigate(navigateToZendeskChooseCategory());
-    }
+    openSupportTicket();
+    void mixpanelTrack("ZENDESK_OPEN_TICKET");
+    workUnitCompleted();
   };
   const cancelButtonProps = {
     testID: "cancelButtonId",
@@ -260,7 +320,7 @@ const ZendeskAskPermissions = (props: Props) => {
 
   return (
     <BaseScreenComponent
-      showInstabugChat={false}
+      showChat={false}
       goBack={true}
       // customRightIcon is needed to have a centered header title
       customRightIcon={{

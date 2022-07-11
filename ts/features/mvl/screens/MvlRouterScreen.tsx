@@ -1,19 +1,22 @@
+import { CompatNavigationProp } from "@react-navigation/compat";
 import * as pot from "italia-ts-commons/lib/pot";
 import * as React from "react";
-import { NavigationInjectedProps } from "react-navigation";
+import { usePaginatedMessages } from "../../../config";
+import { IOStackNavigationProp } from "../../../navigation/params/AppParamsList";
+import { DEPRECATED_setMessageReadState } from "../../../store/actions/messages";
 import { useIODispatch, useIOSelector } from "../../../store/hooks";
+import { isMessageRead } from "../../../store/reducers/entities/messages/messagesStatus";
 import { UIMessageId } from "../../../store/reducers/entities/messages/types";
 import { useOnFirstRender } from "../../../utils/hooks/useOnFirstRender";
-import { isMessageRead } from "../../../store/reducers/entities/messages/messagesStatus";
-import { setMessageReadState } from "../../../store/actions/messages";
+import { MvlParamsList } from "../navigation/params";
 import { mvlDetailsLoad } from "../store/actions";
 import { mvlFromIdSelector } from "../store/reducers/byId";
 import { Mvl } from "../types/mvlData";
-import { MvlGenericErrorScreen } from "./ko/MvlGenericErrorScreen";
 import { MvlDetailsScreen } from "./details/MvlDetailsScreen";
+import { MvlGenericErrorScreen } from "./ko/MvlGenericErrorScreen";
 import { MvlLoadingScreen } from "./MvlLoadingScreen";
 
-type NavigationParams = Readonly<{
+export type MvlRouterScreenNavigationParams = Readonly<{
   id: UIMessageId;
 }>;
 
@@ -43,16 +46,19 @@ const renderByPot = (
  * @constructor
  * @param props
  */
-export const MvlRouterScreen = (
-  props: NavigationInjectedProps<NavigationParams>
-): React.ReactElement => {
+export const MvlRouterScreen = (props: {
+  navigation: CompatNavigationProp<
+    IOStackNavigationProp<MvlParamsList, "MVL_DETAILS">
+  >;
+}): React.ReactElement => {
   const mvlId = props.navigation.getParam("id");
   const mvlPot = useIOSelector(state => mvlFromIdSelector(state, mvlId));
   const dispatch = useIODispatch();
   const isRead = useIOSelector(state => isMessageRead(state, mvlId));
   useOnFirstRender(() => {
-    if (!isRead) {
-      dispatch(setMessageReadState(mvlId, true));
+    if (!isRead && !usePaginatedMessages) {
+      // TODO: remove once we publish pagination
+      dispatch(DEPRECATED_setMessageReadState(mvlId, true, "unknown"));
     }
     if (!pot.isSome(mvlPot)) {
       dispatch(mvlDetailsLoad.request(mvlId));

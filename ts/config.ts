@@ -46,7 +46,6 @@ export const debugRemotePushNotification =
   Config.DEBUG_REMOTE_PUSH_NOTIFICATION === "YES";
 export const isDebugBiometricIdentificationEnabled =
   Config.DEBUG_BIOMETRIC_IDENTIFICATION === "YES";
-export const instabugToken: string = Config.INSTABUG_TOKEN;
 
 export const bonusVacanzeEnabled: boolean =
   Config.BONUS_VACANZE_ENABLED === "YES";
@@ -86,6 +85,33 @@ export const mvlEnabled: boolean = Config.MVL_ENABLED === "YES";
 // CGN new merchants features
 export const cgnMerchantsV2Enabled = Config.CGN_MERCHANTS_V2_ENABLED === "YES";
 
+// Opt-in payments method
+export const bpdOptInPaymentMethodsEnabled =
+  Config.BPD_OPT_IN_PAYMENT_METHODS === "YES";
+
+// Ukraine donation
+export const uaDonationsEnabled = Config.UA_DONATIONS_ENABLED === "YES";
+
+// FIMS (Federated Identity Management System) Feature Flag
+export const fimsEnabled = Config.FIMS_ENABLED === "YES";
+
+// CdC (Carta della cultura) Feature Flag
+export const cdcEnabled = Config.CDC_ENABLED === "YES";
+
+// Premium Messages Opt-in/out Feature Flag
+export const premiumMessagesOptInEnabled =
+  Config.PREMIUM_MESSAGES_OPT_IN_ENABLED === "YES";
+
+export const scanAdditionalBarcodesEnabled =
+  Config.SCAN_ADDITIONAL_BARCODES_ENABLED === "YES";
+
+// Redesign of the transaction summary screen
+export const newTransactionSummaryEnabled =
+  Config.NEW_TRANSACTION_SUMMARY_ENABLED === "YES";
+
+// PN (Piattaforma Notifiche) Feature Flag
+export const pnEnabled = Config.PN_ENABLED === "YES";
+
 // version of ToS
 export const tosVersion: NonNegativeNumber = 2.4 as NonNegativeNumber;
 
@@ -120,9 +146,6 @@ export const totMessageFetchWorkers = t.Integer.decode(
 export const totServiceFetchWorkers = t.Integer.decode(
   parseInt(Config.TOT_SERVICE_FETCH_WORKERS, 10)
 ).getOrElse(DEFAULT_TOT_SERVICE_FETCH_WORKERS);
-
-export const shouldDisplayVersionInfoOverlay =
-  Config.DISPLAY_VERSION_INFO_OVERLAY === "YES";
 
 export const shufflePinPadOnPayment =
   Config.SHUFFLE_PINPAD_ON_PAYMENT === "YES";

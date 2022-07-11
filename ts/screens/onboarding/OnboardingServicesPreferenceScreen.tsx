@@ -1,40 +1,48 @@
-import * as React from "react";
-import { connect } from "react-redux";
-import { SafeAreaView, ScrollView } from "react-native";
-import { View } from "native-base";
-import { NavigationInjectedProps } from "react-navigation";
+import { CompatNavigationProp } from "@react-navigation/compat";
 import * as pot from "italia-ts-commons/lib/pot";
-import BaseScreenComponent from "../../components/screens/BaseScreenComponent";
-import { emptyContextualHelp } from "../../utils/emptyContextualHelp";
-import ServicesContactComponent from "../profile/components/services/ServicesContactComponent";
+import { View } from "native-base";
+import * as React from "react";
+import { SafeAreaView, ScrollView } from "react-native";
+import { connect } from "react-redux";
+import { ServicesPreferencesModeEnum } from "../../../definitions/backend/ServicesPreferencesMode";
 import { InfoBox } from "../../components/box/InfoBox";
 import { H5 } from "../../components/core/typography/H5";
 import { IOColors } from "../../components/core/variables/IOColors";
-import I18n from "../../i18n";
+import { IOStyles } from "../../components/core/variables/IOStyles";
+import { withLoadingSpinner } from "../../components/helpers/withLoadingSpinner";
+import BaseScreenComponent from "../../components/screens/BaseScreenComponent";
 import FooterWithButtons from "../../components/ui/FooterWithButtons";
 import { confirmButtonProps } from "../../features/bonus/bonusVacanze/components/buttons/ButtonConfigurations";
-import { GlobalState } from "../../store/reducers/types";
-import { Dispatch } from "../../store/actions/types";
-import { IOStyles } from "../../components/core/variables/IOStyles";
+import I18n from "../../i18n";
+import { IOStackNavigationProp } from "../../navigation/params/AppParamsList";
+import { OnboardingParamsList } from "../../navigation/params/OnboardingParamsList";
 import { navigateToOnboardingServicePreferenceCompleteAction } from "../../store/actions/navigation";
-import { useManualConfigBottomSheet } from "../profile/components/services/ManualConfigBottomSheet";
-import { ServicesPreferencesModeEnum } from "../../../definitions/backend/ServicesPreferencesMode";
+import { servicesOptinCompleted } from "../../store/actions/onboarding";
+import { profileUpsert } from "../../store/actions/profile";
+import { Dispatch } from "../../store/actions/types";
 import {
   isServicesPreferenceModeSet,
   profileSelector,
   profileServicePreferencesModeSelector
 } from "../../store/reducers/profile";
-import { profileUpsert } from "../../store/actions/profile";
-import { withLoadingSpinner } from "../../components/helpers/withLoadingSpinner";
+import { GlobalState } from "../../store/reducers/types";
+import { emptyContextualHelp } from "../../utils/emptyContextualHelp";
 import { showToast } from "../../utils/showToast";
-import { servicesOptinCompleted } from "../../store/actions/onboarding";
+import { useManualConfigBottomSheet } from "../profile/components/services/ManualConfigBottomSheet";
+import ServicesContactComponent from "../profile/components/services/ServicesContactComponent";
 
-type NavigationProps = {
+export type OnboardingServicesPreferenceScreenNavigationParams = {
   isFirstOnboarding: boolean;
 };
 type Props = ReturnType<typeof mapStateToProps> &
-  ReturnType<typeof mapDispatchToProps> &
-  NavigationInjectedProps<NavigationProps>;
+  ReturnType<typeof mapDispatchToProps> & {
+    navigation: CompatNavigationProp<
+      IOStackNavigationProp<
+        OnboardingParamsList,
+        "ONBOARDING_SERVICES_PREFERENCE"
+      >
+    >;
+  };
 
 const OnboardingServicesPreferenceScreen = (
   props: Props
@@ -80,13 +88,14 @@ const OnboardingServicesPreferenceScreen = (
       props.onServicePreferenceSelected(modeSelected);
     }
   };
-  const { present: confirmManualConfig } = useManualConfigBottomSheet();
+  const { present: confirmManualConfig } = useManualConfigBottomSheet(() =>
+    props.onServicePreferenceSelected(ServicesPreferencesModeEnum.MANUAL)
+  );
+
   const handleOnSelectMode = (mode: ServicesPreferencesModeEnum) => {
     // if user's choice is 'manual', open bottom sheet to ask confirmation
     if (mode === ServicesPreferencesModeEnum.MANUAL) {
-      void confirmManualConfig(() =>
-        props.onServicePreferenceSelected(ServicesPreferencesModeEnum.MANUAL)
-      );
+      confirmManualConfig();
       return;
     }
     setModeSelected(mode);

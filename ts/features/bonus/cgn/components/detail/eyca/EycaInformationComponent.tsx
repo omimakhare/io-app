@@ -2,10 +2,11 @@ import * as React from "react";
 import { View } from "native-base";
 import Markdown from "../../../../../../components/ui/Markdown";
 import I18n from "../../../../../../i18n";
-import { useIOBottomSheet } from "../../../../../../utils/bottomSheet";
+import { useIOBottomSheetModal } from "../../../../../../utils/hooks/bottomSheet";
 import { openWebUrl } from "../../../../../../utils/url";
 import ButtonDefaultOpacity from "../../../../../../components/ButtonDefaultOpacity";
 import { Label } from "../../../../../../components/core/typography/Label";
+import { showToast } from "../../../../../../utils/showToast";
 
 const EYCA_DISCOUNTS_URL = "https://www.eyca.org/discounts/it";
 
@@ -27,7 +28,11 @@ const EycaInformationComponent: React.FunctionComponent = () => {
           <ButtonDefaultOpacity
             style={{ width: "100%" }}
             bordered
-            onPress={() => openWebUrl(EYCA_DISCOUNTS_URL)}
+            onPress={() =>
+              openWebUrl(EYCA_DISCOUNTS_URL, () =>
+                showToast(I18n.t("bonus.cgn.generic.linkError"))
+              )
+            }
             onPressWithGestureHandler
           >
             <Label color={"blue"}>
@@ -41,7 +46,7 @@ const EycaInformationComponent: React.FunctionComponent = () => {
 };
 
 export const useEycaInformationBottomSheet = () =>
-  useIOBottomSheet(
+  useIOBottomSheetModal(
     <EycaInformationComponent />,
     I18n.t("bonus.cgn.detail.status.eycaBottomSheetTitle"),
     420

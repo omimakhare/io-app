@@ -1,9 +1,9 @@
-import { call, Effect, put, takeLatest } from "redux-saga/effects";
+import { call, put, takeLatest } from "typed-redux-saga/macro";
 import { ActionType, getType } from "typesafe-actions";
 
 import { BackendClient } from "../../api/backend";
 import { reloadAllMessages as reloadAllMessagesAction } from "../../store/actions/messages";
-import { SagaCallReturnType } from "../../types/utils";
+import { ReduxSagaEffect, SagaCallReturnType } from "../../types/utils";
 import { toUIMessage } from "../../store/reducers/entities/messages/transformers";
 import { PaginatedPublicMessagesCollection } from "../../../definitions/backend/PaginatedPublicMessagesCollection";
 import { isTestEnv } from "../../utils/environment";
@@ -16,8 +16,8 @@ type LocalBeClient = ReturnType<typeof BackendClient>["getMessages"];
 
 export default function* watcher(
   getMessages: LocalBeClient
-): Generator<Effect, void, SagaCallReturnType<typeof getMessages>> {
-  yield takeLatest(
+): Generator<ReduxSagaEffect, void, SagaCallReturnType<typeof getMessages>> {
+  yield* takeLatest(
     getType(reloadAllMessagesAction.request),
     tryReloadAllMessages(getMessages)
   );
@@ -26,13 +26,15 @@ export default function* watcher(
 function tryReloadAllMessages(getMessages: LocalBeClient) {
   return function* gen(
     action: LocalActionType
-  ): Generator<Effect, void, SagaCallReturnType<typeof getMessages>> {
+  ): Generator<ReduxSagaEffect, void, SagaCallReturnType<typeof getMessages>> {
+    const { filter, pageSize } = action.payload;
     try {
-      const response: SagaCallReturnType<typeof getMessages> = yield call(
+      const response: SagaCallReturnType<typeof getMessages> = yield* call(
         getMessages,
         {
           enrich_result_data: true,
-          page_size: action.payload.pageSize
+          page_size: pageSize,
+          archived: filter.getArchived
         }
       );
 
@@ -41,14 +43,24 @@ function tryReloadAllMessages(getMessages: LocalBeClient) {
         ({ items, next, prev }: PaginatedPublicMessagesCollection) =>
           reloadAllMessagesAction.success({
             messages: items.map(toUIMessage),
-            pagination: { previous: prev, next }
+            pagination: { previous: prev, next },
+            filter
           }),
-        error => reloadAllMessagesAction.failure(getError(error))
+        error =>
+          reloadAllMessagesAction.failure({
+            error: getError(error),
+            filter
+          })
       );
 
-      yield put(nextAction);
+      yield* put(nextAction);
     } catch (error) {
-      yield put(reloadAllMessagesAction.failure(getError(error)));
+      yield* put(
+        reloadAllMessagesAction.failure({
+          error: getError(error),
+          filter
+        })
+      );
     }
   };
 }

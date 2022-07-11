@@ -1,36 +1,34 @@
+import { OrganizationFiscalCode } from "@pagopa/ts-commons/lib/strings";
 import { Text } from "native-base";
 import React from "react";
 import { StyleSheet } from "react-native";
 import { connect } from "react-redux";
 import { Dispatch } from "redux";
-import { OrganizationFiscalCode } from "@pagopa/ts-commons/lib/strings";
+import { PaymentAmount } from "../../../definitions/backend/PaymentAmount";
+import { PaymentNoticeNumber } from "../../../definitions/backend/PaymentNoticeNumber";
+import { isPagoPaSupportedSelector } from "../../common/versionInfo/store/reducers/versionInfo";
 
 import I18n from "../../i18n";
-import NavigationService from "../../navigation/NavigationService";
-import TransactionSummaryScreen from "../../screens/wallet/payment/TransactionSummaryScreen";
+import { TransactionSummaryScreenNavigationParams } from "../../screens/wallet/payment/TransactionSummaryScreen";
 import {
   navigateToPaymentTransactionSummaryScreen,
   navigateToWalletHome
 } from "../../store/actions/navigation";
 import { paymentInitializeState } from "../../store/actions/wallet/payment";
 import { useIODispatch } from "../../store/hooks";
-import { serverInfoDataSelector } from "../../store/reducers/backendInfo";
 import { isProfileEmailValidatedSelector } from "../../store/reducers/profile";
 import { GlobalState } from "../../store/reducers/types";
-import { InferNavigationParams } from "../../types/react";
-import { isUpdateNeeded } from "../../utils/appVersion";
 import {
   getAmountFromPaymentAmount,
   getRptIdFromNoticeNumber
 } from "../../utils/payment";
 import ButtonDefaultOpacity from "../ButtonDefaultOpacity";
-import { PaymentNoticeNumber } from "../../../definitions/backend/PaymentNoticeNumber";
-import { PaymentAmount } from "../../../definitions/backend/PaymentAmount";
 
 type OwnProps = {
   organizationFiscalCode: OrganizationFiscalCode;
   noticeNumber: PaymentNoticeNumber;
   amount: PaymentAmount;
+  messageId?: string;
 };
 
 type Props = OwnProps &
@@ -51,11 +49,12 @@ const styles = StyleSheet.create({
 const PaymentButton = ({
   amount: paymentAmount,
   isEmailValidated,
-  isUpdatedNeededPagoPa,
+  isPagoPaSupported,
   navigateToPaymentTransactionSummaryScreen,
   navigateToWalletHomeScreen,
   noticeNumber,
-  organizationFiscalCode
+  organizationFiscalCode,
+  messageId
 }: Props) => {
   const dispatch = useIODispatch();
   const handleOnPress = () => {
@@ -68,13 +67,13 @@ const PaymentButton = ({
 
     if (amount.isSome() && rptId.isSome()) {
       // TODO: optimize the management of the payment initialization
-      if (isEmailValidated && !isUpdatedNeededPagoPa) {
+      if (isEmailValidated && isPagoPaSupported) {
         dispatch(paymentInitializeState());
         navigateToPaymentTransactionSummaryScreen({
           rptId: rptId.value,
           initialAmount: amount.value,
           paymentStartOrigin: "message",
-          startRoute: NavigationService.getCurrentRoute()
+          messageId
         });
       } else {
         // Navigating to Wallet home, having the email address is not validated,
@@ -96,16 +95,13 @@ const PaymentButton = ({
 
 const mapStateToProps = (state: GlobalState) => ({
   isEmailValidated: isProfileEmailValidatedSelector(state),
-  isUpdatedNeededPagoPa: isUpdateNeeded(
-    serverInfoDataSelector(state),
-    "min_app_version_pagopa"
-  )
+  isPagoPaSupported: isPagoPaSupportedSelector(state)
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   paymentInitializeState: () => dispatch(paymentInitializeState()),
   navigateToPaymentTransactionSummaryScreen: (
-    params: InferNavigationParams<typeof TransactionSummaryScreen>
+    params: TransactionSummaryScreenNavigationParams
   ) => navigateToPaymentTransactionSummaryScreen(params),
   navigateToWalletHomeScreen: () => navigateToWalletHome()
 });

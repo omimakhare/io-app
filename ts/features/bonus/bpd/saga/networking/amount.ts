@@ -1,10 +1,13 @@
 import { Either, left, right } from "fp-ts/lib/Either";
 import { readableReport } from "italia-ts-commons/lib/reporters";
-import { call, Effect } from "redux-saga/effects";
+import { call } from "typed-redux-saga/macro";
 import { TotalCashbackResource } from "../../../../../../definitions/bpd/winning_transactions/TotalCashbackResource";
 import { mixpanelTrack } from "../../../../../mixpanel";
-import { SagaCallReturnType } from "../../../../../types/utils";
-import { getError } from "../../../../../utils/errors";
+import {
+  ReduxSagaEffect,
+  SagaCallReturnType
+} from "../../../../../types/utils";
+import { convertUnknownToError, getError } from "../../../../../utils/errors";
 import { BackendBpdClient } from "../../api/backendBpdClient";
 import { AwardPeriodId, WithAwardPeriodId } from "../../store/actions/periods";
 
@@ -42,14 +45,14 @@ export function* bpdLoadAmountSaga(
   totalCashback: ReturnType<typeof BackendBpdClient>["totalCashback"],
   awardPeriodId: AwardPeriodId
 ): Generator<
-  Effect,
+  ReduxSagaEffect,
   Either<BpdAmountError, BpdAmount>,
   SagaCallReturnType<typeof totalCashback>
 > {
   void mixpanelTrack(mixpanelActionRequest, { awardPeriodId });
   try {
     const totalCashbackResult: SagaCallReturnType<typeof totalCashback> =
-      yield call(totalCashback, { awardPeriodId } as any);
+      yield* call(totalCashback, { awardPeriodId } as any);
     if (totalCashbackResult.isRight()) {
       if (totalCashbackResult.value.status === 200) {
         void mixpanelTrack(mixpanelActionSuccess, { awardPeriodId });
@@ -65,7 +68,7 @@ export function* bpdLoadAmountSaga(
   } catch (e) {
     void mixpanelTrack(mixpanelActionFailure, {
       awardPeriodId,
-      reason: e.message
+      reason: convertUnknownToError(e).message
     });
     return left<BpdAmountError, BpdAmount>({
       error: getError(e),
