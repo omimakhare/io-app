@@ -4,12 +4,12 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  FlatList,
   RefreshControl,
   StyleSheet,
   Vibration,
   View
 } from "react-native";
+import { FlashList } from "@shopify/flash-list";
 import { connect } from "react-redux";
 
 import { maximumItemsFromAPI, pageSize } from "../../../../config";
@@ -43,7 +43,6 @@ import { showToast } from "../../../../utils/showToast";
 import { EdgeBorderComponent } from "../../../screens/EdgeBorderComponent";
 import {
   EmptyComponent,
-  generateItemLayout,
   ITEM_HEIGHT,
   ItemSeparator,
   renderEmptyList,
@@ -175,7 +174,10 @@ const MessageList = ({
   const shouldUseLoad = filteredMessages === undefined;
   const messages = filteredMessages ?? allMessages;
 
-  const flatListRef: React.RefObject<FlatList> = useRef(null);
+  console.log("Messages", messages);
+  console.log("Messages length: ", messages.length);
+
+  const flatListRef: React.RefObject<FlashList<UIMessage>> = useRef(null);
 
   const [longPressedItemIndex, setLongPressedItemIndex] =
     useState<Option<number>>(none);
@@ -264,7 +266,7 @@ const MessageList = ({
 
   return (
     <>
-      <Animated.FlatList
+      <FlashList
         ListHeaderComponent={ListHeaderComponent}
         ItemSeparatorComponent={ItemSeparator}
         ListEmptyComponent={renderEmptyList({
@@ -272,7 +274,6 @@ const MessageList = ({
           EmptyComponent: didLoad ? ListEmptyComponent : null
         })}
         data={messages}
-        initialNumToRender={pageSize}
         keyExtractor={(message: UIMessage): string => message.id}
         ref={flatListRef}
         refreshControl={refreshControl}
@@ -285,11 +286,7 @@ const MessageList = ({
         })}
         scrollEnabled={true}
         scrollEventThrottle={animated?.scrollEventThrottle}
-        style={styles.padded}
-        getItemLayout={(
-          _: ReadonlyArray<UIMessage> | null | undefined,
-          index: number
-        ) => generateItemLayout(messages.length)(index)}
+        contentContainerStyle={styles.padded}
         onScroll={(...args) => {
           animated.onScroll(...args);
         }}
@@ -298,6 +295,7 @@ const MessageList = ({
         onEndReachedThreshold={0.25}
         testID={testID}
         ListFooterComponent={renderListFooter}
+        estimatedItemSize={messages !== undefined ? messages.length : 0}
       />
     </>
   );

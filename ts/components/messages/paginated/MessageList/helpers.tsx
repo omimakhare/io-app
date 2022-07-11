@@ -1,11 +1,13 @@
 import React from "react";
-import { Animated, FlatList, ListRenderItemInfo } from "react-native";
+import { Animated, FlatList, StyleSheet, View } from "react-native";
+import { ListRenderItemInfo } from "@shopify/flash-list";
 
 import { MessageCategory } from "../../../../../definitions/backend/MessageCategory";
 import { UIMessage } from "../../../../store/reducers/entities/messages/types";
 import ItemSeparatorComponent from "../../../ItemSeparatorComponent";
 import { ErrorLoadingComponent } from "../../ErrorLoadingComponent";
 import MessageListItem from "./Item";
+import customVariables from "../../../../theme/variables";
 
 export const ITEM_HEIGHT = 114;
 const ITEM_HEIGHT_WITH_SEPARATOR = ITEM_HEIGHT + 1;
@@ -15,6 +17,12 @@ type ItemLayout = {
   offset: number;
   index: number;
 };
+
+const styles = StyleSheet.create({
+  itemContainer: {
+    paddingHorizontal: customVariables.contentPadding
+  }
+});
 
 /**
  * Calculate the ItemLayout of a given index.
@@ -46,16 +54,18 @@ export const renderItem =
   }: RenderItemProps) =>
   ({ item: message }: ListRenderItemInfo<UIMessage>) =>
     (
-      <MessageListItem
-        category={message.category}
-        hasPaidBadge={hasPaidBadge(message.category)}
-        isRead={message.isRead}
-        message={message}
-        onPress={onPress}
-        onLongPress={() => onLongPress(message)}
-        isSelectionModeEnabled={!!selectedMessageIds}
-        isSelected={!!selectedMessageIds?.has(message.id)}
-      />
+      <View style={styles.itemContainer}>
+        <MessageListItem
+          category={message.category}
+          hasPaidBadge={hasPaidBadge(message.category)}
+          isRead={message.isRead}
+          message={message}
+          onPress={onPress}
+          onLongPress={() => onLongPress(message)}
+          isSelectionModeEnabled={!!selectedMessageIds}
+          isSelected={!!selectedMessageIds?.has(message.id)}
+        />
+      </View>
     );
 
 export type EmptyComponent = React.ComponentProps<
