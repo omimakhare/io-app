@@ -1,0 +1,17 @@
+query MyMessages {
+  myMessages {
+    id
+    service {
+        service_id,
+        service_metadata {
+            __typename
+            ...on CommonServiceMetadata {
+                description
+            }
+            ...on StandardServiceMetadata {
+                web_url
+            }
+        }
+    }
+  }
+}

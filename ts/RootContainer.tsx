@@ -23,6 +23,7 @@ import RootModal from "./screens/modal/RootModal";
 import { applicationChangeState } from "./store/actions/application";
 import { setDebugCurrentRouteName } from "./store/actions/debug";
 import { navigateBack } from "./store/actions/navigation";
+import { sessionTokenSelector } from "./store/reducers/authentication";
 import { isDebugModeEnabledSelector } from "./store/reducers/debug";
 import { preferredLanguageSelector } from "./store/reducers/persistedPreferences";
 import { GlobalState } from "./store/reducers/types";
@@ -117,7 +118,8 @@ class RootContainer extends React.PureComponent<Props> {
 
 const mapStateToProps = (state: GlobalState) => ({
   preferredLanguage: preferredLanguageSelector(state),
-  isDebugModeEnabled: isDebugModeEnabledSelector(state)
+  isDebugModeEnabled: isDebugModeEnabledSelector(state),
+  sessionToken: sessionTokenSelector(state)
 });
 
 const mapDispatchToProps = {

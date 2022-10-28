@@ -1,0 +1,15 @@
+schema:
+  - https://raw.githubusercontent.com/pagopa/io-backend/guilde-graphql/src/graphql/schema/schema.graphql
+documents:
+  - ./ts/**/*.graphql
+generates:
+  ./definitions/graphql/types.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+      - add:
+            content: "import { FiscalCode } from \"@pagopa/ts-commons/lib/strings\";"
+    config:
+      scalars:
+        FiscalCode: FiscalCode

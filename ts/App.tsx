@@ -1,12 +1,13 @@
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { StyleProvider } from "native-base";
 import * as React from "react";
+import "react-native-gesture-handler";
 import { MenuProvider } from "react-native-popup-menu";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import "react-native-gesture-handler";
 import { persistor, store } from "./boot/configureStoreAndPersistor";
 import { LightModalProvider } from "./components/ui/LightModal";
+import IOApolloProvider from "./IOApolloProvider";
 import RootContainer from "./RootContainer";
 import theme from "./theme";
 
@@ -25,7 +26,9 @@ export const App: React.FunctionComponent<never> = () => (
         <BottomSheetModalProvider>
           <LightModalProvider>
             <MenuProvider>
-              <RootContainer />
+              <IOApolloProvider>
+                <RootContainer />
+              </IOApolloProvider>
             </MenuProvider>
           </LightModalProvider>
         </BottomSheetModalProvider>
