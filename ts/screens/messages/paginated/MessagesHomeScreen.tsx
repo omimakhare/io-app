@@ -10,6 +10,8 @@ import { connect, useDispatch } from "react-redux";
 import { Dispatch } from "redux";
 
 import { createSelector } from "reselect";
+import { useMyMessagesQuery } from "../../../../definitions/graphql/types";
+import { RTron } from "../../../boot/configureStoreAndPersistor";
 import { IOColors } from "../../../components/core/variables/IOColors";
 import { IOStyles } from "../../../components/core/variables/IOStyles";
 import { useMessageOpening } from "../../../components/messages/paginated/hooks/useMessageOpening";
@@ -167,6 +169,13 @@ const MessagesHomeScreen = ({
   resetMigrationStatus,
   latestMessageOperation
 }: Props) => {
+  const { data, loading, error } = useMyMessagesQuery({
+    defaultOptions: {
+      fetchPolicy: "no-cache",
+      errorPolicy: "all",
+      returnPartialData: true
+    }
+  });
   const needsMigration = Object.keys(messagesStatus).length > 0;
 
   useOnFirstRender(() => {
@@ -174,6 +183,18 @@ const MessagesHomeScreen = ({
       migrateMessages(messagesStatus);
     }
   });
+
+  useEffect(() => {
+    if (error) {
+      RTron?.log(error);
+      showToast(error.message, "danger");
+    }
+
+    if (data) {
+      // showToast("Messages loaded", "success");
+      RTron.log("Messages loaded", data);
+    }
+  }, [data, loading, error]);
 
   useEffect(() => {
     if (!latestMessageOperation) {
