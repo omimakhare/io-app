@@ -10,14 +10,12 @@ import { connect, useDispatch } from "react-redux";
 import { Dispatch } from "redux";
 
 import { createSelector } from "reselect";
-import { useMyMessagesQuery } from "../../../../definitions/graphql/types";
-import { RTron } from "../../../boot/configureStoreAndPersistor";
 import { IOColors } from "../../../components/core/variables/IOColors";
 import { IOStyles } from "../../../components/core/variables/IOStyles";
+import GraphQLMessagesInbox from "../../../components/messages/paginated/GraphQLMessagesInbox";
 import { useMessageOpening } from "../../../components/messages/paginated/hooks/useMessageOpening";
 import MessageList from "../../../components/messages/paginated/MessageList";
 import MessagesArchive from "../../../components/messages/paginated/MessagesArchive";
-import MessagesInbox from "../../../components/messages/paginated/MessagesInbox";
 import MessagesSearch from "../../../components/messages/paginated/MessagesSearch";
 import { ContextualHelpPropsMarkdown } from "../../../components/screens/BaseScreenComponent";
 import { ScreenContentHeader } from "../../../components/screens/ScreenContentHeader";
@@ -114,7 +112,6 @@ type AllTabsProps = {
 
 const AllTabs = ({
   navigateToMessageDetail,
-  inbox,
   archive,
   setArchived
 }: AllTabsProps) => (
@@ -129,11 +126,7 @@ const AllTabs = ({
         textStyle={styles.textStyle}
         heading={I18n.t("messages.tab.inbox")}
       >
-        <MessagesInbox
-          messages={inbox}
-          navigateToMessageDetail={navigateToMessageDetail}
-          archiveMessages={messages => setArchived(true, messages)}
-        />
+        <GraphQLMessagesInbox />
       </Tab>
 
       <Tab
@@ -169,13 +162,6 @@ const MessagesHomeScreen = ({
   resetMigrationStatus,
   latestMessageOperation
 }: Props) => {
-  const { data, loading, error } = useMyMessagesQuery({
-    defaultOptions: {
-      fetchPolicy: "no-cache",
-      errorPolicy: "all",
-      returnPartialData: true
-    }
-  });
   const needsMigration = Object.keys(messagesStatus).length > 0;
 
   useOnFirstRender(() => {
@@ -183,18 +169,6 @@ const MessagesHomeScreen = ({
       migrateMessages(messagesStatus);
     }
   });
-
-  useEffect(() => {
-    if (error) {
-      RTron?.log(error);
-      showToast(error.message, "danger");
-    }
-
-    if (data) {
-      // showToast("Messages loaded", "success");
-      RTron.log("Messages loaded", data);
-    }
-  }, [data, loading, error]);
 
   useEffect(() => {
     if (!latestMessageOperation) {

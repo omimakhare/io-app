@@ -22,8 +22,8 @@ const checkUsernameValid = (username: string): boolean =>
 const TestAuthenticationScreen: React.FunctionComponent<Props> = (
   props: Props
 ) => {
-  const [username, setUsername] = React.useState("");
-  const [password, setPassword] = React.useState("");
+  const [username, setUsername] = React.useState("ETTMOM85A74Y896X");
+  const [password, setPassword] = React.useState("secret");
 
   const confirmButton: BlockButtonProps = {
     block: true,

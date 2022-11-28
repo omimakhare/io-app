@@ -1,6 +1,10 @@
-query MyMessages {
-  myMessages {
+query Messages($pageSize: Int $maximumId: ID $minimumId: ID $enrichResultData: Boolean $getArchivedMessages: Boolean) {
+  messages(pageSize: $pageSize maximumId: $maximumId minimumId: $minimumId enrichResultData: $enrichResultData getArchivedMessages: $getArchivedMessages) {
     id
+    content {
+      subject
+      content
+    }
     service {
         service_id,
         service_metadata {
