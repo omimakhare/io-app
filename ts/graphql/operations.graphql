@@ -1,21 +1,16 @@
 query Messages($pageSize: Int $maximumId: ID $minimumId: ID $enrichResultData: Boolean $getArchivedMessages: Boolean) {
   messages(pageSize: $pageSize maximumId: $maximumId minimumId: $minimumId enrichResultData: $enrichResultData getArchivedMessages: $getArchivedMessages) {
-    id
+    id,
+    fiscal_code,
+    created_at,
+    category,
     content {
       subject
-      content
     }
     service {
         service_id,
-        service_metadata {
-            __typename
-            ...on CommonServiceMetadata {
-                description
-            }
-            ...on StandardServiceMetadata {
-                web_url
-            }
-        }
+        service_name,
+        organization_name
     }
   }
 }

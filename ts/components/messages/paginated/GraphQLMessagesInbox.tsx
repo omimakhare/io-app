@@ -13,6 +13,7 @@ import { RTron } from "../../../boot/configureStoreAndPersistor";
 import I18n from "../../../i18n";
 import { UIMessage } from "../../../store/reducers/entities/messages/types";
 import { showToast } from "../../../utils/showToast";
+import { IOStyles } from "../../core/variables/IOStyles";
 import { EmptyListComponent } from "../EmptyListComponent";
 import MessageListItem from "./MessageList/Item";
 
@@ -74,7 +75,7 @@ const GraphQLMessagesInbox = () => {
 
   return (
     <View style={styles.listWrapper}>
-      <View style={styles.listContainer}>
+      <View style={[styles.listContainer, IOStyles.horizontalContentPadding]}>
         <FlatList
           data={data?.messages as ReadonlyArray<Message> | undefined}
           renderItem={({ item }: ListRenderItemInfo<Message>) => (
@@ -86,27 +87,28 @@ const GraphQLMessagesInbox = () => {
                 id: item.id as UIMessage["id"],
                 serviceId: item.service?.service_id as UIMessage["serviceId"],
                 serviceName: item.service
-                  ?.service_id as UIMessage["serviceName"],
+                  ?.service_name as UIMessage["serviceName"],
                 title: item.content?.subject as UIMessage["title"],
-                category: { tag: TagEnum.GENERIC },
+                category: { tag: item.category } as UIMessage["category"],
                 isRead: true,
-                isArchived: false,
-                organizationName: "disney",
-                fiscalCode: "pippo" as UIMessage["fiscalCode"],
-                createdAt: new Date(),
+                isArchived: true,
+                organizationName: item.service
+                  ?.organization_name as UIMessage["organizationName"],
+                fiscalCode: item.fiscal_code,
+                createdAt: new Date(parseInt(item.created_at, 10)),
                 raw: {
                   id: item.id as PublicMessage["id"],
-                  fiscal_code: "pippo" as PublicMessage["fiscal_code"],
-                  created_at: new Date(),
-                  is_archived: false,
-                  is_read: true,
+                  fiscal_code: item.fiscal_code,
+                  created_at: new Date(item.created_at),
+                  isArchived: item.is_archived ?? false,
+                  isRead: item.is_read ?? false,
                   sender_service_id: item.service
                     ?.service_id as PublicMessage["sender_service_id"],
                   time_to_live: 3600 as PublicMessage["time_to_live"],
-                  service_name: "pippo",
-                  organization_name: "pippo",
+                  service_name: item.service?.service_name,
+                  organization_name: item.service?.organization_name,
                   message_title: item.content?.subject ?? "title"
-                } as PublicMessage
+                }
               }}
               onPress={constNull}
               onLongPress={() => constNull}
