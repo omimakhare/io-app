@@ -15,7 +15,10 @@ import {
 } from "@pagopa/ts-commons/lib/requests";
 import { Tuple2 } from "@pagopa/ts-commons/lib/tuples";
 import { Millisecond } from "@pagopa/ts-commons/lib/units";
+import { sign } from "io-react-native-crypto";
 import _ from "lodash";
+import { CreatedMessageWithContentAndAttachments } from "../../definitions/backend/CreatedMessageWithContentAndAttachments";
+import { PaginatedPublicMessagesCollection } from "../../definitions/backend/PaginatedPublicMessagesCollection";
 import { ProblemJson } from "../../definitions/backend/ProblemJson";
 import {
   AbortUserDataProcessingT,
@@ -35,38 +38,36 @@ import {
   GetSessionStateT,
   getSupportTokenDefaultDecoder,
   GetSupportTokenT,
+  getThirdPartyMessageDefaultDecoder,
+  GetThirdPartyMessageT,
   getUserDataProcessingDefaultDecoder,
   GetUserDataProcessingT,
   getUserMessageDefaultDecoder,
   getUserMessagesDefaultDecoder,
   getUserMetadataDefaultDecoder,
   GetUserMetadataT,
+  getUserProfileDefaultDecoder,
   GetUserProfileT,
   getVisibleServicesDefaultDecoder,
   GetVisibleServicesT,
   StartEmailValidationProcessT,
   updateProfileDefaultDecoder,
   UpdateProfileT,
+  upsertMessageStatusAttributesDefaultDecoder,
+  UpsertMessageStatusAttributesT,
   upsertServicePreferencesDefaultDecoder,
   UpsertServicePreferencesT,
   upsertUserDataProcessingDefaultDecoder,
   UpsertUserDataProcessingT,
   upsertUserMetadataDefaultDecoder,
-  UpsertUserMetadataT,
-  upsertMessageStatusAttributesDefaultDecoder,
-  UpsertMessageStatusAttributesT,
-  getUserProfileDefaultDecoder,
-  GetThirdPartyMessageT,
-  getThirdPartyMessageDefaultDecoder
+  UpsertUserMetadataT
 } from "../../definitions/backend/requestTypes";
 import { SessionToken } from "../types/SessionToken";
-import { constantPollingFetch, defaultRetryingFetch } from "../utils/fetch";
 import {
   tokenHeaderProducer,
   withBearerToken as withToken
 } from "../utils/api";
-import { PaginatedPublicMessagesCollection } from "../../definitions/backend/PaginatedPublicMessagesCollection";
-import { CreatedMessageWithContentAndAttachments } from "../../definitions/backend/CreatedMessageWithContentAndAttachments";
+import { constantPollingFetch, defaultRetryingFetch } from "../utils/fetch";
 
 /**
  * We will retry for as many times when polling for a payment ID.
@@ -125,6 +126,20 @@ export type LogoutT = IPostApiRequestType<
   never,
   BaseResponseType<SuccessResponse>
 >;
+
+const signHttpRequest = <
+  M extends r.RequestMethod,
+  P,
+  H extends string,
+  Q extends string,
+  R
+>(
+  request: r.IBaseApiRequestType<M, P, H, Q, R>
+): r.IBaseApiRequestType<M, P, H, Q, R> => {
+  const signer = { sign, keyid: "key-1" };
+  const { method, headers } = request;
+  return request;
+};
 
 //
 // Create client
