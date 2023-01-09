@@ -156,7 +156,7 @@ export function* generateAndSign() {
 
     if (!keyExistsRes) {
       const k = yield* call(generate, "my-tmp-k");
-      console.log(JSON.stringify(k));
+      RTron.log(k);
     }
     const signer = {
       sign: (msg: Uint8Array) => {
