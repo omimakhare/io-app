@@ -175,7 +175,7 @@ export function* generateAndSign() {
             return e;
           });
       },
-      keyid: "sig-1"
+      keyid: "my-temp-sign"
     };
     const commonSignatureOptions = {
       url: "https://example.net",
