@@ -1,7 +1,11 @@
-import * as O from "fp-ts/lib/Option";
+import { createSignatureHeader } from "@mattrglobal/http-signatures";
 import * as pot from "@pagopa/ts-commons/lib/pot";
 import { Millisecond } from "@pagopa/ts-commons/lib/units";
+import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/lib/Option";
+import { generate, getPublicKey, sign } from "io-react-native-crypto";
 import { Alert } from "react-native";
+import PushNotification from "react-native-push-notification";
 import { channel } from "redux-saga";
 import {
   call,
@@ -16,11 +20,10 @@ import {
   takeLatest
 } from "typed-redux-saga/macro";
 import { ActionType, getType } from "typesafe-actions";
-import { pipe } from "fp-ts/lib/function";
-import PushNotification from "react-native-push-notification";
 import { UserDataProcessingChoiceEnum } from "../../definitions/backend/UserDataProcessingChoice";
 import { UserDataProcessingStatusEnum } from "../../definitions/backend/UserDataProcessingStatus";
 import { BackendClient } from "../api/backend";
+import { RTron } from "../boot/configureStoreAndPersistor";
 import {
   apiUrlPrefix,
   bonusVacanzeEnabled,
@@ -28,27 +31,34 @@ import {
   cdcEnabled,
   euCovidCertificateEnabled,
   fciEnabled,
+  idPayEnabled,
   mvlEnabled,
   pagoPaApiUrlPrefix,
   pagoPaApiUrlPrefixTest,
   pnEnabled,
   svEnabled,
-  zendeskEnabled,
-  idPayEnabled
+  zendeskEnabled
 } from "../config";
 import { watchBonusSaga } from "../features/bonus/bonusVacanze/store/sagas/bonusSaga";
 import { watchBonusBpdSaga } from "../features/bonus/bpd/saga";
+import { watchBonusCdcSaga } from "../features/bonus/cdc/saga";
 import { watchBonusCgnSaga } from "../features/bonus/cgn/saga";
 import { watchBonusSvSaga } from "../features/bonus/siciliaVola/saga";
 import { watchEUCovidCertificateSaga } from "../features/euCovidCert/saga";
-import { watchMvlSaga } from "../features/mvl/saga";
-import { watchZendeskSupportSaga } from "../features/zendesk/saga";
 import { watchFciSaga } from "../features/fci/saga";
+import { idpayInitiativeDetailsSaga } from "../features/idpay/initiative/details/saga";
+import { watchIDPayWalletSaga } from "../features/idpay/wallet/saga";
+import { watchMessageAttachmentsSaga } from "../features/messages/saga/attachments";
+import { clearAllAttachments } from "../features/messages/saga/clearAttachments";
+import { watchMvlSaga } from "../features/mvl/saga";
+import { watchPnSaga } from "../features/pn/store/sagas/watchPnSaga";
+import { watchZendeskSupportSaga } from "../features/zendesk/saga";
 import I18n from "../i18n";
 import { mixpanelTrack } from "../mixpanel";
 import NavigationService from "../navigation/NavigationService";
 import { startApplicationInitialization } from "../store/actions/application";
 import { sessionExpired } from "../store/actions/authentication";
+import { differentProfileLoggedIn } from "../store/actions/crossSessions";
 import { previousInstallationDataDeleteSuccess } from "../store/actions/installation";
 import { setMixpanelEnabled } from "../store/actions/mixpanel";
 import {
@@ -64,6 +74,7 @@ import {
   sessionInfoSelector,
   sessionTokenSelector
 } from "../store/reducers/authentication";
+import { UIMessageId } from "../store/reducers/entities/messages/types";
 import { IdentificationResult } from "../store/reducers/identification";
 import { pendingMessageStateSelector } from "../store/reducers/notifications/pendingMessage";
 import { isPagoPATestEnabledSelector } from "../store/reducers/persistedPreferences";
@@ -75,24 +86,18 @@ import { PinString } from "../types/PinString";
 import { ReduxSagaEffect, SagaCallReturnType } from "../types/utils";
 import { isTestEnv } from "../utils/environment";
 import { deletePin, getPin } from "../utils/keychain";
-import { UIMessageId } from "../store/reducers/entities/messages/types";
-import { watchBonusCdcSaga } from "../features/bonus/cdc/saga";
-import { differentProfileLoggedIn } from "../store/actions/crossSessions";
-import { clearAllAttachments } from "../features/messages/saga/clearAttachments";
-import { watchMessageAttachmentsSaga } from "../features/messages/saga/attachments";
-import { watchPnSaga } from "../features/pn/store/sagas/watchPnSaga";
-import { watchIDPayWalletSaga } from "../features/idpay/wallet/saga";
-import { idpayInitiativeDetailsSaga } from "../features/idpay/initiative/details/saga";
 import {
   startAndReturnIdentificationResult,
   watchIdentification
 } from "./identification";
 import { previousInstallationDataDeleteSaga } from "./installation";
+import { watchLoadMessageById } from "./messages/watchLoadMessageById";
 import watchLoadMessageDetails from "./messages/watchLoadMessageDetails";
 import watchLoadNextPageMessages from "./messages/watchLoadNextPageMessages";
 import watchLoadPreviousPageMessages from "./messages/watchLoadPreviousPageMessages";
 import watchMigrateToPagination from "./messages/watchMigrateToPagination";
 import watchReloadAllMessages from "./messages/watchReloadAllMessages";
+import { watchThirdPartyMessageSaga } from "./messages/watchThirdPartyMessageSaga";
 import watchUpsertMessageStatusAttribues from "./messages/watchUpsertMessageStatusAttribues";
 import {
   askMixpanelOptIn,
@@ -115,7 +120,9 @@ import { checkAcknowledgedEmailSaga } from "./startup/checkAcknowledgedEmailSaga
 import { checkAcknowledgedFingerprintSaga } from "./startup/checkAcknowledgedFingerprintSaga";
 import { checkConfiguredPinSaga } from "./startup/checkConfiguredPinSaga";
 import { watchEmailNotificationPreferencesSaga } from "./startup/checkEmailNotificationPreferencesSaga";
+import { checkNotificationsPreferencesSaga } from "./startup/checkNotificationsPreferencesSaga";
 import { checkProfileEnabledSaga } from "./startup/checkProfileEnabledSaga";
+import { completeOnboardingSaga } from "./startup/completeOnboardingSaga";
 import { loadSessionInformationSaga } from "./startup/loadSessionInformationSaga";
 import { watchAbortOnboardingSaga } from "./startup/watchAbortOnboardingSaga";
 import { watchApplicationActivitySaga } from "./startup/watchApplicationActivitySaga";
@@ -133,15 +140,64 @@ import {
 } from "./user/userMetadata";
 import { watchWalletSaga } from "./wallet";
 import { watchProfileEmailValidationChangedSaga } from "./watchProfileEmailValidationChangedSaga";
-import { completeOnboardingSaga } from "./startup/completeOnboardingSaga";
-import { watchLoadMessageById } from "./messages/watchLoadMessageById";
-import { watchThirdPartyMessageSaga } from "./messages/watchThirdPartyMessageSaga";
-import { checkNotificationsPreferencesSaga } from "./startup/checkNotificationsPreferencesSaga";
 
 const WAIT_INITIALIZE_SAGA = 5000 as Millisecond;
 const navigatorPollingTime = 125 as Millisecond;
 const warningWaitNavigatorTime = 2000 as Millisecond;
 
+const keyExists = async (keyId: string) =>
+  await getPublicKey(keyId)
+    .then(_ => true)
+    .catch(_ => false);
+
+export function* generateAndSign() {
+  try {
+    const keyExistsRes = yield* call(keyExists, "my-tmp-k");
+
+    if (!keyExistsRes) {
+      const k = yield* call(generate, "my-tmp-k");
+      console.log(JSON.stringify(k));
+    }
+    const signer = {
+      sign: (msg: Uint8Array) => {
+        RTron.log("Byte Array", msg);
+        const arrayToString = new Array(msg.length)
+          .fill("")
+          .map((_, i) => String.fromCharCode(msg[i]))
+          .join("");
+        RTron?.log("arrayToString", arrayToString);
+        return sign(arrayToString, "my-tmp-k")
+          .then(signed =>
+            Uint8Array.from(signed.split("").map(x => x.charCodeAt(0)))
+          )
+          .catch(e => {
+            RTron?.log(e);
+            return e;
+          });
+      },
+      keyid: "sig-1"
+    };
+    const commonSignatureOptions = {
+      url: "https://example.net",
+      method: "GET",
+      httpHeaders: {
+        Host: "example.net",
+        "X-Custom-1": "0x01",
+        "X-Custom-2": "0x02"
+      }
+    };
+
+    const result = yield* call(createSignatureHeader, {
+      signer,
+      ...commonSignatureOptions
+    });
+
+    RTron.log(result);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.log(e);
+  }
+}
 /**
  * Handles the application startup and the main application logic loop
  */
@@ -160,6 +216,7 @@ export function* initializeApplicationSaga(): Generator<
   //           order to force the user to choose unlock code and run through onboarding
   //           every new installation.
 
+  yield* call(generateAndSign);
   // store the app version in the history, if the current version is not present
   yield* call(checkAppHistoryVersionSaga);
   // check if mixpanel could be initialized

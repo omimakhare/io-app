@@ -15,7 +15,6 @@ import {
 } from "@pagopa/ts-commons/lib/requests";
 import { Tuple2 } from "@pagopa/ts-commons/lib/tuples";
 import { Millisecond } from "@pagopa/ts-commons/lib/units";
-import { sign } from "io-react-native-crypto";
 import _ from "lodash";
 import { CreatedMessageWithContentAndAttachments } from "../../definitions/backend/CreatedMessageWithContentAndAttachments";
 import { PaginatedPublicMessagesCollection } from "../../definitions/backend/PaginatedPublicMessagesCollection";
@@ -126,20 +125,6 @@ export type LogoutT = IPostApiRequestType<
   never,
   BaseResponseType<SuccessResponse>
 >;
-
-const signHttpRequest = <
-  M extends r.RequestMethod,
-  P,
-  H extends string,
-  Q extends string,
-  R
->(
-  request: r.IBaseApiRequestType<M, P, H, Q, R>
-): r.IBaseApiRequestType<M, P, H, Q, R> => {
-  const signer = { sign, keyid: "key-1" };
-  const { method, headers } = request;
-  return request;
-};
 
 //
 // Create client

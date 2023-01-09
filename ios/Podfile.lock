@@ -135,6 +135,8 @@ PODS:
   - nanopb/decode (2.30908.0)
   - nanopb/encode (2.30908.0)
   - OpenSSL-Universal (1.1.1100)
+  - pagopa-io-react-native-crypto (0.1.0):
+    - React-Core
   - PromisesObjC (2.0.0)
   - Protobuf (3.19.1)
   - RCT-Folly (2021.06.28.00-v2):
@@ -388,6 +390,8 @@ PODS:
     - React
   - react-native-pdf (6.4.0):
     - React-Core
+  - react-native-randombytes (3.6.1):
+    - React-Core
   - react-native-render-html (6.3.1):
     - React-Core
   - react-native-safe-area-context (3.3.2):
@@ -609,6 +613,7 @@ DEPENDENCIES:
   - jail-monkey (from `../node_modules/jail-monkey`)
   - libevent (~> 2.1.12)
   - OpenSSL-Universal (= 1.1.1100)
+  - pagopa-io-react-native-crypto (from `../node_modules/io-react-native-crypto`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -636,6 +641,7 @@ DEPENDENCIES:
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - react-native-mixpanel (from `../node_modules/react-native-mixpanel`)
   - react-native-pdf (from `../node_modules/react-native-pdf`)
+  - react-native-randombytes (from `../node_modules/react-native-randombytes`)
   - react-native-render-html (from `../node_modules/react-native-render-html`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-screen-brightness (from `../node_modules/react-native-screen-brightness`)
@@ -741,6 +747,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/sdks/hermes/hermes-engine.podspec"
   jail-monkey:
     :path: "../node_modules/jail-monkey"
+  pagopa-io-react-native-crypto:
+    :path: "../node_modules/io-react-native-crypto"
   RCT-Folly:
     :podspec: "../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec"
   RCTRequired:
@@ -793,6 +801,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-mixpanel"
   react-native-pdf:
     :path: "../node_modules/react-native-pdf"
+  react-native-randombytes:
+    :path: "../node_modules/react-native-randombytes"
   react-native-render-html:
     :path: "../node_modules/react-native-render-html"
   react-native-safe-area-context:
@@ -914,6 +924,7 @@ SPEC CHECKSUMS:
   MLKitVision: e87dc3f2e456a6ab32361ebd985e078dd2746143
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
+  pagopa-io-react-native-crypto: d81b6b4bd8ebb1322da4c602ac810d5e9d4eefb3
   PromisesObjC: 68159ce6952d93e17b2dfe273b8c40907db5ba58
   Protobuf: 3724efa50cb2846d7ccebc8691c574e85fd74471
   RCT-Folly: b9d9fe1fc70114b751c076104e52f3b1b5e5a95a
@@ -942,6 +953,7 @@ SPEC CHECKSUMS:
   react-native-image-picker: a6e56460d34905c849ada551db30897dc7f3d535
   react-native-mixpanel: d644efe1ca33d2646d5cba29e24a13ebc9b37209
   react-native-pdf: a6a5a3f0bdf340eb2eed6c96034424d2cc3f84b0
+  react-native-randombytes: 421f1c7d48c0af8dbcd471b0324393ebf8fe7846
   react-native-render-html: 96c979fe7452a0a41559685d2f83b12b93edac8c
   react-native-safe-area-context: 584dc04881deb49474363f3be89e4ca0e854c057
   react-native-screen-brightness: 9eefe6db96a5d757e63cdfce8e48d7c9039f2af2
