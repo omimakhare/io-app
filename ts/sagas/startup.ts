@@ -3,6 +3,8 @@ import * as pot from "@pagopa/ts-commons/lib/pot";
 import { Millisecond } from "@pagopa/ts-commons/lib/units";
 import { pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
+import * as T from "fp-ts/lib/Task";
+import * as TE from "fp-ts/lib/TaskEither";
 import { generate, getPublicKey, sign } from "io-react-native-crypto";
 import { Alert } from "react-native";
 import PushNotification from "react-native-push-notification";
@@ -145,10 +147,15 @@ const WAIT_INITIALIZE_SAGA = 5000 as Millisecond;
 const navigatorPollingTime = 125 as Millisecond;
 const warningWaitNavigatorTime = 2000 as Millisecond;
 
-const keyExists = async (keyId: string) =>
-  await getPublicKey(keyId)
-    .then(_ => true)
-    .catch(_ => false);
+const keyExists = (keyId: string) =>
+  pipe(
+    TE.tryCatch(
+      () => getPublicKey(keyId),
+      () => false
+    ),
+    TE.map(_ => true),
+    TE.getOrElse(() => T.of(false))
+  )();
 
 export function* generateAndSign() {
   try {
