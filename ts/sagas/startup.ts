@@ -192,7 +192,9 @@ export function* generateAndSign() {
       ...commonSignatureOptions
     });
 
-    RTron.log(result);
+    RTron.log(
+      result.map(r => ({ signature: r.signature, input: r.signatureInput }))
+    );
   } catch (e) {
     // eslint-disable-next-line no-console
     console.log(e);
