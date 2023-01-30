@@ -1,7 +1,7 @@
 import {
-  generate,
+  CryptoError,
   deleteKey,
-  CryptoError
+  generate
 } from "@pagopa/io-react-native-crypto";
 import { call } from "typed-redux-saga/macro";
 import {
@@ -11,7 +11,7 @@ import {
 } from "../../utils/crypto";
 import { mixpanelTrack } from "./../../mixpanel";
 
-const KEY_NAME = "lp-temp-key";
+export const KEY_NAME = "lp-temp-key";
 
 export function* generateCryptoKeyPair() {
   try {
