@@ -4,18 +4,16 @@ import { assign, createMachine } from "xstate";
 import { InitiativeDto } from "../../../../../definitions/idpay/onboarding/InitiativeDto";
 import { StatusEnum } from "../../../../../definitions/idpay/onboarding/OnboardingStatusDTO";
 import { RequiredCriteriaDTO } from "../../../../../definitions/idpay/onboarding/RequiredCriteriaDTO";
-import { SelfConsentDTO } from "../../../../../definitions/idpay/onboarding/SelfConsentDTO";
 import { SelfConsentMultiDTO } from "../../../../../definitions/idpay/onboarding/SelfConsentMultiDTO";
+import { SelfDeclarationBoolDTO } from "../../../../../definitions/idpay/onboarding/SelfDeclarationBoolDTO";
+import { SelfDeclarationMultiDTO } from "../../../../../definitions/idpay/onboarding/SelfDeclarationMultiDTO";
 import {
   LOADING_TAG,
   UPSERTING_TAG,
   WAITING_USER_INPUT_TAG
 } from "../../../../utils/xstate";
 import { OnboardingFailureType } from "./failure";
-import {
-  getBoolRequiredCriteriaFromContext,
-  getMultiRequiredCriteriaFromContext
-} from "./selectors";
+import { filterRequiredCriteria } from "./utils";
 
 // Context types
 export type Context = {
@@ -23,9 +21,14 @@ export type Context = {
   initiative?: InitiativeDto;
   initiativeStatus?: StatusEnum;
   requiredCriteria?: O.Option<RequiredCriteriaDTO>;
+  multiConsents: Record<SelfConsentMultiDTO["code"], SelfConsentMultiDTO>;
+  multiConsentsIndex: number;
   failure?: OnboardingFailureType;
-  multiConsents?: Array<SelfConsentDTO | undefined>;
-  // undefined will not be pushed to the array, but needs handling in case of empty index in selectors
+};
+
+const INITIAL_CONTEXT: Context = {
+  multiConsents: {},
+  multiConsentsIndex: 0
 };
 
 // Events types
@@ -42,10 +45,6 @@ type E_ACCEPT_REQUIRED_PDND_CRITERIA = {
   type: "ACCEPT_REQUIRED_PDND_CRITERIA";
 };
 
-type E_ACCEPT_REQUIRED_SELF_CRITERIA = {
-  type: "ACCEPT_REQUIRED_SELF_CRITERIA";
-};
-
 type E_ACCEPT_REQUIRED_BOOL_CRITERIA = {
   type: "ACCEPT_REQUIRED_BOOL_CRITERIA";
 };
@@ -54,29 +53,23 @@ type E_QUIT_ONBOARDING = {
   type: "QUIT_ONBOARDING";
 };
 
-type E_GO_BACK = {
-  type: "GO_BACK";
+type E_ACCEPT_REQUIRED_MULTI_CRITERIA = {
+  type: "ACCEPT_REQUIRED_MULTI_CRITERIA";
+  data: SelfConsentMultiDTO;
 };
 
-type E_ADD_MULTI_CONSENT = {
-  type: "ADD_MULTI_CONSENT";
-  data: SelfConsentMultiDTO;
-  page: number;
-};
-type E_ALL_CRITERIA_ACCEPTED = {
-  type: "ALL_CRITERIA_ACCEPTED";
+type E_GO_BACK = {
+  type: "GO_BACK";
 };
 
 type Events =
   | E_SELECT_INITIATIVE
   | E_ACCEPT_TOS
   | E_ACCEPT_REQUIRED_PDND_CRITERIA
-  | E_ACCEPT_REQUIRED_SELF_CRITERIA
-  | E_QUIT_ONBOARDING
-  | E_GO_BACK
-  | E_ADD_MULTI_CONSENT
   | E_ACCEPT_REQUIRED_BOOL_CRITERIA
-  | E_ALL_CRITERIA_ACCEPTED;
+  | E_ACCEPT_REQUIRED_MULTI_CRITERIA
+  | E_QUIT_ONBOARDING
+  | E_GO_BACK;
 
 // Services types
 type Services = {
@@ -129,16 +122,27 @@ const hasSelfRequiredCriteria = (context: Context) => {
 };
 
 const hasBoolRequiredCriteria = (context: Context) =>
-  getBoolRequiredCriteriaFromContext(context).length > 0;
+  filterRequiredCriteria(context.requiredCriteria, SelfDeclarationBoolDTO.is)
+    .length > 0;
 
 const hasMultiRequiredCriteria = (context: Context) =>
-  getMultiRequiredCriteriaFromContext(context).length > 0;
+  filterRequiredCriteria(context.requiredCriteria, SelfDeclarationMultiDTO.is)
+    .length > 0;
+
+const isNotFirstMultiCriteria = (context: Context) =>
+  context.multiConsentsIndex !== 0;
+
+const isLastMultiCriteria = (context: Context) =>
+  context.multiConsentsIndex >=
+  filterRequiredCriteria(context.requiredCriteria, SelfDeclarationMultiDTO.is)
+    .length -
+    1;
 
 const createIDPayOnboardingMachine = () =>
   /** @xstate-layout N4IgpgJg5mDOIC5QEkAiAFAggTQPoHkA5AIX0wCVVlCBxAYgEUBVZAFQJLMupoG0AGALqJQABwD2sAJYAXKeIB2IkAA9EARgDsmgGwA6dQBZN-bTvU6AHJf46ANCACeGgEwBfNw7RY8RUhSpaPQB1TDYeXGpwzFZkADUAUVwAZQSAGQSAYViiOlSM7MjCaNjEgWEkEAlpOUVlNQQAZkN1PUtGzQBWAE5DW35GxssXRodnBE6XfUNuxqMXTuNZ5o8vDBwOf24gtLJAmiKS+IS6CEUwPSkFADdxAGsLgBtxAEMIZAVZKRe5a7By5TVL51SoNSyGTp6XRTBb8dSNbo6bouMaIRYuPQubSddSWXQDHQ41YgbwbPxcfZ6XaYfaHWIxY50MAAJ2Z4mZelEjx+ADN2QBbPTPN4fL4-KR-AGVIG1JSgxDaVEIFyWZGYwwuTUtSw9FxaYmk3ycAI8Kl7CJRemlJLJVgxJjJU7nS43e5PV7vT5ycV-ZIyH4AV1gUrEkmBctADQhrRGRm6iM6nUaC0WSpc-Dxeh6yZ0U1smu6nQN6yNW0p1NpluQDMSKTtrAdTNZ7M53JkfOZguFnrFvzAfsDwaEgLDsvqiGjmLmMwTSZThiVuM6-D0hM6XSmk3aPWLPk2FNNCTimDSTAZtDp1etdftjpDVVH8gjqgVmiVcy6bUMOu-OkJXSMXcyWNbYaD0I8TzPWILyrGsbXrRteHUCpQxqJ9xwQbpVT0QZtEsKx+A1TRETTAscMRZNuiMfg9W6TQgNLA8ggg09zwOWDr1tW86F4FwUIfNCQUjRAsO6HCOk0fCbCIkinA0eMMQhVUjFVLFl3ozwSRLfcTSCKhknQNIcAtYorUZTBMkyBJ0HYVh8GSe8ZXQ+Umi0FcdA6cEdH4QsOmMRdNBVPQqJxOiLEkwxDEaBidNAvQLKsmyIjsx0zgUC4rluB49BeABjXKwFEGRWEkRzHyEl9MLfOTlSsfRJnhLC-28zcYvJXSwIS6zoIOFKmzZDkuV5AUcvywritK4dpXK58wWq8YsXjVdGk6VU6P6ZE2pA8tzQvcgEmYZB9tQXBMnINgEnOzAnXSl0svdN5yDAABHAMpGZSBMmZWQWW+MrBNmjR5o0dQMVzZdCPUQsjHUTodC2stTQrCJ9sO47TvO1hLurfqWyG9sRu7J7Xvez7vpkX6Xn+8MML-SFEVVRoMzmEYVrTHRjBwkYIZ6fDiIRpiwJYqCUYOlh0bOi6rp4qbUJplzGisPQBlByKtEkzRBnsGqXF6HC+jhFbkSmfnNMNWLKWFtjcFR8WEhOyWselpD+KciqGkVGrYd1zFNEi-CVvTbQBY68Dj1YnqbbFo77YxqWcd412ZowujF34OE2naXQ-y6CEiTN7T2ri-TDOMvbo-R9BUEIB3Mex66upsqO0djqua7jp3q2pscXIhTRldmXOVRxXXCUXFbISkhYEXBP2opD4vkAMozsFFluTrb2v44byzuubu2N+rrfO8wF2RwBjDIv7nyOnRHVQYTRdQZXQPQoWQsBm6BfKRLle14P3Am8O71zoDQfAuBiAWQANLd2csJBAV8B63w1PfUenRFx9H0EzdchgObeSikWAue4i4-yXqXVe5d14pHSAAMWAdLNKFxYD+gpnoc2JDTS-zLgcW2McTr5DoY7eusD3aICZtoAw1g4RGGaLgqYSoPL93jHCcw645je2-pwshf9KEAIEfQnGYCIHQJEYDBB64kFD1QY-L22C9BRVMKony-AkzwyIcBRGeltHcP3nw6haRBF12lkYyBmQYHIXPvLeB79GgGF6CrdMSZNDqAwbMZW3lVS4K1jgzRXjl4+N4ejfRQirph0gtbYpQSE6ywElEyqsNCL2OaCYOGsxwoLhqnDDEcNLBQyGKDKwkxclgS4RQnhFdY6VO3mUiOEQpknx4hE6aF8XINMME04wLikRzB0H7JULTM62ELFRGicNhl6FGf-Px8z656EyNgTIGRcAAFkmBpFiAYhuqB+G0NOkQVIhBWCmIwlMawU5ekqgAtgpUvSVymFxJRXMi03FrGIdtLR+Sxm+KKb8kp1Y7kPKea895yBPl0BpD8gJfzCAAqBUsuWPdondFsMFawIx4wal2YMJUSSoQuEirrXoyY-bRXcYxUOlzdHXNxVUzAFzvFYtIPgNIZLG7sEKbHJVKq8WnxqW7MxtEYzZiwitCECIeVDExPyyKGp4wWF1uctVVyJaypuhlV02U8oFSKsTN6H0IBfR+t9Kmerk4K3UAMKEcNsw2sIvhceisDDUWoh5cGorNIKHEBAOAyh2HotoJExllUAC0cw0zrN6PGXoxEbAWGTOc0I4QYKmSvMcfxWQciEELXAyq-lOkzCzFYIw34dm9HOcjZtRxEjdtERMCEOE4bJltYmJElgeULFZbYZcKDh5fzFRbJGu12ItrgjeBsyQZ1mMCmmeFmIKKEV6Phdw+6OHMXDiLSdZlaxcXPZe2mzLM5xgcYrfC2sFoRrErDPEvQPJM3UIBF9+aRkKpMlOhIf6XIqj6FCeJQ6qLflTl7A5NhrCSW8kmHElhHW7ySheFKGH4GDCZsFLogwegzGXGzIjLi2gZjxPhFxK1cTjqPdi2OOqGOVSmGJeMQxhWqMClFdmK02jUUCnMZYLjzlW0jhq4+9dJNRmBsqfCfLb7G1xOnZ9qKPGC3lZi51rcj6fMMyJFEtjNRxJMHBuYzQ6LnMleMqhNyrquYQPB7CiZmj8oisiJUfQMR4jVu0XZHLRU2fFYvBzUqcVUp1TMj9BwQvVjC6DDoWYkwamMOCOLNUkT9yREKxasMTCGACyhnLkyZXTPuY8pIxKPkSeWXUhoCxCSHJ8vy2RXKFEtEzrspMsNES53a9loLejusn3s+QiIWqXPDaLQ0BFsTCKTFzH0XQVEeXeTvUK3BUMrD1sQ54zqNHdMTP06Fg7PbRsmH7pJWG2SFua0XCqMScJklRURNDwkq2dsXlfQcTI+BnmGQSFjVAYW2MVs8kidcRhEwdPGA-LBzKBiLAGCgqjz27OBYPReGhYRTz7TC8y2JalNTwjx7rInYiVStG0H5XWkx07U48EAA */
   createMachine(
     {
-      context: {},
+      context: INITIAL_CONTEXT,
       tsTypes: {} as import("./machine.typegen").Typegen0,
       schema: {
         context: {} as Context,
@@ -146,7 +150,7 @@ const createIDPayOnboardingMachine = () =>
         services: {} as Services
       },
       predictableActionArguments: true,
-      id: "IDPAY_ONBOARDING",
+      id: "ROOT",
       initial: "WAITING_INITIATIVE_SELECTION",
       on: {
         QUIT_ONBOARDING: {
@@ -311,13 +315,12 @@ const createIDPayOnboardingMachine = () =>
 
         DISPLAYING_REQUIRED_SELF_CRITERIA: {
           tags: [WAITING_USER_INPUT_TAG],
-          initial: "EVALUATING_SELF_CRITERIA",
+          initial: "EVALUATING_REQUIRED_SELF_CRITERIA",
           onDone: {
             target: "ACCEPTING_REQUIRED_CRITERIA"
-            // triggered by the 'final' substate
           },
           states: {
-            EVALUATING_SELF_CRITERIA: {
+            EVALUATING_REQUIRED_SELF_CRITERIA: {
               tags: [LOADING_TAG],
               always: [
                 {
@@ -325,7 +328,7 @@ const createIDPayOnboardingMachine = () =>
                   cond: "hasBoolRequiredCriteria"
                 },
                 {
-                  target: "CYCLING_MULTI_CRITERIA",
+                  target: "DISPLAYING_MULTI_CRITERIA",
                   cond: "hasMultiRequiredCriteria"
                 }
               ]
@@ -334,54 +337,62 @@ const createIDPayOnboardingMachine = () =>
               tags: [WAITING_USER_INPUT_TAG],
               entry: "navigateToBoolSelfDeclarationsScreen",
               on: {
-                GO_BACK: [
-                  {
-                    target:
-                      "#IDPAY_ONBOARDING.DISPLAYING_REQUIRED_PDND_CRITERIA",
-                    cond: "hasPDNDRequiredCriteria"
-                  },
-                  {
-                    target: "#IDPAY_ONBOARDING.DISPLAYING_INITIATIVE"
-                  }
-                ],
                 ACCEPT_REQUIRED_BOOL_CRITERIA: [
                   {
-                    target: "CYCLING_MULTI_CRITERIA",
+                    target: "DISPLAYING_MULTI_CRITERIA",
                     cond: "hasMultiRequiredCriteria"
                   },
                   {
-                    target: "MULTI_PREREQUISITES_CYCLE_OVER"
+                    target: "REQUIRED_SELF_CRITERIA_COMPLETED"
+                  }
+                ],
+                GO_BACK: [
+                  {
+                    target: "#ROOT.DISPLAYING_REQUIRED_PDND_CRITERIA",
+                    cond: "hasPDNDRequiredCriteria"
+                  },
+                  {
+                    target: "#ROOT.DISPLAYING_INITIATIVE"
                   }
                 ]
               }
             },
-            CYCLING_MULTI_CRITERIA: {
+            DISPLAYING_MULTI_CRITERIA: {
               tags: [WAITING_USER_INPUT_TAG],
               entry: "navigateToMultiSelfDeclarationsScreen",
               on: {
-                ADD_MULTI_CONSENT: {
-                  actions: "addMultiConsent"
-                },
-                ALL_CRITERIA_ACCEPTED: {
-                  target: "MULTI_PREREQUISITES_CYCLE_OVER"
-                },
+                ACCEPT_REQUIRED_MULTI_CRITERIA: [
+                  {
+                    target: "REQUIRED_SELF_CRITERIA_COMPLETED",
+                    actions: "acceptMultiCriteria",
+                    cond: "isLastMultiCriteria"
+                  },
+                  {
+                    actions: [
+                      "acceptMultiCriteria",
+                      "navigateToMultiSelfDeclarationsScreen"
+                    ]
+                  }
+                ],
                 GO_BACK: [
+                  {
+                    actions: [
+                      "revertMultiCriteria",
+                      "navigateToPreviousMultiSelfDeclarationsScreen"
+                    ],
+                    cond: "isNotFirstMultiCriteria"
+                  },
                   {
                     target: "DISPLAYING_BOOL_CRITERIA",
                     cond: "hasBoolRequiredCriteria"
                   },
                   {
-                    target:
-                      "#IDPAY_ONBOARDING.DISPLAYING_REQUIRED_PDND_CRITERIA",
-                    cond: "hasPDNDRequiredCriteria"
-                  },
-                  {
-                    target: "#IDPAY_ONBOARDING.DISPLAYING_INITIATIVE"
+                    target: "#ROOT.DISPLAYING_INITIATIVE"
                   }
                 ]
               }
             },
-            MULTI_PREREQUISITES_CYCLE_OVER: {
+            REQUIRED_SELF_CRITERIA_COMPLETED: {
               type: "final"
             }
           }
@@ -442,14 +453,14 @@ const createIDPayOnboardingMachine = () =>
         acceptTosFailure: assign((_, event) => ({
           failure: event.data as OnboardingFailureType
         })),
-        addMultiConsent: assign((context, event) => {
-          // required in order to use an array instead of a number:key map
-          const newConsents = context.multiConsents ?? [];
-          // eslint-disable-next-line functional/immutable-data
-          newConsents[event.page] = event.data;
-
+        revertMultiCriteria: assign((context, _) => ({
+          multiConsentsIndex: context.multiConsentsIndex - 1
+        })),
+        acceptMultiCriteria: assign((context, event) => {
+          const data = event.data as SelfConsentMultiDTO;
           return {
-            multiConsents: newConsents
+            multiConsents: { ...context.multiConsents, [data.code]: data },
+            multiConsentsIndex: context.multiConsentsIndex + 1
           };
         })
       },
@@ -459,7 +470,9 @@ const createIDPayOnboardingMachine = () =>
         hasPDNDRequiredCriteria,
         hasSelfRequiredCriteria,
         hasBoolRequiredCriteria,
-        hasMultiRequiredCriteria
+        hasMultiRequiredCriteria,
+        isNotFirstMultiCriteria,
+        isLastMultiCriteria
       }
     }
   );

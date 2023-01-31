@@ -1,69 +1,33 @@
 /* eslint-disable no-underscore-dangle */
-import * as O from "fp-ts/lib/Option";
-import { pipe } from "fp-ts/lib/function";
 import { createSelector } from "reselect";
 import { StateFrom } from "xstate";
-import { RequiredCriteriaDTO } from "../../../../../definitions/idpay/onboarding/RequiredCriteriaDTO";
 import { SelfDeclarationBoolDTO } from "../../../../../definitions/idpay/onboarding/SelfDeclarationBoolDTO";
-import { SelfDeclarationDTO } from "../../../../../definitions/idpay/onboarding/SelfDeclarationDTO";
 import { SelfDeclarationMultiDTO } from "../../../../../definitions/idpay/onboarding/SelfDeclarationMultiDTO";
-import { Context, IDPayOnboardingMachineType } from "./machine";
+import { IDPayOnboardingMachineType } from "./machine";
+import { filterRequiredCriteria } from "./utils";
 
 type StateWithContext = StateFrom<IDPayOnboardingMachineType>;
+
 const selectRequiredCriteria = (state: StateWithContext) =>
   state.context.requiredCriteria;
-const filterCriteria = <T extends SelfDeclarationDTO>(
-  criteria: O.Option<RequiredCriteriaDTO> | undefined,
-  filterFunc: typeof SelfDeclarationMultiDTO | typeof SelfDeclarationBoolDTO
-) =>
-  pipe(
-    criteria,
-    O.fromNullable,
-    O.flatten,
-    O.fold(
-      () => [],
-      some => some.selfDeclarationList.filter(filterFunc.is)
-    )
-  ) as Array<T>;
 
 const multiRequiredCriteriaSelector = createSelector(
   selectRequiredCriteria,
   requiredCriteria =>
-    filterCriteria<SelfDeclarationMultiDTO>(
-      requiredCriteria,
-      SelfDeclarationMultiDTO
-    )
-);
-
-const pickedCriteriaSelector = createSelector(
-  (state: StateWithContext) => state.context.multiConsents,
-  val => val ?? []
+    filterRequiredCriteria(requiredCriteria, SelfDeclarationMultiDTO.is)
 );
 
 const boolRequiredCriteriaSelector = createSelector(
   selectRequiredCriteria,
   requiredCriteria =>
-    filterCriteria<SelfDeclarationBoolDTO>(
-      requiredCriteria,
-      SelfDeclarationBoolDTO
-    )
+    filterRequiredCriteria(requiredCriteria, SelfDeclarationBoolDTO.is)
 );
-const getMultiRequiredCriteriaFromContext = (context: Context) =>
-  filterCriteria<SelfDeclarationMultiDTO>(
-    context.requiredCriteria,
-    SelfDeclarationMultiDTO
-  );
 
-const getBoolRequiredCriteriaFromContext = (context: Context) =>
-  filterCriteria<SelfDeclarationBoolDTO>(
-    context.requiredCriteria,
-    SelfDeclarationBoolDTO
-  );
+const selectMultiConsents = (state: StateWithContext) =>
+  state.context.multiConsents;
 
 export {
-  multiRequiredCriteriaSelector,
   boolRequiredCriteriaSelector,
-  pickedCriteriaSelector,
-  getMultiRequiredCriteriaFromContext,
-  getBoolRequiredCriteriaFromContext
+  multiRequiredCriteriaSelector,
+  selectMultiConsents
 };

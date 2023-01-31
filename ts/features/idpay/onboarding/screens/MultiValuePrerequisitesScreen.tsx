@@ -1,8 +1,10 @@
-/* eslint-disable no-underscore-dangle */
 import { RouteProp, useRoute } from "@react-navigation/native";
+import { useSelector } from "@xstate/react";
 import { ListItem as NBListItem } from "native-base";
 import React from "react";
 import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import { SelfConsentDTO } from "../../../../../definitions/idpay/onboarding/SelfConsentDTO";
+import { VSpacer } from "../../../../components/core/spacer/Spacer";
 import { Body } from "../../../../components/core/typography/Body";
 import { H1 } from "../../../../components/core/typography/H1";
 import { H4 } from "../../../../components/core/typography/H4";
@@ -13,11 +15,12 @@ import BaseScreenComponent from "../../../../components/screens/BaseScreenCompon
 import FooterWithButtons from "../../../../components/ui/FooterWithButtons";
 import IconFont from "../../../../components/ui/IconFont";
 import I18n from "../../../../i18n";
-import { IOStackNavigationProp } from "../../../../navigation/params/AppParamsList";
 import { IDPayOnboardingParamsList } from "../navigation/navigator";
-import { useMultiPrerequisitesPagination } from "../utils/hooks";
 import { useOnboardingMachineService } from "../xstate/provider";
-import { VSpacer } from "../../../../components/core/spacer/Spacer";
+import {
+  multiRequiredCriteriaSelector,
+  selectMultiConsents
+} from "../xstate/selectors";
 
 const styles = StyleSheet.create({
   maxheight: {
@@ -51,57 +54,59 @@ const CustomListItem = ({ text, onPress, checked }: ListItemProps) => (
   </NBListItem>
 );
 
-const buttonProps = {
-  leftButton: { title: I18n.t("global.buttons.back"), bordered: true },
-  rightButton: {
-    title: I18n.t("global.buttons.continue"),
-    bordered: false
-  }
-};
-
-type MultiValueScreenNavigationType = IOStackNavigationProp<
-  IDPayOnboardingParamsList,
-  "IDPAY_ONBOARDING_MULTI_SELF_DECLARATIONS"
->;
 type MultiValuePrerequisitesScreenRouteParams = {
-  page: number;
+  index: number;
 };
 
-type MultiValuePrerequisitesScreenRouteProps = RouteProp<
+type MultiValuePrerequisitesRouteProps = RouteProp<
   IDPayOnboardingParamsList,
   "IDPAY_ONBOARDING_MULTI_SELF_DECLARATIONS"
 >;
 
-type NavigationProps = {
-  navigation: MultiValueScreenNavigationType;
-};
-const MultiValuePrerequisitesScreen = ({ navigation }: NavigationProps) => {
-  const [selectedIndex, setSelectedIndex] = React.useState<number | undefined>(
-    undefined
-  );
-  const { params } = useRoute<MultiValuePrerequisitesScreenRouteProps>();
+const MultiValuePrerequisitesScreen = () => {
+  const { params } = useRoute<MultiValuePrerequisitesRouteProps>();
   const machine = useOnboardingMachineService();
 
-  const { currentPage, confirmChoice, goBack } =
-    useMultiPrerequisitesPagination(navigation, machine, params.page);
+  const criteriaList = useSelector(machine, multiRequiredCriteriaSelector);
+  const selectedCriteria = criteriaList[params.index];
+
+  const userConsents = useSelector(machine, selectMultiConsents);
+  const currentChoice = userConsents[selectedCriteria.code]?.value;
+  const currentChoiceIndex =
+    currentChoice !== undefined
+      ? selectedCriteria?.value.indexOf(currentChoice)
+      : undefined;
+
+  const [selectedIndex, setSelectedIndex] = React.useState<number | undefined>(
+    currentChoiceIndex
+  );
+
+  const handleGoBack = () => machine.send({ type: "GO_BACK" });
 
   const continueOnPress = () => {
     if (selectedIndex === undefined) {
-      return null;
+      return;
     }
-    confirmChoice({
-      _type: currentPage._type,
-      value: currentPage.value[selectedIndex],
-      code: currentPage.code
-    });
 
-    return null;
+    const data: SelfConsentDTO = {
+      ...selectedCriteria,
+      value: selectedCriteria.value[selectedIndex]
+    };
+
+    machine.send({
+      type: "ACCEPT_REQUIRED_MULTI_CRITERIA",
+      data
+    });
   };
+
+  if (selectedCriteria === undefined) {
+    return null;
+  }
 
   return (
     <SafeAreaView style={IOStyles.flex}>
       <BaseScreenComponent
-        goBack={goBack}
+        goBack={handleGoBack}
         headerTitle={I18n.t("idpay.onboarding.headerTitle")}
       >
         <View style={IOStyles.horizontalContentPadding}>
@@ -110,9 +115,9 @@ const MultiValuePrerequisitesScreen = ({ navigation }: NavigationProps) => {
           <Body>{I18n.t("idpay.onboarding.multiPrerequisites.body")}</Body>
           <Link>{I18n.t("idpay.onboarding.multiPrerequisites.link")}</Link>
           <VSpacer size={24} />
-          <H4>{currentPage.description}</H4>
+          <H4>{selectedCriteria.description}</H4>
           <ScrollView style={styles.maxheight}>
-            {currentPage.value.map((requisite, index) => (
+            {selectedCriteria.value.map((requisite, index) => (
               <CustomListItem
                 key={index}
                 text={requisite}
@@ -126,21 +131,21 @@ const MultiValuePrerequisitesScreen = ({ navigation }: NavigationProps) => {
       <FooterWithButtons
         type="TwoButtonsInlineHalf"
         leftButton={{
-          onPress: goBack,
-          ...buttonProps.leftButton
+          onPress: handleGoBack,
+          title: I18n.t("global.buttons.back"),
+          bordered: true
         }}
         rightButton={{
           onPress: continueOnPress,
           disabled: selectedIndex === undefined,
-          ...buttonProps.rightButton
+          title: I18n.t("global.buttons.continue"),
+          bordered: false
         }}
       />
     </SafeAreaView>
   );
 };
 
+export type { MultiValuePrerequisitesScreenRouteParams };
+
 export default MultiValuePrerequisitesScreen;
-export type {
-  MultiValuePrerequisitesScreenRouteParams,
-  MultiValueScreenNavigationType
-};

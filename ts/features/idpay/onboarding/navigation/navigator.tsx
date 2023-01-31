@@ -1,5 +1,12 @@
-import { PathConfigMap } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
+import {
+  ParamListBase,
+  PathConfigMap,
+  RouteProp
+} from "@react-navigation/native";
+import {
+  createStackNavigator,
+  StackNavigationProp
+} from "@react-navigation/stack";
 import React from "react";
 import BoolValuePrerequisitesScreen from "../screens/BoolValuePrerequisitesScreen";
 import CompletionScreen from "../screens/CompletionScreen";
@@ -64,6 +71,9 @@ export const IDPayOnboardingNavigator = () => (
       <Stack.Screen
         name={IDPayOnboardingRoutes.IDPAY_ONBOARDING_MULTI_SELF_DECLARATIONS}
         component={MultiValuePrerequisitesScreen}
+        options={{
+          animationTypeForReplace: "pop"
+        }}
       />
       <Stack.Screen
         name={IDPayOnboardingRoutes.IDPAY_ONBOARDING_PDNDACCEPTANCE}
@@ -81,3 +91,16 @@ export const IDPayOnboardingNavigator = () => (
     </Stack.Navigator>
   </IDPayOnboardingMachineProvider>
 );
+
+export type IDPayOnboardingStackNavigationRouteProps<
+  ParamList extends ParamListBase,
+  RouteName extends keyof ParamList = string
+> = {
+  navigation: IDPayOnboardingStackNavigationProp<ParamList, RouteName>;
+  route: RouteProp<ParamList, RouteName>;
+};
+
+export type IDPayOnboardingStackNavigationProp<
+  ParamList extends ParamListBase,
+  RouteName extends keyof ParamList = string
+> = StackNavigationProp<IDPayOnboardingParamsList & ParamList, RouteName>;

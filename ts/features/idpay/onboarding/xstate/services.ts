@@ -1,16 +1,17 @@
 /* eslint-disable no-underscore-dangle */
 import * as E from "fp-ts/lib/Either";
-import * as O from "fp-ts/lib/Option";
 import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/lib/Option";
 import { PreferredLanguage } from "../../../../../definitions/backend/PreferredLanguage";
 import { InitiativeDto } from "../../../../../definitions/idpay/onboarding/InitiativeDto";
 import { StatusEnum } from "../../../../../definitions/idpay/onboarding/OnboardingStatusDTO";
 import { RequiredCriteriaDTO } from "../../../../../definitions/idpay/onboarding/RequiredCriteriaDTO";
 import { SelfConsentDTO } from "../../../../../definitions/idpay/onboarding/SelfConsentDTO";
+import { SelfDeclarationBoolDTO } from "../../../../../definitions/idpay/onboarding/SelfDeclarationBoolDTO";
 import { OnboardingClient } from "../api/client";
 import { OnboardingFailureType } from "./failure";
 import { Context } from "./machine";
-import { getBoolRequiredCriteriaFromContext } from "./selectors";
+import { filterRequiredCriteria } from "./utils";
 
 const createServicesImplementation = (
   onboardingClient: OnboardingClient,
@@ -138,11 +139,12 @@ const createServicesImplementation = (
   };
 
   const acceptRequiredCriteria = async (context: Context) => {
-    const {
-      initiative,
+    const { initiative, requiredCriteria, multiConsents } = context;
+    const boolConsents = filterRequiredCriteria(
       requiredCriteria,
-      multiConsents: selfConsents
-    } = context;
+      SelfDeclarationBoolDTO.is
+    );
+
     if (initiative === undefined || requiredCriteria === undefined) {
       throw new Error("initative or requiredCriteria is undefined");
     }
@@ -152,12 +154,12 @@ const createServicesImplementation = (
     }
 
     const consentsArray = [
-      ...getBoolRequiredCriteriaFromContext(context).map(_ => ({
+      ...boolConsents.map(_ => ({
         _type: _._type,
         code: _.code,
         accepted: true
       })),
-      ...(selfConsents ?? [])
+      ...Object.entries(multiConsents)
     ] as Array<SelfConsentDTO>;
 
     const response = await onboardingClient.consentOnboarding({
