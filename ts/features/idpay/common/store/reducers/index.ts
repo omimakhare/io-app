@@ -2,13 +2,12 @@ import { combineReducers } from "redux";
 import initiativeDetailsReducer, {
   IDPayInitiativeState
 } from "../../../initiative/details/store/index";
-import walletReducer, {
-  IDPayWalletState
-} from "../../../wallet/store/reducers/index";
-
 import unsubscriptionReducer, {
   IDPayUnsubscriptionState
 } from "../../../unsubscription/store";
+import walletReducer, {
+  IDPayWalletState
+} from "../../../wallet/store/reducers/index";
 
 export type IDPayState = {
   wallet: IDPayWalletState;

@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import { Text as NBText } from "native-base";
 import React from "react";
 import { SafeAreaView, StyleSheet, View } from "react-native";
@@ -7,15 +8,16 @@ import { H3 } from "../../../../components/core/typography/H3";
 import { IOStyles } from "../../../../components/core/variables/IOStyles";
 import ButtonOutline from "../../../../components/ui/ButtonOutline";
 import I18n from "../../../../i18n";
+import {
+  AppParamsList,
+  IOStackNavigationProp
+} from "../../../../navigation/params/AppParamsList";
 import themeVariables from "../../../../theme/variables";
-import { useUnsubscriptionMachineService } from "../xstate/provider";
 
 const UnsubscriptionFailureScreen = () => {
-  const machine = useUnsubscriptionMachineService();
+  const navigation = useNavigation<IOStackNavigationProp<AppParamsList>>();
 
-  const handleClosePress = () => {
-    machine.send({ type: "EXIT" });
-  };
+  const handleClosePress = () => navigation.pop();
 
   return (
     <SafeAreaView style={[IOStyles.flex, { flexGrow: 1 }]}>

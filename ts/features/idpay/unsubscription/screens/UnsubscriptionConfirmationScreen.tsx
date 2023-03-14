@@ -1,5 +1,5 @@
-import { RouteProp, useRoute } from "@react-navigation/native";
-import { useSelector } from "@xstate/react";
+import * as pot from "@pagopa/ts-commons/lib/pot";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import React from "react";
 import { FlatList, SafeAreaView, StyleSheet, View } from "react-native";
 import { VSpacer } from "../../../../components/core/spacer/Spacer";
@@ -13,17 +13,30 @@ import TouchableDefaultOpacity from "../../../../components/TouchableDefaultOpac
 import FooterWithButtons from "../../../../components/ui/FooterWithButtons";
 import IconFont from "../../../../components/ui/IconFont";
 import I18n from "../../../../i18n";
+import {
+  AppParamsList,
+  IOStackNavigationProp
+} from "../../../../navigation/params/AppParamsList";
+import { useIODispatch, useIOSelector } from "../../../../store/hooks";
 import customVariables from "../../../../theme/variables";
 import { emptyContextualHelp } from "../../../../utils/emptyContextualHelp";
 import { useIOBottomSheetModal } from "../../../../utils/hooks/bottomSheet";
+import { useOnFirstRender } from "../../../../utils/hooks/useOnFirstRender";
 import { UnsubscriptionCheckListItem } from "../components/UnsubscriptionCheckListItem";
-import { IDPayUnsubscriptionParamsList } from "../navigation/navigator";
-import { useUnsubscriptionMachineService } from "../xstate/provider";
+import {
+  IDPayUnsubscriptionParamsList,
+  IDPayUnsubscriptionRoutes
+} from "../navigation/navigator";
 import {
   areChecksFullfilledSelector,
-  isLoadingSelector,
-  selectChecks
-} from "../xstate/selectors";
+  unsubscriptionChecksSelector,
+  unsubscriptionRequestSelector
+} from "../store";
+import {
+  idPayUnsubscribe,
+  idPayUnsubscriptionCheckToggle,
+  idPayUnsubscriptionReset
+} from "../store/actions";
 
 export type IDPayUnsubscriptionConfirmationScreenParams = {
   initiativeId: string;
@@ -40,32 +53,38 @@ const UnsubscriptionConfirmationScreen = () => {
 
   const { initiativeId, initiativeName } = route.params;
 
-  const machine = useUnsubscriptionMachineService();
-  const checks = useSelector(machine, selectChecks);
-  const areChecksFullfilled = useSelector(machine, areChecksFullfilledSelector);
-  const isLoading = useSelector(machine, isLoadingSelector);
+  const dispatch = useIODispatch();
+  const navigation = useNavigation<IOStackNavigationProp<AppParamsList>>();
+
+  const checks = useIOSelector(unsubscriptionChecksSelector);
+  const areChecksFullfilled = useIOSelector(areChecksFullfilledSelector);
+
+  const unsubscriptionRequest = useIOSelector(unsubscriptionRequestSelector);
+  const isLoading = pot.isLoading(unsubscriptionRequest);
+
+  useOnFirstRender(() => {
+    dispatch(idPayUnsubscriptionReset());
+  });
 
   React.useEffect(() => {
-    machine.send({ type: "SELECT_INITIATIVE", initiativeId, initiativeName });
-  }, [machine, initiativeId, initiativeName]);
+    if (pot.isSome(unsubscriptionRequest)) {
+      navigation.navigate(IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_MAIN, {
+        screen: IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_SUCCESS
+      });
+    } else if (pot.isError(unsubscriptionRequest)) {
+      navigation.navigate(IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_MAIN, {
+        screen: IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_FAILURE
+      });
+    }
+  }, [navigation, unsubscriptionRequest]);
 
-  const handleClosePress = () =>
-    machine.send({
-      type: "EXIT"
-    });
+  const handleClosePress = () => navigation.pop();
 
-  const handleConfirmPress = () => {
-    machine.send({
-      type: "CONFIRM_UNSUBSCRIPTION"
-    });
-  };
+  const handleConfirmPress = () =>
+    dispatch(idPayUnsubscribe.request({ initiativeId }));
 
-  const handleCheckToggle = (index: number) => {
-    machine.send({
-      type: "TOGGLE_CHECK",
-      index
-    });
-  };
+  const handleCheckToggle = (index: number) =>
+    dispatch(idPayUnsubscriptionCheckToggle(index));
 
   const closeButton = (
     <TouchableDefaultOpacity

@@ -5,7 +5,6 @@ import UnsubscriptionConfirmationScreen, {
 } from "../screens/UnsubscriptionConfirmationScreen";
 import UnsubscriptionFailureScreen from "../screens/UnsubscriptionFailureScreen";
 import UnsubscriptionSuccessScreen from "../screens/UnsubscriptionSuccessScreen";
-import { IDPayUnsubscriptionMachineProvider } from "../xstate/provider";
 
 export const IDPayUnsubscriptionRoutes = {
   IDPAY_UNSUBSCRIPTION_MAIN: "IDPAY_UNSUBSCRIPTION_MAIN",
@@ -24,25 +23,23 @@ export type IDPayUnsubscriptionParamsList = {
 const Stack = createStackNavigator<IDPayUnsubscriptionParamsList>();
 
 export const IDPayUnsubscriptionNavigator = () => (
-  <IDPayUnsubscriptionMachineProvider>
-    <Stack.Navigator
-      initialRouteName={
-        IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_CONFIRMATION
-      }
-      screenOptions={{ headerShown: false }}
-    >
-      <Stack.Screen
-        name={IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_CONFIRMATION}
-        component={UnsubscriptionConfirmationScreen}
-      />
-      <Stack.Screen
-        name={IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_SUCCESS}
-        component={UnsubscriptionSuccessScreen}
-      />
-      <Stack.Screen
-        name={IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_FAILURE}
-        component={UnsubscriptionFailureScreen}
-      />
-    </Stack.Navigator>
-  </IDPayUnsubscriptionMachineProvider>
+  <Stack.Navigator
+    initialRouteName={
+      IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_CONFIRMATION
+    }
+    screenOptions={{ headerShown: false }}
+  >
+    <Stack.Screen
+      name={IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_CONFIRMATION}
+      component={UnsubscriptionConfirmationScreen}
+    />
+    <Stack.Screen
+      name={IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_SUCCESS}
+      component={UnsubscriptionSuccessScreen}
+    />
+    <Stack.Screen
+      name={IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_FAILURE}
+      component={UnsubscriptionFailureScreen}
+    />
+  </Stack.Navigator>
 );
