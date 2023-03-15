@@ -24,19 +24,15 @@ import { useIOBottomSheetModal } from "../../../../utils/hooks/bottomSheet";
 import { useOnFirstRender } from "../../../../utils/hooks/useOnFirstRender";
 import { UnsubscriptionCheckListItem } from "../components/UnsubscriptionCheckListItem";
 import {
+  UnsubscriptionCheck,
+  useUnsubscriptionChecks
+} from "../hooks/useUnsubscriptionChecks";
+import {
   IDPayUnsubscriptionParamsList,
   IDPayUnsubscriptionRoutes
 } from "../navigation/navigator";
-import {
-  areChecksFullfilledSelector,
-  unsubscriptionChecksSelector,
-  unsubscriptionRequestSelector
-} from "../store";
-import {
-  idPayUnsubscribe,
-  idPayUnsubscriptionCheckToggle,
-  idPayUnsubscriptionReset
-} from "../store/actions";
+import { unsubscriptionRequestSelector } from "../store";
+import { idPayUnsubscribe, idPayUnsubscriptionReset } from "../store/actions";
 
 export type IDPayUnsubscriptionConfirmationScreenParams = {
   initiativeId: string;
@@ -48,6 +44,29 @@ type IDPayUnsubscriptionConfirmationScreenRouteProps = RouteProp<
   "IDPAY_UNSUBSCRIPTION_CONFIRMATION"
 >;
 
+const INITIAL_CHECKS: ReadonlyArray<UnsubscriptionCheck> = [
+  {
+    title: I18n.t("idpay.unsubscription.checks.1.title"),
+    subtitle: I18n.t("idpay.unsubscription.checks.1.content"),
+    value: false
+  },
+  {
+    title: I18n.t("idpay.unsubscription.checks.2.title"),
+    subtitle: I18n.t("idpay.unsubscription.checks.2.content"),
+    value: false
+  },
+  {
+    title: I18n.t("idpay.unsubscription.checks.3.title"),
+    subtitle: I18n.t("idpay.unsubscription.checks.3.content"),
+    value: false
+  },
+  {
+    title: I18n.t("idpay.unsubscription.checks.4.title"),
+    subtitle: I18n.t("idpay.unsubscription.checks.4.content"),
+    value: false
+  }
+];
+
 const UnsubscriptionConfirmationScreen = () => {
   const route = useRoute<IDPayUnsubscriptionConfirmationScreenRouteProps>();
 
@@ -56,11 +75,11 @@ const UnsubscriptionConfirmationScreen = () => {
   const dispatch = useIODispatch();
   const navigation = useNavigation<IOStackNavigationProp<AppParamsList>>();
 
-  const checks = useIOSelector(unsubscriptionChecksSelector);
-  const areChecksFullfilled = useIOSelector(areChecksFullfilledSelector);
-
   const unsubscriptionRequest = useIOSelector(unsubscriptionRequestSelector);
   const isLoading = pot.isLoading(unsubscriptionRequest);
+
+  const { checks, toggleCheck, areChecksFullfilled } =
+    useUnsubscriptionChecks(INITIAL_CHECKS);
 
   useOnFirstRender(() => {
     dispatch(idPayUnsubscriptionReset());
@@ -83,8 +102,7 @@ const UnsubscriptionConfirmationScreen = () => {
   const handleConfirmPress = () =>
     dispatch(idPayUnsubscribe.request({ initiativeId }));
 
-  const handleCheckToggle = (index: number) =>
-    dispatch(idPayUnsubscriptionCheckToggle(index));
+  const handleCheckToggle = (index: number) => toggleCheck(index);
 
   const closeButton = (
     <TouchableDefaultOpacity

@@ -13,14 +13,6 @@ export const idPayUnsubscribe = createAsyncAction(
   "IDPAY_UNSUBSCRIBE_FAILURE"
 )<IdPayUnsubscribePayloadType, void, NetworkError>();
 
-export type IdPayUnsubscriptionCheckTogglePayloadType = { index: number };
-
-export const idPayUnsubscriptionCheckToggle = createAction(
-  "IDPAY_UNSUBSCRIPTION_CHECK_TOGGLE",
-  resolve => (index: number) => resolve({ index })
-);
-
 export type IDPayUnsubscriptionActions =
   | ActionType<typeof idPayUnsubscriptionReset>
-  | ActionType<typeof idPayUnsubscribe>
-  | ActionType<typeof idPayUnsubscriptionCheckToggle>;
+  | ActionType<typeof idPayUnsubscribe>;
