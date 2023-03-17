@@ -1,5 +1,5 @@
 import * as pot from "@pagopa/ts-commons/lib/pot";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { FlatList, SafeAreaView, StyleSheet, View } from "react-native";
 import { VSpacer } from "../../../../components/core/spacer/Spacer";
@@ -21,26 +21,14 @@ import { useIODispatch, useIOSelector } from "../../../../store/hooks";
 import customVariables from "../../../../theme/variables";
 import { emptyContextualHelp } from "../../../../utils/emptyContextualHelp";
 import { useIOBottomSheetModal } from "../../../../utils/hooks/bottomSheet";
-import { useOnFirstRender } from "../../../../utils/hooks/useOnFirstRender";
 import { UnsubscriptionCheckListItem } from "../components/UnsubscriptionCheckListItem";
 import { useConfirmationChecks } from "../hooks/useConfirmationChecks";
-
+import { IDPayUnsubscriptionRoutes } from "../navigation/navigator";
 import {
-  IDPayUnsubscriptionParamsList,
-  IDPayUnsubscriptionRoutes
-} from "../navigation/navigator";
-import { unsubscriptionRequestSelector } from "../store";
-import { idPayUnsubscribe, idPayUnsubscriptionReset } from "../store/actions";
-
-export type IDPayUnsubscriptionConfirmationScreenParams = {
-  initiativeId: string;
-  initiativeName?: string;
-};
-
-type IDPayUnsubscriptionConfirmationScreenRouteProps = RouteProp<
-  IDPayUnsubscriptionParamsList,
-  "IDPAY_UNSUBSCRIPTION_CONFIRMATION"
->;
+  initiativeNameSelector,
+  unsubscriptionRequestSelector
+} from "../store";
+import { idPayUnsubscribe } from "../store/actions";
 
 const unsubscriptionChecks: ReadonlyArray<{ title: string; subtitle: string }> =
   [
@@ -63,21 +51,14 @@ const unsubscriptionChecks: ReadonlyArray<{ title: string; subtitle: string }> =
   ];
 
 const UnsubscriptionConfirmationScreen = () => {
-  const route = useRoute<IDPayUnsubscriptionConfirmationScreenRouteProps>();
-
-  const { initiativeId, initiativeName } = route.params;
-
   const dispatch = useIODispatch();
   const navigation = useNavigation<IOStackNavigationProp<AppParamsList>>();
 
   const unsubscriptionRequest = useIOSelector(unsubscriptionRequestSelector);
+  const initiativeName = useIOSelector(initiativeNameSelector);
   const isLoading = pot.isLoading(unsubscriptionRequest);
 
   const checks = useConfirmationChecks(unsubscriptionChecks.length);
-
-  useOnFirstRender(() => {
-    dispatch(idPayUnsubscriptionReset());
-  });
 
   React.useEffect(() => {
     if (pot.isSome(unsubscriptionRequest)) {
@@ -93,8 +74,7 @@ const UnsubscriptionConfirmationScreen = () => {
 
   const handleClosePress = () => navigation.pop();
 
-  const handleConfirmPress = () =>
-    dispatch(idPayUnsubscribe.request({ initiativeId }));
+  const handleConfirmPress = () => dispatch(idPayUnsubscribe.request());
 
   const handleCheckToggle = (index: number) => checks.toggle(index);
 

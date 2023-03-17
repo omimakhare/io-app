@@ -1,18 +1,26 @@
 import { ActionType, createAction, createAsyncAction } from "typesafe-actions";
 import { NetworkError } from "../../../../../utils/errors";
 
-export const idPayUnsubscriptionReset = createAction(
-  "IDPAY_UNSUBSCRIPTION_RESET"
+export const idPayUnsubscriptionBegin = createAction(
+  "IDPAY_UNSUBSCRIPTION_BEGIN",
+  resolve => (initiativeId: string, initiativeName?: string) =>
+    resolve({
+      initiativeId,
+      initiativeName
+    })
 );
-
-export type IdPayUnsubscribePayloadType = { initiativeId: string };
 
 export const idPayUnsubscribe = createAsyncAction(
   "IDPAY_UNSUBSCRIBE_REQUEST",
   "IDPAY_UNSUBSCRIBE_SUCCESS",
   "IDPAY_UNSUBSCRIBE_FAILURE"
-)<IdPayUnsubscribePayloadType, void, NetworkError>();
+)<void, void, NetworkError>();
+
+export const idPayUnsubscriptionExit = createAction(
+  "IDPAY_UNSUBSCRIPTION_EXIT"
+);
 
 export type IDPayUnsubscriptionActions =
-  | ActionType<typeof idPayUnsubscriptionReset>
-  | ActionType<typeof idPayUnsubscribe>;
+  | ActionType<typeof idPayUnsubscriptionBegin>
+  | ActionType<typeof idPayUnsubscribe>
+  | ActionType<typeof idPayUnsubscriptionExit>;

@@ -20,7 +20,8 @@ import {
 import customVariables from "../../../../../theme/variables";
 import { IDPayConfigurationRoutes } from "../../configuration/navigation/navigator";
 import { HSpacer, VSpacer } from "../../../../../components/core/spacer/Spacer";
-import { IDPayUnsubscriptionRoutes } from "../../../unsubscription/navigation/navigator";
+import { useIODispatch } from "../../../../../store/hooks";
+import { idPayUnsubscriptionBegin } from "../../../unsubscription/store/actions";
 
 type Props = {
   initiative: InitiativeDTO;
@@ -65,6 +66,7 @@ const SettingsButtonComponent = (props: SettingsButtonProps) => (
 export const InitiativeSettingsComponent = (props: Props) => {
   const { initiative } = props;
 
+  const dispatch = useIODispatch();
   const navigation = useNavigation<IOStackNavigationProp<AppParamsList>>();
 
   const navigateToInstrumentsConfiguration = () => {
@@ -87,13 +89,12 @@ export const InitiativeSettingsComponent = (props: Props) => {
   };
 
   const navigateToUnsubscription = () => {
-    navigation.navigate(IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_MAIN, {
-      screen: IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_CONFIRMATION,
-      params: {
-        initiativeId: initiative.initiativeId,
-        initiativeName: initiative.initiativeName
-      }
-    });
+    dispatch(
+      idPayUnsubscriptionBegin(
+        initiative.initiativeId,
+        initiative.initiativeName
+      )
+    );
   };
 
   return (

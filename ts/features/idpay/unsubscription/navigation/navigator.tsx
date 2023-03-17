@@ -1,8 +1,6 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
-import UnsubscriptionConfirmationScreen, {
-  IDPayUnsubscriptionConfirmationScreenParams
-} from "../screens/UnsubscriptionConfirmationScreen";
+import UnsubscriptionConfirmationScreen from "../screens/UnsubscriptionConfirmationScreen";
 import UnsubscriptionFailureScreen from "../screens/UnsubscriptionFailureScreen";
 import UnsubscriptionSuccessScreen from "../screens/UnsubscriptionSuccessScreen";
 
@@ -15,7 +13,7 @@ export const IDPayUnsubscriptionRoutes = {
 
 export type IDPayUnsubscriptionParamsList = {
   [IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_MAIN]: undefined;
-  [IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_CONFIRMATION]: IDPayUnsubscriptionConfirmationScreenParams;
+  [IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_CONFIRMATION]: undefined;
   [IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_SUCCESS]: undefined;
   [IDPayUnsubscriptionRoutes.IDPAY_UNSUBSCRIPTION_FAILURE]: undefined;
 };

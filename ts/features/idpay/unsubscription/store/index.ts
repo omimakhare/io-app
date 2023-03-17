@@ -1,17 +1,27 @@
 import * as pot from "@pagopa/ts-commons/lib/pot";
+import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/lib/Option";
 import { createSelector } from "reselect";
 import { getType } from "typesafe-actions";
 import { Action } from "../../../../store/actions/types";
 import { GlobalState } from "../../../../store/reducers/types";
 import { NetworkError } from "../../../../utils/errors";
-import { idPayUnsubscribe, idPayUnsubscriptionReset } from "./actions";
+import {
+  idPayUnsubscribe,
+  idPayUnsubscriptionBegin,
+  idPayUnsubscriptionExit
+} from "./actions";
 
 export type IDPayUnsubscriptionState = {
   unsubscriptionRequest: pot.Pot<void, NetworkError>;
+  initiativeId: O.Option<string>;
+  initiativeName: O.Option<string>;
 };
 
 const INITIAL_STATE: IDPayUnsubscriptionState = {
-  unsubscriptionRequest: pot.none
+  unsubscriptionRequest: pot.none,
+  initiativeId: O.none,
+  initiativeName: O.none
 };
 
 const reducer = (
@@ -19,8 +29,12 @@ const reducer = (
   action: Action
 ): IDPayUnsubscriptionState => {
   switch (action.type) {
-    case getType(idPayUnsubscriptionReset):
-      return INITIAL_STATE;
+    case getType(idPayUnsubscriptionBegin):
+      return {
+        ...INITIAL_STATE,
+        initiativeId: O.some(action.payload.initiativeId),
+        initiativeName: O.fromNullable(action.payload.initiativeName)
+      };
     case getType(idPayUnsubscribe.request):
       return {
         ...state,
@@ -49,6 +63,20 @@ const selectUnsubscription = (state: GlobalState) =>
 export const unsubscriptionRequestSelector = createSelector(
   selectUnsubscription,
   unsubscription => unsubscription.unsubscriptionRequest
+);
+
+export const initiativeIdSelector = createSelector(
+  selectUnsubscription,
+  unsubscription => unsubscription.initiativeId
+);
+
+export const initiativeNameSelector = createSelector(
+  selectUnsubscription,
+  unsubscription =>
+    pipe(
+      unsubscription.initiativeName,
+      O.getOrElse(() => "")
+    )
 );
 
 export default reducer;
