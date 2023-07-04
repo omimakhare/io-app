@@ -6,6 +6,7 @@ import {
   AppState,
   AppStateStatus,
   NativeEventSubscription,
+  NativeModules,
   Platform,
   StatusBar
 } from "react-native";
@@ -62,6 +63,15 @@ class RootContainer extends React.PureComponent<Props> {
     this.updateLocale();
     // Hide splash screen
     SplashScreen.hide();
+
+    console.log(`=== componentDidMount`);
+    const { FIMSModule } = NativeModules;
+    const a = FIMSModule.startFIMSFlow(
+      "http://localhost:3000/"
+    ) as Promise<string>;
+    a.then(inputParam => {
+      console.log(`=== Input parameter is (${inputParam})`);
+    }).catch(() => console.log(`=== ERROR`));
   }
 
   /**

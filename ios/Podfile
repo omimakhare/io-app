@@ -13,6 +13,7 @@ target 'ItaliaApp' do
 
   pod 'RNCPushNotificationIOS', :path => '../node_modules/@react-native-community/push-notification-ios'
   pod 'ReactNativeART', :podspec => '../node_modules/@react-native-community/art/ReactNativeART.podspec'
+  pod 'Alamofire'
   use_react_native!(
     :path => config[:reactNativePath],
     # to enable hermes on iOS, change `false` to `true` and then install pods

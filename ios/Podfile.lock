@@ -1,4 +1,5 @@
 PODS:
+  - Alamofire (5.6.4)
   - boost (1.76.0)
   - BVLinearGradient (2.5.6):
     - React
@@ -584,6 +585,7 @@ PODS:
   - ZXingObjC/All (3.6.5)
 
 DEPENDENCIES:
+  - Alamofire
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - BVLinearGradient (from `../node_modules/react-native-linear-gradient`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
@@ -691,6 +693,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - Alamofire
     - CocoaAsyncSocket
     - Flipper
     - Flipper-Boost-iOSX
@@ -896,6 +899,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  Alamofire: 4e95d97098eacb88856099c4fc79b526a299e48c
   boost: a7c83b31436843459a1961bfd74b96033dc77234
   BVLinearGradient: e3aad03778a456d77928f594a649e96995f1c872
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
@@ -1018,6 +1022,6 @@ SPEC CHECKSUMS:
   ZendeskSupportSDK: 92e6f9d334e81e9186f8a17583862350460a5393
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-PODFILE CHECKSUM: 0d78c2a7f58353c7eed2163b7e3b3747b00ff101
+PODFILE CHECKSUM: 843b0da8f96c0a3442c4f4665b8a042a899ec216
 
 COCOAPODS: 1.12.0
