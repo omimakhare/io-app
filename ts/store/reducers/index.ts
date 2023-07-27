@@ -19,6 +19,7 @@ import { Action } from "../actions/types";
 import createSecureStorage from "../storages/keychain";
 import { DateISO8601Transform } from "../transforms/dateISO8601Tranform";
 import { whatsNewInitialState } from "../../features/whatsnew/store/reducers";
+import storedMachinesReducer from "../../xstate/store";
 import appStateReducer from "./appState";
 import assistanceToolsReducer from "./assistanceTools";
 import authenticationReducer, {
@@ -113,6 +114,9 @@ export const appReducer: Reducer<GlobalState, Action> = combineReducers<
     authenticationPersistConfig,
     authenticationReducer
   ),
+
+  // Xstate machines
+  storedMachines: storedMachinesReducer,
 
   // standard persistor, see configureStoreAndPersistor.ts
 
