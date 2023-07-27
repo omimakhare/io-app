@@ -2,7 +2,7 @@ import {
   AppParamsList,
   IOStackNavigationProp
 } from "../../../../navigation/params/AppParamsList";
-import { guardedNavigationAction } from "../../common/xstate/utils";
+import { guardedNavigationAction } from "../../../../xstate/utils/actions";
 import { IDPayDetailsRoutes } from "../../initiative/details/navigation";
 import {
   IDPayOnboardingParamsList,
