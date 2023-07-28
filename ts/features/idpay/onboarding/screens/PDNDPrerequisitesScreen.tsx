@@ -22,7 +22,7 @@ import { serviceByIdSelector } from "../../../../store/reducers/entities/service
 import { emptyContextualHelp } from "../../../../utils/emptyContextualHelp";
 import { useIOBottomSheetAutoresizableModal } from "../../../../utils/hooks/bottomSheet";
 import { getPDNDCriteriaDescription } from "../utils/strings";
-import { useOnboardingMachineService } from "../xstate/provider";
+import { useIDPayOnboardingMachine } from "../xstate/provider";
 import { pdndCriteriaSelector, selectServiceId } from "../xstate/selectors";
 
 const secondaryButtonProps = {
@@ -43,9 +43,9 @@ const styles = StyleSheet.create({
 });
 
 export const PDNDPrerequisitesScreen = () => {
-  const machine = useOnboardingMachineService();
+  const { service } = useIDPayOnboardingMachine();
   const [authority, setAuthority] = React.useState<string | undefined>();
-  const serviceId = useSelector(machine, selectServiceId);
+  const serviceId = useSelector(service, selectServiceId);
 
   const serviceName = pipe(
     useIOSelector(serviceByIdSelector(serviceId as ServiceId)) || pot.none,
@@ -57,8 +57,8 @@ export const PDNDPrerequisitesScreen = () => {
   );
 
   const continueOnPress = () =>
-    machine.send({ type: "ACCEPT_REQUIRED_PDND_CRITERIA" });
-  const goBackOnPress = () => machine.send({ type: "BACK" });
+    service.send({ type: "ACCEPT_REQUIRED_PDND_CRITERIA" });
+  const goBackOnPress = () => service.send({ type: "BACK" });
 
   const { present, bottomSheet, dismiss } = useIOBottomSheetAutoresizableModal(
     {
@@ -93,10 +93,10 @@ export const PDNDPrerequisitesScreen = () => {
     130
   );
 
-  const pdndCriteria = useSelector(machine, pdndCriteriaSelector);
+  const pdndCriteria = useSelector(service, pdndCriteriaSelector);
 
   useNavigationSwipeBackListener(() => {
-    machine.send({ type: "BACK", skipNavigation: true });
+    service.send({ type: "BACK", skipNavigation: true });
   });
 
   return (

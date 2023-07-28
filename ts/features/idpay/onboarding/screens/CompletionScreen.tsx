@@ -8,22 +8,18 @@ import LoadingSpinnerOverlay from "../../../../components/LoadingSpinnerOverlay"
 import BaseScreenComponent from "../../../../components/screens/BaseScreenComponent";
 import FooterWithButtons from "../../../../components/ui/FooterWithButtons";
 import I18n from "../../../../i18n";
-import { useOnboardingMachineService } from "../xstate/provider";
+import { useIDPayOnboardingMachine } from "../xstate/provider";
 import { isUpsertingSelector } from "../xstate/selectors";
 import themeVariables from "../../../../theme/variables";
 import { VSpacer } from "../../../../components/core/spacer/Spacer";
 import { Pictogram } from "../../../../components/core/pictograms";
 
 const CompletionScreen = () => {
-  const onboardingMachineService = useOnboardingMachineService();
+  const { service } = useIDPayOnboardingMachine();
 
-  const isUpserting = useSelector(
-    onboardingMachineService,
-    isUpsertingSelector
-  );
+  const isUpserting = useSelector(service, isUpsertingSelector);
 
-  const handleClosePress = () =>
-    onboardingMachineService.send({ type: "QUIT_ONBOARDING" });
+  const handleClosePress = () => service.send({ type: "QUIT_ONBOARDING" });
 
   if (isUpserting) {
     return (

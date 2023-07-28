@@ -3,17 +3,13 @@ import * as O from "fp-ts/lib/Option";
 import { getType } from "typesafe-actions";
 import { Action } from "../../store/actions/types";
 import { GlobalState } from "../../store/reducers/types";
-import { xstateRegisterMachine, xstateSendEvent } from "../actions";
 import {
-  AnyDispatchedEvent,
-  DispatchedSupervisedEvent,
-  StoredMachine
-} from "../helpers";
+  xstateDeregisterMachine,
+  xstateRegisterMachine,
+  xstateSendEvent
+} from "../actions";
+import { StoredMachine } from "../helpers";
 import storedMachineReducer from "./storedMachineReducer";
-
-const isBatchedEvent = (
-  event: DispatchedSupervisedEvent
-): event is Array<AnyDispatchedEvent> => Array.isArray(event);
 
 export type StoredMachinesState = Record<string, StoredMachine>;
 
@@ -32,16 +28,30 @@ export default function storedMachinesReducer(
         ...state,
         [action.payload.id]: action.payload
       };
+    case getType(xstateDeregisterMachine):
+      return Object.keys(state).reduce(
+        (acc, nextId) =>
+          nextId === action.payload.id
+            ? acc
+            : {
+                ...acc,
+                [nextId]: state[nextId]
+              },
+        {}
+      );
     case getType(xstateSendEvent):
       const event = action.payload;
 
-      if (isBatchedEvent(event)) {
+      // If the event is an array, send each event in the array to the machines reducer.
+      if (Array.isArray(event)) {
         return event.reduce(
-          (acc, next) => storedMachinesReducer(acc, xstateSendEvent(next)),
+          (acc, nextEvent) =>
+            storedMachinesReducer(acc, xstateSendEvent(nextEvent)),
           state
         );
       }
 
+      // If the event is targetting multiple machines, send each event to the machines reducer.
       if (Array.isArray(event.to)) {
         const events = event.to.map(id => ({
           ...event,
@@ -51,6 +61,7 @@ export default function storedMachinesReducer(
         return storedMachinesReducer(state, xstateSendEvent(events));
       }
 
+      // If the event is targetting a single machine, send it to the machine reducer.
       const storedMachine = state[event.to];
 
       if (storedMachine) {

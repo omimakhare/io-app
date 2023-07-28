@@ -3,6 +3,7 @@ import { useSelector } from "@xstate/react";
 import { ListItem as NBListItem } from "native-base";
 import React from "react";
 import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import { Icon } from "../../../../components/core/icons/Icon";
 import { VSpacer } from "../../../../components/core/spacer/Spacer";
 import { Body } from "../../../../components/core/typography/Body";
 import { H1 } from "../../../../components/core/typography/H1";
@@ -13,12 +14,11 @@ import BaseScreenComponent from "../../../../components/screens/BaseScreenCompon
 import FooterWithButtons from "../../../../components/ui/FooterWithButtons";
 import { useNavigationSwipeBackListener } from "../../../../hooks/useNavigationSwipeBackListener";
 import I18n from "../../../../i18n";
-import { useOnboardingMachineService } from "../xstate/provider";
+import { useIDPayOnboardingMachine } from "../xstate/provider";
 import {
   criteriaToDisplaySelector,
   prerequisiteAnswerIndexSelector
 } from "../xstate/selectors";
-import { Icon } from "../../../../components/core/icons/Icon";
 
 const styles = StyleSheet.create({
   maxheight: {
@@ -61,11 +61,11 @@ const buttonProps = {
 };
 
 const MultiValuePrerequisitesScreen = () => {
-  const machine = useOnboardingMachineService();
+  const { service } = useIDPayOnboardingMachine();
 
-  const currentPrerequisite = useSelector(machine, criteriaToDisplaySelector);
+  const currentPrerequisite = useSelector(service, criteriaToDisplaySelector);
   const possiblySelectedIndex = useSelector(
-    machine,
+    service,
     prerequisiteAnswerIndexSelector
   );
 
@@ -77,7 +77,7 @@ const MultiValuePrerequisitesScreen = () => {
     if (selectedIndex === undefined) {
       return null;
     }
-    machine.send("SELECT_MULTI_CONSENT", {
+    service.send("SELECT_MULTI_CONSENT", {
       data: {
         _type: currentPrerequisite._type,
         value: currentPrerequisite.value[selectedIndex],
@@ -87,10 +87,10 @@ const MultiValuePrerequisitesScreen = () => {
 
     return null;
   };
-  const goBack = () => machine.send("BACK");
+  const goBack = () => service.send("BACK");
 
   useNavigationSwipeBackListener(() => {
-    machine.send({ type: "BACK", skipNavigation: true });
+    service.send({ type: "BACK", skipNavigation: true });
   });
 
   return (

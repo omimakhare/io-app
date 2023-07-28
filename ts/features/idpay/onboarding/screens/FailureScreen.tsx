@@ -1,23 +1,23 @@
+import { useSelector } from "@xstate/react";
+import * as O from "fp-ts/lib/Option";
+import { pipe } from "fp-ts/lib/function";
 import { Text as NBButtonText } from "native-base";
 import React from "react";
-import { useSelector } from "@xstate/react";
-import { pipe } from "fp-ts/lib/function";
-import * as O from "fp-ts/lib/Option";
-import { View, SafeAreaView, StyleSheet } from "react-native";
+import { SafeAreaView, StyleSheet, View } from "react-native";
 import ButtonDefaultOpacity from "../../../../components/ButtonDefaultOpacity";
 import {
   IOPictograms,
   Pictogram
 } from "../../../../components/core/pictograms";
 import { VSpacer } from "../../../../components/core/spacer/Spacer";
+import { Body } from "../../../../components/core/typography/Body";
 import { H3 } from "../../../../components/core/typography/H3";
 import { IOStyles } from "../../../../components/core/variables/IOStyles";
 import I18n from "../../../../i18n";
 import themeVariables from "../../../../theme/variables";
 import { OnboardingFailureEnum } from "../xstate/failure";
-import { useOnboardingMachineService } from "../xstate/provider";
+import { useIDPayOnboardingMachine } from "../xstate/provider";
 import { selectOnboardingFailure } from "../xstate/selectors";
-import { Body } from "../../../../components/core/typography/Body";
 
 const failurePictures: Record<OnboardingFailureEnum, IOPictograms> = {
   [OnboardingFailureEnum.GENERIC]: "umbrella",
@@ -33,8 +33,8 @@ const failurePictures: Record<OnboardingFailureEnum, IOPictograms> = {
 };
 
 const FailureScreen = () => {
-  const machine = useOnboardingMachineService();
-  const failureOption = useSelector(machine, selectOnboardingFailure);
+  const { service } = useIDPayOnboardingMachine();
+  const failureOption = useSelector(service, selectOnboardingFailure);
 
   const failure = pipe(
     failureOption,
@@ -44,11 +44,11 @@ const FailureScreen = () => {
   const isAlreadyOnboarded = failure === OnboardingFailureEnum.ONBOARDED;
 
   const handleClosePress = () => {
-    machine.send({ type: "QUIT_ONBOARDING" });
+    service.send({ type: "QUIT_ONBOARDING" });
   };
 
   const handleNavigateToInitiativePress = () => {
-    machine.send({ type: "SHOW_INITIATIVE_DETAILS" });
+    service.send({ type: "SHOW_INITIATIVE_DETAILS" });
   };
 
   const renderCloseButton = () => {

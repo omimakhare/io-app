@@ -15,7 +15,7 @@ export default (
     const next = state.service.send(event);
 
     // Only mutate store state if changes have happened.
-    if (next.changed) {
+    if (next?.changed) {
       return {
         ...state,
         state: next

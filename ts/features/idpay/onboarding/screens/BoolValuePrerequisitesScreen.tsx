@@ -15,7 +15,7 @@ import FooterWithButtons from "../../../../components/ui/FooterWithButtons";
 import { useNavigationSwipeBackListener } from "../../../../hooks/useNavigationSwipeBackListener";
 import I18n from "../../../../i18n";
 import { emptyContextualHelp } from "../../../../utils/emptyContextualHelp";
-import { useOnboardingMachineService } from "../xstate/provider";
+import { useIDPayOnboardingMachine } from "../xstate/provider";
 import {
   areAllSelfDeclarationsToggledSelector,
   boolRequiredCriteriaSelector,
@@ -26,28 +26,28 @@ import { openWebUrl } from "../../../../utils/url";
 import { dpr28Dec2000Url } from "../../../../urls";
 
 const InitiativeSelfDeclarationsScreen = () => {
-  const machine = useOnboardingMachineService();
+  const { service } = useIDPayOnboardingMachine();
 
-  const isLoading = useSelector(machine, isLoadingSelector);
+  const isLoading = useSelector(service, isLoadingSelector);
 
-  const selfCriteriaBool = useSelector(machine, boolRequiredCriteriaSelector);
+  const selfCriteriaBool = useSelector(service, boolRequiredCriteriaSelector);
   const selfCriteriaBoolAnswers = useSelector(
-    machine,
+    service,
     selectSelfDeclarationBoolAnswers
   );
   const areAllSelfCriteriaBoolAccepted = useSelector(
-    machine,
+    service,
     areAllSelfDeclarationsToggledSelector
   );
 
   const continueOnPress = () =>
-    machine.send({ type: "ACCEPT_REQUIRED_BOOL_CRITERIA" });
+    service.send({ type: "ACCEPT_REQUIRED_BOOL_CRITERIA" });
 
-  const goBackOnPress = () => machine.send({ type: "BACK" });
+  const goBackOnPress = () => service.send({ type: "BACK" });
 
   const toggleCriteria =
     (criteria: SelfDeclarationBoolDTO) => (value: boolean) =>
-      machine.send({
+      service.send({
         type: "TOGGLE_BOOL_CRITERIA",
         criteria: { ...criteria, value }
       });
@@ -56,7 +56,7 @@ const InitiativeSelfDeclarationsScreen = () => {
     selfCriteriaBoolAnswers[criteria.code] ?? false;
 
   useNavigationSwipeBackListener(() => {
-    machine.send({ type: "BACK", skipNavigation: true });
+    service.send({ type: "BACK", skipNavigation: true });
   });
 
   return (

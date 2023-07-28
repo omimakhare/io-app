@@ -1,5 +1,4 @@
 import { useNavigation } from "@react-navigation/native";
-import { useInterpret } from "@xstate/react";
 import * as O from "fp-ts/lib/Option";
 import { pipe } from "fp-ts/lib/function";
 import React from "react";
@@ -23,7 +22,7 @@ import {
   fromLocaleToPreferredLanguage,
   getLocalePrimaryWithFallback
 } from "../../../../utils/locale";
-import { useXStateMachine } from "../../../../xstate/hooks/useXStateMachine";
+import { useStoredXStateMachine } from "../../../../xstate/hooks/useStoredXStateMachine";
 import { createIDPayClient } from "../../common/api/client";
 import {
   IDPayOnboardingParamsList,
@@ -36,7 +35,10 @@ import {
 } from "./machine";
 import { createServicesImplementation } from "./services";
 
-type OnboardingMachineContext = InterpreterFrom<IDPayOnboardingMachineType>;
+type OnboardingMachineContext = {
+  machine: IDPayOnboardingMachineType;
+  service: InterpreterFrom<IDPayOnboardingMachineType>;
+};
 
 const OnboardingMachineContext = React.createContext<OnboardingMachineContext>(
   {} as OnboardingMachineContext
@@ -47,17 +49,16 @@ type Props = {
 };
 
 const IDPayOnboardingMachineProvider = (props: Props) => {
-  const [machine] = useXStateMachine(createIDPayOnboardingMachine);
-  const isPagoPATestEnabled = useIOSelector(isPagoPATestEnabledSelector);
-  const baseUrl = isPagoPATestEnabled ? idPayApiUatBaseUrl : idPayApiBaseUrl;
-
-  const sessionInfo = useIOSelector(sessionInfoSelector);
-
   const rootNavigation = useNavigation<IOStackNavigationProp<AppParamsList>>();
   const onboardingNavigation =
     useNavigation<
       IDPayOnboardingStackNavigationProp<IDPayOnboardingParamsList>
     >();
+
+  const isPagoPATestEnabled = useIOSelector(isPagoPATestEnabledSelector);
+  const sessionInfo = useIOSelector(sessionInfoSelector);
+
+  const baseUrl = isPagoPATestEnabled ? idPayApiUatBaseUrl : idPayApiBaseUrl;
 
   if (O.isNone(sessionInfo)) {
     throw new Error("Session info is undefined");
@@ -76,25 +77,27 @@ const IDPayOnboardingMachineProvider = (props: Props) => {
   const client = createIDPayClient(baseUrl);
 
   const services = createServicesImplementation(client, token, language);
-
   const actions = createActionsImplementation(
     rootNavigation,
     onboardingNavigation
   );
 
-  const machineService = useInterpret(machine, {
-    services,
-    actions
-  });
+  const [machine, service] = useStoredXStateMachine<IDPayOnboardingMachineType>(
+    createIDPayOnboardingMachine,
+    {
+      services,
+      actions
+    }
+  );
 
   return (
-    <OnboardingMachineContext.Provider value={machineService}>
+    <OnboardingMachineContext.Provider value={{ machine, service }}>
       {props.children}
     </OnboardingMachineContext.Provider>
   );
 };
 
-const useOnboardingMachineService = () =>
+const useIDPayOnboardingMachine = () =>
   React.useContext(OnboardingMachineContext);
 
-export { IDPayOnboardingMachineProvider, useOnboardingMachineService };
+export { IDPayOnboardingMachineProvider, useIDPayOnboardingMachine };

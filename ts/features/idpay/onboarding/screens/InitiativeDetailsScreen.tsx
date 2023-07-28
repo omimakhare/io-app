@@ -19,8 +19,11 @@ import {
 import { OnboardingPrivacyAdvice } from "../components/OnboardingPrivacyAdvice";
 import { OnboardingServiceHeader } from "../components/OnboardingServiceHeader";
 import { IDPayOnboardingParamsList } from "../navigation/navigator";
-import { useOnboardingMachineService } from "../xstate/provider";
+import { useIDPayOnboardingMachine } from "../xstate/provider";
 import { isUpsertingSelector, selectInitiative } from "../xstate/selectors";
+import { useIODispatch } from "../../../../store/hooks";
+import { xstateSendEvent } from "../../../../xstate/actions";
+import { IDPAY_ONBOARDING_MACHINE_ID } from "../xstate/machine";
 
 type InitiativeDetailsScreenRouteParams = {
   serviceId: string;
@@ -33,24 +36,33 @@ type InitiativeDetailsRouteProps = RouteProp<
 
 const InitiativeDetailsScreen = () => {
   const route = useRoute<InitiativeDetailsRouteProps>();
-  const machine = useOnboardingMachineService();
+  const { service } = useIDPayOnboardingMachine();
+  const dispatch = useIODispatch();
 
   const { serviceId } = route.params;
 
   React.useEffect(() => {
-    machine.send({
+    /* service.send({
       type: "SELECT_INITIATIVE",
       serviceId
-    });
-  }, [machine, serviceId]);
+    }); */
 
-  const initiative = useSelector(machine, selectInitiative);
-  const isUpserting = useSelector(machine, isUpsertingSelector);
+    dispatch(
+      xstateSendEvent({
+        to: IDPAY_ONBOARDING_MACHINE_ID,
+        type: "SELECT_INITIATIVE",
+        serviceId
+      })
+    );
+  }, [dispatch, service, serviceId]);
+
+  const initiative = useSelector(service, selectInitiative);
+  const isUpserting = useSelector(service, isUpsertingSelector);
   const [isDescriptionLoaded, setDescriptionLoaded] = React.useState(false);
 
-  const handleGoBackPress = () => machine.send({ type: "QUIT_ONBOARDING" });
+  const handleGoBackPress = () => service.send({ type: "QUIT_ONBOARDING" });
 
-  const handleContinuePress = () => machine.send({ type: "ACCEPT_TOS" });
+  const handleContinuePress = () => service.send({ type: "ACCEPT_TOS" });
 
   const onboardingPrivacyAdvice = pipe(
     initiative,

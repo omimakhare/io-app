@@ -18,6 +18,8 @@ import {
   getMultiRequiredCriteriaFromContext
 } from "./selectors";
 
+export const IDPAY_ONBOARDING_MACHINE_ID = "IDPAY_ONBOARDING";
+
 // Context types
 export type Context = {
   serviceId?: string;
@@ -109,7 +111,7 @@ const createIDPayOnboardingMachine = () =>
         services: {} as Services
       },
       predictableActionArguments: true,
-      id: "IDPAY_ONBOARDING",
+      id: IDPAY_ONBOARDING_MACHINE_ID,
       initial: "WAITING_INITIATIVE_SELECTION",
       on: {
         QUIT_ONBOARDING: {
