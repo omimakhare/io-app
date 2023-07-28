@@ -4,9 +4,9 @@ import { getType } from "typesafe-actions";
 import { Action } from "../../store/actions/types";
 import { GlobalState } from "../../store/reducers/types";
 import {
-  xstateDeregisterMachine,
-  xstateRegisterMachine,
-  xstateSendEvent
+  storedMachineRegisterAction,
+  storedMachineRemoveAction,
+  storedMachineSendEventAction
 } from "../actions";
 import { StoredMachine } from "../helpers";
 import storedMachineReducer from "./storedMachineReducer";
@@ -23,12 +23,12 @@ export default function storedMachinesReducer(
   action: Action
 ): StoredMachinesState {
   switch (action.type) {
-    case getType(xstateRegisterMachine):
+    case getType(storedMachineRegisterAction):
       return {
         ...state,
         [action.payload.id]: action.payload
       };
-    case getType(xstateDeregisterMachine):
+    case getType(storedMachineRemoveAction):
       return Object.keys(state).reduce(
         (acc, nextId) =>
           nextId === action.payload.id
@@ -39,14 +39,14 @@ export default function storedMachinesReducer(
               },
         {}
       );
-    case getType(xstateSendEvent):
+    case getType(storedMachineSendEventAction):
       const event = action.payload;
 
       // If the event is an array, send each event in the array to the machines reducer.
       if (Array.isArray(event)) {
         return event.reduce(
           (acc, nextEvent) =>
-            storedMachinesReducer(acc, xstateSendEvent(nextEvent)),
+            storedMachinesReducer(acc, storedMachineSendEventAction(nextEvent)),
           state
         );
       }
@@ -58,7 +58,10 @@ export default function storedMachinesReducer(
           to: id
         }));
 
-        return storedMachinesReducer(state, xstateSendEvent(events));
+        return storedMachinesReducer(
+          state,
+          storedMachineSendEventAction(events)
+        );
       }
 
       // If the event is targetting a single machine, send it to the machine reducer.

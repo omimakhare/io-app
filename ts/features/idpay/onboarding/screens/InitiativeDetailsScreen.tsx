@@ -5,12 +5,13 @@ import * as O from "fp-ts/lib/Option";
 import { pipe } from "fp-ts/lib/function";
 import * as React from "react";
 import { StyleSheet, View } from "react-native";
-import ItemSeparatorComponent from "../../../../components/ItemSeparatorComponent";
 import { ForceScrollDownView } from "../../../../components/ForceScrollDownView";
+import ItemSeparatorComponent from "../../../../components/ItemSeparatorComponent";
 import { VSpacer } from "../../../../components/core/spacer/Spacer";
 import BaseScreenComponent from "../../../../components/screens/BaseScreenComponent";
 import BlockButtons from "../../../../components/ui/BlockButtons";
 import I18n from "../../../../i18n";
+import { useIODispatch } from "../../../../store/hooks";
 import { emptyContextualHelp } from "../../../../utils/emptyContextualHelp";
 import {
   OnboardingDescriptionMarkdown,
@@ -21,9 +22,6 @@ import { OnboardingServiceHeader } from "../components/OnboardingServiceHeader";
 import { IDPayOnboardingParamsList } from "../navigation/navigator";
 import { useIDPayOnboardingMachine } from "../xstate/provider";
 import { isUpsertingSelector, selectInitiative } from "../xstate/selectors";
-import { useIODispatch } from "../../../../store/hooks";
-import { xstateSendEvent } from "../../../../xstate/actions";
-import { IDPAY_ONBOARDING_MACHINE_ID } from "../xstate/machine";
 
 type InitiativeDetailsScreenRouteParams = {
   serviceId: string;
@@ -42,18 +40,10 @@ const InitiativeDetailsScreen = () => {
   const { serviceId } = route.params;
 
   React.useEffect(() => {
-    /* service.send({
+    service.send({
       type: "SELECT_INITIATIVE",
       serviceId
-    }); */
-
-    dispatch(
-      xstateSendEvent({
-        to: IDPAY_ONBOARDING_MACHINE_ID,
-        type: "SELECT_INITIATIVE",
-        serviceId
-      })
-    );
+    });
   }, [dispatch, service, serviceId]);
 
   const initiative = useSelector(service, selectInitiative);

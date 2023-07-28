@@ -22,7 +22,7 @@ import {
   fromLocaleToPreferredLanguage,
   getLocalePrimaryWithFallback
 } from "../../../../utils/locale";
-import { useStoredXStateMachine } from "../../../../xstate/hooks/useStoredXStateMachine";
+import { useStoredMachine } from "../../../../xstate/hooks/useStoredMachine";
 import { createIDPayClient } from "../../common/api/client";
 import {
   IDPayOnboardingParamsList,
@@ -82,7 +82,7 @@ const IDPayOnboardingMachineProvider = (props: Props) => {
     onboardingNavigation
   );
 
-  const [machine, service] = useStoredXStateMachine<IDPayOnboardingMachineType>(
+  const [machine, service] = useStoredMachine<IDPayOnboardingMachineType>(
     createIDPayOnboardingMachine,
     {
       services,
